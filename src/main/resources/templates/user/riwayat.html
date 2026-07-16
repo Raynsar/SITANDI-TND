@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Peminjaman - SIPENJAM Alat TU</title>
+    <th:block th:replace="~{common/context-path :: context-path}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen">
+
+    <header th:replace="~{common/header :: header}"></header>
+
+    <main class="flex-grow container mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold text-slate-900 mb-6">Riwayat &amp; Status Peminjaman</h1>
+
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                    <tr>
+                        <th class="px-4 py-3">Alat</th>
+                        <th class="px-4 py-3">Tanggal Pinjam</th>
+                        <th class="px-4 py-3">Tanggal Kembali</th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Satu baris per item dari ${riwayatPeminjaman} (PeminjamanController) -->
+                    <tr th:each="item : ${riwayatPeminjaman}" class="border-t border-slate-100">
+                        <td class="px-4 py-3" th:text="${item.namaAlat}">-</td>
+                        <td class="px-4 py-3" th:text="${item.tanggalPinjam}">-</td>
+                        <td class="px-4 py-3" th:text="${item.tanggalKembali}">-</td>
+                        <td class="px-4 py-3">
+                            <span class="text-xs font-medium bg-amber-50 text-amber-700 px-2 py-1 rounded-full"
+                                  th:text="${item.status}">Menunggu Persetujuan</span>
+                        </td>
+                        <td class="px-4 py-3">
+                            <button type="button" th:if="${item.status == 'MENUNGGU'}"
+                                    class="btn-batal bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium py-1.5 px-3 rounded-lg"
+                                    th:data-id="${item.id}">Batalkan</button>
+                            <button type="button" th:if="${item.status == 'DISETUJUI' or item.status == 'DIPINJAM'}"
+                                    class="btn-kembalikan bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-1.5 px-3 rounded-lg"
+                                    th:data-id="${item.id}">Kembalikan</button>
+                            <span th:if="${item.status != 'MENUNGGU' and item.status != 'DISETUJUI' and item.status != 'DIPINJAM'}"
+                                  class="text-slate-300 text-xs">-</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${riwayatPeminjaman == null or riwayatPeminjaman.isEmpty()}" class="border-t border-slate-100">
+                        <td class="px-4 py-6 text-center text-slate-400" colspan="5">Belum ada peminjaman.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer th:replace="~{common/footer :: footer}"></footer>
+
+    <script th:src="@{/js/main.js}" type="module"></script>
+    <script type="module">
+        const { batalkanPeminjaman } = await import(window.APP_CONTEXT_PATH + 'js/modules/Peminjaman.js');
+        const { konfirmasiPengembalian } = await import(window.APP_CONTEXT_PATH + 'js/modules/Pengembalian.js');
+
+        const KONDISI = ['BAIK', 'RUSAK_RINGAN', 'RUSAK_BERAT'];
+
+        document.querySelectorAll('.btn-batal').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                if (!confirm('Batalkan pengajuan peminjaman ini?')) return;
+                btn.disabled = true;
+                try {
+                    await batalkanPeminjaman(btn.dataset.id);
+                    window.location.reload();
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal membatalkan peminjaman.');
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        document.querySelectorAll('.btn-kembalikan').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const kondisi = prompt(`Kondisi alat saat dikembalikan (${KONDISI.join(' / ')}):`, 'BAIK');
+                if (kondisi === null) return;
+                if (!KONDISI.includes(kondisi.trim().toUpperCase())) {
+                    alert('Kondisi tidak valid.');
+                    return;
+                }
+                const catatan = prompt('Catatan pengembalian (opsional):', '');
+                if (catatan === null) return;
+                btn.disabled = true;
+                try {
+                    await konfirmasiPengembalian(btn.dataset.id, {
+                        kondisiSaatKembali: kondisi.trim().toUpperCase(),
+                        catatan: catatan.trim()
+                    });
+                    window.location.reload();
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal mengembalikan alat.');
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

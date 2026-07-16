@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Akun - SIPENJAM Alat TU</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <th:block th:replace="~{common/context-path :: context-path}"></th:block>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center px-4 py-8">
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 w-full max-w-md">
+        <div class="flex justify-center mb-6">
+            <img th:src="@{/images/logo-tu.svg}" alt="Logo TU" class="h-10 w-10">
+        </div>
+        <h1 class="text-xl font-bold text-center text-slate-900 mb-1">Daftar Akun SIPENJAM</h1>
+        <p class="text-sm text-center text-slate-500 mb-6">
+            Akun baru harus disetujui admin TU sebelum bisa dipakai masuk.
+        </p>
+
+        <div id="pesanError"
+             class="hidden text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4"></div>
+
+        <form id="formRegister" class="flex flex-col gap-4" novalidate>
+            <div>
+                <label for="nama" class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+                <input id="nama" name="nama" type="text" required autocomplete="name" maxlength="100"
+                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <div>
+                <label for="username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                <input id="username" name="username" type="text" required autocomplete="username"
+                       minlength="4" maxlength="30" pattern="[a-zA-Z0-9._\-]+"
+                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <p class="text-xs text-slate-400 mt-1">4-30 karakter. Huruf, angka, titik, garis bawah, strip.</p>
+            </div>
+
+            <div>
+                <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input id="email" name="email" type="email" required autocomplete="email" maxlength="100"
+                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <input id="password" name="password" type="password" required autocomplete="new-password"
+                       minlength="8" maxlength="72"
+                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <p class="text-xs text-slate-400 mt-1">Minimal 8 karakter.</p>
+            </div>
+
+            <div>
+                <label for="konfirmasiPassword" class="block text-sm font-medium text-slate-700 mb-1">Ulangi Password</label>
+                <input id="konfirmasiPassword" name="konfirmasiPassword" type="password" required
+                       autocomplete="new-password" minlength="8" maxlength="72"
+                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <button id="tombolDaftar" type="submit"
+                    class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-sm font-medium py-2.5 rounded-lg transition-colors shadow-sm">
+                Daftar
+            </button>
+        </form>
+
+        <p class="text-sm text-slate-500 text-center mt-6">
+            Sudah punya akun?
+            <a th:href="@{/login}" class="text-emerald-600 hover:text-emerald-700 font-medium">Masuk di sini</a>
+        </p>
+    </div>
+
+    <script type="module">
+        const form = document.getElementById('formRegister');
+        const pesanError = document.getElementById('pesanError');
+        const tombol = document.getElementById('tombolDaftar');
+
+        function tampilkanError(teks) {
+            pesanError.textContent = teks;
+            pesanError.classList.remove('hidden');
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            pesanError.classList.add('hidden');
+
+            const data = Object.fromEntries(new FormData(form).entries());
+
+            // Dicek juga di server (AuthServiceImpl#register) — ini hanya agar user
+            // tidak perlu menunggu round-trip untuk kesalahan yang jelas.
+            if (data.password !== data.konfirmasiPassword) {
+                tampilkanError('Konfirmasi password tidak cocok.');
+                return;
+            }
+
+            tombol.disabled = true;
+            try {
+                const { authRequest } = await import(window.APP_CONTEXT_PATH + 'js/api.js');
+                await authRequest('/register', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                window.location.href = window.APP_CONTEXT_PATH + 'login?daftar';
+            } catch (error) {
+                tampilkanError(error.message || 'Pendaftaran gagal, coba lagi.');
+                tombol.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>

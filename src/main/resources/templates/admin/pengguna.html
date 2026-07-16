@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Pengguna - SIPENJAM Alat TU</title>
+    <th:block th:replace="~{common/context-path :: context-path}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen">
+
+    <header th:replace="~{common/header :: header}"></header>
+
+    <div class="flex flex-grow">
+        <aside th:replace="~{common/sidebar :: sidebar}"></aside>
+
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <h1 class="text-2xl font-bold text-slate-900 mb-1">Kelola Pengguna</h1>
+            <p class="text-sm text-slate-500 mb-6">
+                Akun yang mendaftar sendiri harus disetujui di sini sebelum bisa masuk.
+            </p>
+
+            <div th:if="${jumlahMenungguAktivasi > 0}"
+                 class="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3 mb-6">
+                <strong th:text="${jumlahMenungguAktivasi}">0</strong>
+                akun menunggu persetujuan Anda.
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3">Nama</th>
+                            <th class="px-4 py-3">Username</th>
+                            <th class="px-4 py-3">Email</th>
+                            <th class="px-4 py-3">Role</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pengguna : ${daftarPengguna}" class="border-t border-slate-100">
+                            <td class="px-4 py-3" th:text="${pengguna.nama}">-</td>
+                            <td class="px-4 py-3 font-mono text-xs" th:text="${pengguna.username}">-</td>
+                            <td class="px-4 py-3 text-slate-500" th:text="${pengguna.email}">-</td>
+                            <td class="px-4 py-3">
+                                <span th:text="${pengguna.role}"
+                                      th:classappend="${pengguna.role == 'ADMIN'}
+                                          ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-600'"
+                                      class="text-xs font-medium px-2 py-1 rounded">-</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <span th:if="${pengguna.aktif}"
+                                      class="bg-emerald-50 text-emerald-700 text-xs font-medium px-2 py-1 rounded">Aktif</span>
+                                <span th:unless="${pengguna.aktif}"
+                                      class="bg-amber-50 text-amber-700 text-xs font-medium px-2 py-1 rounded">Menunggu</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <button th:unless="${pengguna.aktif}" type="button"
+                                        class="btn-aksi bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-1.5 px-3 rounded-lg"
+                                        th:data-id="${pengguna.id}" data-aksi="aktifkan">Setujui</button>
+                                <button th:if="${pengguna.aktif}" type="button"
+                                        class="btn-aksi bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium py-1.5 px-3 rounded-lg"
+                                        th:data-id="${pengguna.id}" data-aksi="nonaktifkan">Nonaktifkan</button>
+                            </td>
+                        </tr>
+                        <tr th:if="${daftarPengguna == null or daftarPengguna.isEmpty()}" class="border-t border-slate-100">
+                            <td class="px-4 py-6 text-center text-slate-400" colspan="6">Belum ada pengguna.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <footer th:replace="~{common/footer :: footer}"></footer>
+
+    <script th:src="@{/js/main.js}" type="module"></script>
+    <script type="module">
+        const { authRequest } = await import(window.APP_CONTEXT_PATH + 'js/api.js');
+
+        document.querySelectorAll('.btn-aksi').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const { id, aksi } = btn.dataset;
+
+                if (aksi === 'nonaktifkan'
+                        && !confirm('Nonaktifkan akun ini? Pengguna tidak akan bisa masuk lagi.')) {
+                    return;
+                }
+
+                btn.disabled = true;
+                try {
+                    // PATCH /api/v1/auth/pengguna/{id}/{aksi}
+                    await authRequest(`/pengguna/${id}/${aksi}`, { method: 'PATCH' });
+                    window.location.reload();
+                } catch (err) {
+                    alert(err.message || 'Gagal memproses akun.');
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

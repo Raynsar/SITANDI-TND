@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - SIPENJAM Alat TU</title>
+    <th:block th:replace="~{common/context-path :: context-path}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen">
+
+    <header th:replace="~{common/header :: header}"></header>
+
+    <div class="flex flex-grow">
+        <aside th:replace="~{common/sidebar :: sidebar}"></aside>
+
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <h1 class="text-2xl font-bold text-slate-900 mb-6">Dashboard</h1>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                    <p class="text-sm text-slate-500 mb-1">Peminjaman Aktif</p>
+                    <p class="text-2xl font-bold text-slate-900" th:text="${jumlahAktif != null ? jumlahAktif : 0}">0</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                    <p class="text-sm text-slate-500 mb-1">Menunggu Persetujuan</p>
+                    <p class="text-2xl font-bold text-amber-600" th:text="${jumlahMenunggu != null ? jumlahMenunggu : 0}">0</p>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                    <p class="text-sm text-slate-500 mb-1">Total Alat</p>
+                    <p class="text-2xl font-bold text-slate-900" th:text="${totalAlat != null ? totalAlat : 0}">0</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+                <h2 class="font-semibold text-slate-900 mb-3">Log Aktivitas Terbaru</h2>
+                <ul th:if="${logAktivitas != null and !logAktivitas.isEmpty()}" class="flex flex-col divide-y divide-slate-100">
+                    <li th:each="log : ${logAktivitas}" th:text="${log}"
+                        class="text-sm text-slate-600 py-2">Aktivitas</li>
+                </ul>
+                <p th:if="${logAktivitas == null or logAktivitas.isEmpty()}" class="text-sm text-slate-400">Belum ada aktivitas.</p>
+            </div>
+        </main>
+    </div>
+
+    <footer th:replace="~{common/footer :: footer}"></footer>
+
+    <script th:src="@{/js/main.js}" type="module"></script>
+</body>
+</html>

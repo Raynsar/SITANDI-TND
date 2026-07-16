@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pengembalian - SIPENJAM Alat TU</title>
+    <th:block th:replace="~{common/context-path :: context-path}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen">
+
+    <header th:replace="~{common/header :: header}"></header>
+
+    <div class="flex flex-grow">
+        <aside th:replace="~{common/sidebar :: sidebar}"></aside>
+
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <h1 class="text-2xl font-bold text-slate-900 mb-6">Data Pengembalian Alat</h1>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3">Pemohon</th>
+                            <th class="px-4 py-3">Alat</th>
+                            <th class="px-4 py-3">Tgl Dikembalikan</th>
+                            <th class="px-4 py-3">Kondisi Saat Kembali</th>
+                            <th class="px-4 py-3">Catatan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${daftarPengembalian}" class="border-t border-slate-100">
+                            <td class="px-4 py-3" th:text="${item.namaPemohon}">-</td>
+                            <td class="px-4 py-3" th:text="${item.namaAlat}">-</td>
+                            <td class="px-4 py-3" th:text="${item.tanggalDikembalikan}">-</td>
+                            <td class="px-4 py-3">
+                                <span class="text-xs font-medium px-2 py-1 rounded-full"
+                                      th:classappend="${item.kondisiSaatKembali == 'BAIK'} ? 'bg-emerald-50 text-emerald-700'
+                                                      : (${item.kondisiSaatKembali == 'RUSAK_RINGAN'} ? 'bg-amber-50 text-amber-700'
+                                                      : 'bg-red-50 text-red-600')"
+                                      th:text="${item.kondisiSaatKembali != null ? item.kondisiSaatKembali : '-'}">-</span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600" th:text="${item.catatanPengembalian != null ? item.catatanPengembalian : '-'}">-</td>
+                        </tr>
+                        <tr th:if="${daftarPengembalian == null or daftarPengembalian.isEmpty()}" class="border-t border-slate-100">
+                            <td class="px-4 py-6 text-center text-slate-400" colspan="5">Belum ada alat yang dikembalikan.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <footer th:replace="~{common/footer :: footer}"></footer>
+
+    <script th:src="@{/js/main.js}" type="module"></script>
+</body>
+</html>

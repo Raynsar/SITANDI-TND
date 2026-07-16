@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!--
+      Meng-expose context path aplikasi ke JavaScript.
+
+      Wajib disisipkan di <head> SEBELUM script module apa pun (module ber-sifat
+      deferred, script biasa ini jalan lebih dulu saat parsing, jadi urutannya aman).
+
+      Nilai @{/} dirender Thymeleaf jadi '/' saat jalan lokal (root context) dan
+      '/sipenjam/' saat di-deploy sebagai sipenjam.war ke Tomcat eksternal.
+      Selalu ADA trailing slash, jadi concat-nya tanpa slash tambahan:
+          window.APP_CONTEXT_PATH + 'js/main.js'
+    -->
+    <th:block th:fragment="context-path">
+        <script th:inline="javascript">
+            window.APP_CONTEXT_PATH = /*[[@{/}]]*/ '/';
+        </script>
+    </th:block>
+</head>
+</html>

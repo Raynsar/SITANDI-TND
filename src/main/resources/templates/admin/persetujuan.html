@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persetujuan Peminjaman - SIPENJAM Alat TU</title>
+    <th:block th:replace="~{common/context-path :: context-path}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen">
+
+    <header th:replace="~{common/header :: header}"></header>
+
+    <div class="flex flex-grow">
+        <aside th:replace="~{common/sidebar :: sidebar}"></aside>
+
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <h1 class="text-2xl font-bold text-slate-900 mb-6">Persetujuan Pengajuan Peminjaman</h1>
+
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3">Pemohon</th>
+                            <th class="px-4 py-3">Alat</th>
+                            <th class="px-4 py-3">Periode</th>
+                            <th class="px-4 py-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="pengajuan : ${daftarMenunggu}" class="border-t border-slate-100">
+                            <td class="px-4 py-3" th:text="${pengajuan.namaPemohon}">-</td>
+                            <td class="px-4 py-3" th:text="${pengajuan.namaAlat}">-</td>
+                            <td class="px-4 py-3" th:text="${pengajuan.tanggalPinjam + ' - ' + pengajuan.tanggalKembali}">-</td>
+                            <td class="px-4 py-3 flex gap-2">
+                                <button type="button" class="btn-setujui bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-1.5 px-3 rounded-lg"
+                                        th:data-id="${pengajuan.id}">Setujui</button>
+                                <button type="button" class="btn-tolak bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium py-1.5 px-3 rounded-lg"
+                                        th:data-id="${pengajuan.id}">Tolak</button>
+                            </td>
+                        </tr>
+                        <tr th:if="${daftarMenunggu == null or daftarMenunggu.isEmpty()}" class="border-t border-slate-100">
+                            <td class="px-4 py-6 text-center text-slate-400" colspan="4">Tidak ada pengajuan menunggu persetujuan.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <footer th:replace="~{common/footer :: footer}"></footer>
+
+    <script th:src="@{/js/main.js}" type="module"></script>
+    <script type="module">
+        const { restRequest } = await import(window.APP_CONTEXT_PATH + 'js/api.js');
+
+        async function prosesPengajuan(id, aksi) {
+            // aksi: 'setujui' atau 'tolak' -> PATCH /api/v1/peminjaman/{id}/{aksi}
+            await restRequest(`/${id}/${aksi}`, { method: 'PATCH' });
+        }
+
+        document.querySelectorAll('.btn-setujui, .btn-tolak').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                const aksi = btn.classList.contains('btn-setujui') ? 'setujui' : 'tolak';
+                btn.disabled = true;
+                try {
+                    await prosesPengajuan(id, aksi);
+                    window.location.reload();
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal memproses pengajuan. Silakan coba lagi.');
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

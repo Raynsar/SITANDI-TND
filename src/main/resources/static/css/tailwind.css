@@ -1,0 +1,13 @@
+/*
+ * File ini reserved untuk output build Tailwind CLI (jika nanti pindah dari CDN ke build step).
+ * Saat ini index.html masih menggunakan <script src="https://cdn.tailwindcss.com"> secara langsung,
+ * jadi file ini belum di-link di mana pun.
+ *
+ * Catatan: CDN Tailwind cocok untuk prototyping, tapi untuk production sebaiknya:
+ *   1. npm install -D tailwindcss
+ *   2. Definisikan tailwind.config.js (content path ke templates/ & static/)
+ *   3. Build ke file ini: npx tailwindcss -i ./src.css -o ./tailwind.css --minify
+ *   4. Ganti <script src="cdn..."> di semua halaman dengan <link rel="stylesheet" href="/css/tailwind.css">
+ * Alasan: CDN memuat seluruh utility class saat runtime (lebih berat), bergantung pada
+ * ketersediaan CDN pihak ketiga, dan tanpa purge unused CSS.
+ */

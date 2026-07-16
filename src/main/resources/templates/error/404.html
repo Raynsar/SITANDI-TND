@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Halaman Tidak Ditemukan</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center px-4">
+    <div class="text-center">
+        <p class="text-6xl font-bold text-emerald-600 mb-2">404</p>
+        <h1 class="text-xl font-semibold text-slate-900 mb-2">Halaman Tidak Ditemukan</h1>
+        <p class="text-slate-500 mb-6">Halaman yang Anda cari tidak tersedia atau sudah dipindahkan.</p>
+        <a th:href="@{/}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium py-2.5 px-6 rounded-lg transition-colors shadow-sm">
+            Kembali ke Beranda
+        </a>
+    </div>
+</body>
+</html>
