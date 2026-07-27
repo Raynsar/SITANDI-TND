@@ -74,6 +74,22 @@ public class GlobalExceptionHandler {
                 .body(baseBody(HttpStatus.FORBIDDEN, ex.getMessage()));
     }
 
+    @ExceptionHandler(TndeLoginException.class)
+    public ResponseEntity<Object> handleTndeLogin(TndeLoginException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(baseBody(HttpStatus.UNAUTHORIZED, ex.getMessage()));
+    }
+
+    /**
+     * Error saat komunikasi dengan server TNDE (misal: timeout, connection refused).
+     * Kembalikan 502 Bad Gateway agar klien bisa membedakan dengan error autentikasi.
+     */
+    @ExceptionHandler(TndeServerException.class)
+    public ResponseEntity<Object> handleTndeServer(TndeServerException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(baseBody(HttpStatus.BAD_GATEWAY, ex.getMessage()));
+    }
+
     /**
      * Login API gagal (POST /api/v1/auth/login).
      *
@@ -95,3 +111,4 @@ public class GlobalExceptionHandler {
                 .body(baseBody(HttpStatus.INTERNAL_SERVER_ERROR, "Terjadi kesalahan pada server"));
     }
 }
+

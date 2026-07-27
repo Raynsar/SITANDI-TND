@@ -81,23 +81,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new JwtException("Token tanpa subject");
             }
 
-            // Role & status diambil ulang dari database, BUKAN dari claim di token.
-            // Token berumur sampai 1 jam: kalau admin menonaktifkan akun atau
-            // menurunkan rolenya, token lama masih memuat data lama. Membaca dari DB
-            // membuat pencabutan akses langsung berlaku — ini juga satu-satunya cara
-            // "logout" benar-benar berarti bagi akun yang dinonaktifkan.
-            Pengguna pengguna = authService.getByUsername(username);
+            String role = jwtUtil.extractRole(token);
+            if (!StringUtils.hasText(role)) {
+                throw new JwtException("Token tanpa role");
+            }
 
-            if (!pengguna.isAktif()) {
-                // Akun dinonaktifkan setelah token terbit. Buang cookie-nya supaya
-                // browser tidak terus mengirim token yang sudah tidak berguna.
+            // Kalau user terdaftar lokal, cek aktifitasnya; kalau tidak, teruskan sebagai
+            // pengguna eksternal yang diautentikasi oleh TNDE.
+            boolean active = true;
+            try {
+                Pengguna pengguna = authService.getByUsername(username);
+                if (!pengguna.isAktif()) {
+                    active = false;
+                }
+            } catch (UsernameNotFoundException ex) {
+                active = true;
+            }
+
+            if (!active) {
                 tolak(response, request);
                 return;
             }
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    pengguna.getUsername(), null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + pengguna.getRole().name())));
+                    username, null,
+                    List.of(new SimpleGrantedAuthority(role)));
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContext context = SecurityContextHolder.createEmptyContext();

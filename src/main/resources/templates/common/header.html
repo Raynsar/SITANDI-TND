@@ -11,6 +11,8 @@
                 </span>
             </div>
             <nav class="hidden md:flex items-center gap-6">
+                <a sec:authorize="isAuthenticated()" th:href="@{/surat-masuk}"
+                   class="text-sm font-medium text-slate-600 hover:text-emerald-600">Surat Masuk</a>
                 <a th:href="@{/katalog}" class="text-sm font-medium text-slate-600 hover:text-emerald-600">Katalog Alat</a>
                 <a th:href="@{/riwayat}" class="text-sm font-medium text-slate-600 hover:text-emerald-600">Riwayat Peminjaman</a>
                 <a sec:authorize="isAuthenticated()" th:href="@{/ganti-password}"

@@ -5,6 +5,7 @@ import java.util.List;
 import com.sipenjam.peminjamanalattu.dto.GantiPasswordRequestDto;
 import com.sipenjam.peminjamanalattu.dto.PenggunaDto;
 import com.sipenjam.peminjamanalattu.dto.RegisterRequestDto;
+import com.sipenjam.peminjamanalattu.dto.TndeLoginResponseDto;
 import com.sipenjam.peminjamanalattu.model.Pengguna;
 
 /**
@@ -31,6 +32,14 @@ public interface AuthService {
      *                                  cocok, atau password baru sama dengan yang lama
      */
     void gantiPassword(GantiPasswordRequestDto request, String username);
+
+    /**
+     * Login menggunakan API eksternal TNDE. Memanggil endpoint TNDE, lalu
+     * menyinkronkan data pengguna lokal yang diperlukan untuk otorisasi.
+     *
+     * @throws com.sipenjam.peminjamanalattu.exception.TndeLoginException bila login TNDE gagal
+     */
+    TndeLoginResponseDto loginTnde(String username, String password);
 
     /** Daftar akun yang menunggu persetujuan admin (aktif=false). */
     List<PenggunaDto> daftarMenungguAktivasi();

@@ -6,12 +6,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
-import com.sipenjam.peminjamanalattu.model.Pengguna;
-import com.sipenjam.peminjamanalattu.model.Role;
+import com.sipenjam.peminjamanalattu.dto.TndeLoginResponseDto;
+import com.sipenjam.peminjamanalattu.dto.TndeUserDataDto;
 import com.sipenjam.peminjamanalattu.service.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * Dijalankan setelah form login memverifikasi username+password. Tugasnya menerbitkan
@@ -41,25 +42,30 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
         String contextPath = request.getContextPath();
-        Pengguna pengguna = authService.getByUsername(authentication.getName());
-
-        if (!pengguna.isAktif()) {
-            // Password benar, tapi admin belum menyetujui akun ini. Tidak ada token
-            // yang diterbitkan, jadi user tetap anonim.
-            response.sendRedirect(contextPath + "/login?pending");
-            return;
-        }
-
+        String username = authentication.getName();
         String role = authentication.getAuthorities().stream()
                 .findFirst()
                 .map(GrantedAuthority::getAuthority)
-                .orElse("ROLE_" + Role.USER.name());
+                .orElse("ROLE_USER");
 
-        cookieService.tulis(response, jwtUtil.generateToken(pengguna.getUsername(), role), contextPath);
+        cookieService.tulis(response, jwtUtil.generateToken(username, role), contextPath);
+
+        // Simpan data TNDE ke session untuk digunakan fitur lain (misal: Surat Masuk)
+        Object details = authentication.getDetails();
+        if (details instanceof TndeLoginResponseDto.TndeLoginDataDto tndeData) {
+            TndeUserDataDto userData = tndeData.getUser();
+            HttpSession session = request.getSession(true);
+            session.setAttribute("username", userData.getUsername());
+            session.setAttribute("nama", userData.getNama());
+            session.setAttribute("levelName", userData.getLevelName());
+            session.setAttribute("kodeInstansi", userData.getKodeinstansi());
+            session.setAttribute("tndeToken", tndeData.getToken());
+        }
 
         // getContextPath() wajib: sendRedirect("/...") relatif ke root host, bukan ke
         // context path, jadi tanpa ini redirect 404 saat deploy WAR non-root.
-        String target = pengguna.getRole() == Role.ADMIN ? "/admin/dashboard" : "/katalog";
+        boolean isAdmin = role.contains("ADMIN");
+        String target = isAdmin ? "/admin/dashboard" : "/katalog";
         response.sendRedirect(contextPath + target);
     }
 }

@@ -25,7 +25,7 @@
 
             <div th:if="${param.error}"
                  class="text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                Username atau password salah.
+                <span th:text="${param.message != null ? param.message : 'Username atau password salah.'}">Username atau password salah.</span>
             </div>
 
             <!-- Password benar, tapi admin belum menyetujui akun ini. -->
@@ -43,6 +43,11 @@
             <div th:if="${param.daftar}"
                  class="text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
                 Pendaftaran berhasil. Akun Anda menunggu persetujuan admin sebelum bisa dipakai masuk.
+            </div>
+
+            <div th:if="${param['session-expired']}"
+                 class="text-sm text-rose-800 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                Sesi anda telah berakhir, silakan login kembali.
             </div>
 
             <div>

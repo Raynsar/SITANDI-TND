@@ -1,68 +1,140 @@
 package com.sipenjam.peminjamanalattu.service.impl;
 
 import java.util.List;
+import java.util.UUID;
 
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.sipenjam.peminjamanalattu.dto.GantiPasswordRequestDto;
 import com.sipenjam.peminjamanalattu.dto.PenggunaDto;
 import com.sipenjam.peminjamanalattu.dto.RegisterRequestDto;
+import com.sipenjam.peminjamanalattu.dto.TndeLoginRequestDto;
+import com.sipenjam.peminjamanalattu.dto.TndeLoginResponseDto;
+import com.sipenjam.peminjamanalattu.dto.TndeUserDataDto;
 import com.sipenjam.peminjamanalattu.exception.ResourceNotFoundException;
+import com.sipenjam.peminjamanalattu.exception.TndeLoginException;
 import com.sipenjam.peminjamanalattu.model.Pengguna;
 import com.sipenjam.peminjamanalattu.model.Role;
 import com.sipenjam.peminjamanalattu.repository.PenggunaRepository;
 import com.sipenjam.peminjamanalattu.service.AuthService;
 
-import lombok.RequiredArgsConstructor;
 
 /**
- * Implementasi otentikasi & pengelolaan akun. Sekaligus menjadi
- * {@link UserDetailsService} untuk Spring Security, memetakan Role ke ROLE_*.
+ * Implementasi otentikasi & pengelolaan akun.
  */
 @Service
-@RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService, UserDetailsService {
+public class AuthServiceImpl implements AuthService {
 
     private final PenggunaRepository penggunaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    private final String tndeLoginUrl;
 
-    /**
-     * Status aktif SENGAJA tidak dipetakan ke {@code User.disabled()}.
-     *
-     * DaoAuthenticationProvider menjalankan pemeriksaan status akun SEBELUM
-     * mencocokkan password. Kalau akun nonaktif ditandai disabled di sini, maka
-     * mengirim username yang benar dengan password ngawur tetap menghasilkan
-     * DisabledException — dan pesan "akun menunggu persetujuan" itu membocorkan
-     * bahwa username tersebut terdaftar, tanpa penyerang perlu tahu passwordnya
-     * (user enumeration).
-     *
-     * Karena itu status aktif dicek SETELAH password terbukti benar, yaitu di
-     * JwtLoginSuccessHandler (form login) dan AuthApiController (login API), serta
-     * di setiap request oleh JwtAuthenticationFilter.
-     */
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Pengguna pengguna = penggunaRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Pengguna tidak ditemukan: " + username));
-
-        return new User(
-                pengguna.getUsername(),
-                pengguna.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + pengguna.getRole().name()))
-        );
+    public AuthServiceImpl(PenggunaRepository penggunaRepository,
+                           PasswordEncoder passwordEncoder,
+                           RestTemplate restTemplate,
+                           ObjectMapper objectMapper,
+                           @Value("${tnde.login-url:http://192.168.1.131:1323/api/login}") String tndeLoginUrl) {
+        this.penggunaRepository = penggunaRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        this.tndeLoginUrl = tndeLoginUrl;
     }
 
     @Override
     public Pengguna getByUsername(String username) {
         return penggunaRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Pengguna tidak ditemukan: " + username));
+    }
+
+    @Override
+    @Transactional
+    public TndeLoginResponseDto loginTnde(String username, String password) {
+        TndeLoginRequestDto request = TndeLoginRequestDto.builder()
+                .username(username)
+                .password(password)
+                .build();
+
+        TndeLoginResponseDto response;
+        try {
+            response = restTemplate.postForObject(tndeLoginUrl, request, TndeLoginResponseDto.class);
+        } catch (ResourceAccessException ex) {
+            throw new TndeLoginException("Server TNDE tidak dapat dihubungi, silakan coba lagi nanti", ex);
+        } catch (HttpStatusCodeException ex) {
+            TndeLoginResponseDto errorResponse = parseTndeErrorResponse(ex.getResponseBodyAsString());
+            if (errorResponse != null && !errorResponse.isSuccess() && StringUtils.hasText(errorResponse.getMessage())) {
+                throw new TndeLoginException(errorResponse.getMessage(), ex);
+            }
+            throw new TndeLoginException("Gagal memproses respons dari server TNDE", ex);
+        } catch (RestClientException ex) {
+            throw new TndeLoginException("Gagal memproses respons dari server TNDE", ex);
+        }
+
+        if (response == null) {
+            throw new TndeLoginException("Server TNDE tidak dapat dihubungi, silakan coba lagi nanti");
+        }
+        if (!response.isSuccess()) {
+            throw new TndeLoginException(response.getMessage());
+        }
+        if (response.getData() == null || response.getData().getUser() == null) {
+            throw new TndeLoginException("Respons login TNDE tidak lengkap");
+        }
+
+        sinkronkanPengguna(response.getData().getUser());
+        return response;
+    }
+
+    private TndeLoginResponseDto parseTndeErrorResponse(String responseBody) {
+        if (!StringUtils.hasText(responseBody)) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(responseBody, TndeLoginResponseDto.class);
+        } catch (JsonProcessingException ex) {
+            return null;
+        }
+    }
+
+    private void sinkronkanPengguna(TndeUserDataDto user) {
+        Role role = mapLevelNameToRole(user.getLevelName());
+        penggunaRepository.findByUsername(user.getUsername())
+                .map(existing -> {
+                    existing.setNama(user.getNama());
+                    existing.setRole(role);
+                    return penggunaRepository.save(existing);
+                })
+                .orElseGet(() -> penggunaRepository.save(Pengguna.builder()
+                        .nama(user.getNama())
+                        .username(user.getUsername())
+                        .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                        .role(role)
+                        .aktif(true)
+                        .build()));
+    }
+
+    private Role mapLevelNameToRole(String levelName) {
+        if (levelName == null) {
+            return Role.USER;
+        }
+        String normalized = levelName.trim().toLowerCase();
+        if (normalized.contains("admin")) {
+            return Role.ADMIN;
+        }
+        return Role.USER;
     }
 
     @Override

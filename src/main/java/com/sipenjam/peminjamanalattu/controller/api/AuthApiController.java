@@ -5,10 +5,6 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +19,7 @@ import com.sipenjam.peminjamanalattu.dto.LoginRequestDto;
 import com.sipenjam.peminjamanalattu.dto.LoginResponseDto;
 import com.sipenjam.peminjamanalattu.dto.PenggunaDto;
 import com.sipenjam.peminjamanalattu.dto.RegisterRequestDto;
+import com.sipenjam.peminjamanalattu.dto.TndeLoginResponseDto;
 import com.sipenjam.peminjamanalattu.exception.AkunBelumAktifException;
 import com.sipenjam.peminjamanalattu.model.Pengguna;
 import com.sipenjam.peminjamanalattu.service.AuthService;
@@ -45,34 +42,22 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthApiController {
 
-    private final AuthenticationManager authenticationManager;
     private final AuthService authService;
     private final JwtUtil jwtUtil;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
-        // Kredensial salah -> AuthenticationException -> ditangani GlobalExceptionHandler
-        // jadi 401 dengan pesan generik, tidak membedakan username vs password salah.
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-
-        // Status aktif dicek SETELAH password terbukti benar. Kalau dicek lebih awal
-        // (lewat User.disabled()), pesan "menunggu persetujuan" akan bocor ke siapa pun
-        // yang menebak username saja. Lihat AuthServiceImpl#loadUserByUsername.
-        Pengguna pengguna = authService.getByUsername(authentication.getName());
+        TndeLoginResponseDto tndeResponse = authService.loginTnde(request.getUsername(), request.getPassword());
+        Pengguna pengguna = authService.getByUsername(tndeResponse.getData().getUser().getUsername());
         if (!pengguna.isAktif()) {
             throw new AkunBelumAktifException("Akun Anda belum disetujui admin, silakan tunggu");
         }
 
-        String role = authentication.getAuthorities().stream()
-                .findFirst()
-                .map(GrantedAuthority::getAuthority)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Pengguna terautentikasi tanpa role: " + authentication.getName()));
+        String role = "ROLE_" + pengguna.getRole().name();
 
         return ResponseEntity.ok(LoginResponseDto.builder()
-                .token(jwtUtil.generateToken(authentication.getName(), role))
-                .username(authentication.getName())
+                .token(jwtUtil.generateToken(pengguna.getUsername(), role))
+                .username(pengguna.getUsername())
                 .role(role)
                 .expiresInMs(jwtUtil.getExpirationMs())
                 .build());

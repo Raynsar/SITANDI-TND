@@ -5,19 +5,21 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.security.authentication.ProviderManager;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sipenjam.peminjamanalattu.service.AuthService;
@@ -46,9 +48,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration)
-            throws Exception {
-        return configuration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(TndeAuthenticationProvider tndeAuthenticationProvider) {
+        return new ProviderManager(List.of(tndeAuthenticationProvider));
     }
 
     /**
@@ -173,7 +174,8 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain webFilterChain(HttpSecurity http, JwtUtil jwtUtil,
                                               JwtCookieService cookieService,
-                                              AuthService authService) throws Exception {
+                                              AuthService authService,
+                                              AuthenticationFailureHandler failureHandler) throws Exception {
         http
             .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfTokenRepository())
@@ -190,7 +192,7 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 // Menerbitkan JWT + menaruhnya di cookie, lalu redirect sesuai role.
                 .successHandler(new JwtLoginSuccessHandler(jwtUtil, cookieService, authService))
-                .failureUrl("/login?error")
+                .failureHandler(failureHandler)
                 .permitAll()
             )
             .logout(logout -> logout
