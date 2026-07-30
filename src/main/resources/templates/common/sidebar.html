@@ -1,37 +1,99 @@
 <!DOCTYPE html>
-<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<html lang="id" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
-    <aside th:fragment="sidebar" class="w-64 bg-white border-r border-slate-200 h-full py-6 px-4 hidden md:block">
-        <nav class="flex flex-col gap-1">
-            <a th:href="@{/admin/dashboard}"
-               class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
-                Dashboard
-            </a>
-            <a th:href="@{/surat-masuk}"
-               class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
-                Surat Masuk
-            </a>
-            <a th:href="@{/admin/persetujuan}"
-               class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
-                Persetujuan Peminjaman
-            </a>
-            <a th:href="@{/admin/inventory}"
-               class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
-                Manajemen Inventaris
-            </a>
-            <a th:href="@{/admin/tambah-alat}"
-               class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
-                Tambah Alat
-            </a>
-            <a th:href="@{/admin/pengembalian}"
-               class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
-                Data Pengembalian
-            </a>
-            <a th:href="@{/admin/pengguna}"
-               class="px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
-                Kelola Pengguna
-            </a>
-        </nav>
+    <!--
+      ============================================================
+      AdminLTE 4 — App Sidebar
+      ============================================================
+      • .app-sidebar         — sidebar wrapper
+      • .sidebar             — inner scrollable area
+      • .nav-sidebar         — navigation menu (with .nav-item, .nav-link)
+      • data-lte-toggle="treeview" — untuk menu dengan submenu
+      ============================================================
+    -->
+    <aside th:fragment="sidebar" class="app-sidebar" data-bs-theme="dark">
+        <div class="sidebar">
+
+            <!-- Brand / Logo Area -->
+            <div th:replace="~{common/header :: sidebar-brand}"></div>
+
+            <!-- ====== Primary Navigation Menu ====== -->
+            <nav class="mt-2">
+                <ul class="nav nav-sidebar flex-column" data-lte-toggle="treeview" role="menu">
+
+                    <!-- --- User / General Menu (tampil untuk semua yang login) --- -->
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a th:href="@{/surat-masuk}" class="nav-link">
+                            <i class="nav-icon bi bi-envelope"></i>
+                            <p>Surat Masuk</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/katalog}" class="nav-link">
+                            <i class="nav-icon bi bi-box-seam"></i>
+                            <p>Katalog Alat</p>
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a th:href="@{/riwayat}" class="nav-link">
+                            <i class="nav-icon bi bi-clock-history"></i>
+                            <p>Riwayat Peminjaman</p>
+                        </a>
+                    </li>
+
+                    <!-- --- Admin Menu (hanya untuk ROLE_ADMIN) --- -->
+                    <li class="nav-header" sec:authorize="hasRole('ADMIN')">
+                        <span class="nav-header-text">ADMIN</span>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/dashboard}" class="nav-link">
+                            <i class="nav-icon bi bi-speedometer2"></i>
+                            <p>Dashboard</p>
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/persetujuan}" class="nav-link">
+                            <i class="nav-icon bi bi-check2-square"></i>
+                            <p>Persetujuan Peminjaman</p>
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/inventory}" class="nav-link">
+                            <i class="nav-icon bi bi-archive"></i>
+                            <p>Manajemen Inventaris</p>
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/tambah-alat}" class="nav-link">
+                            <i class="nav-icon bi bi-plus-circle"></i>
+                            <p>Tambah Alat</p>
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/pengembalian}" class="nav-link">
+                            <i class="nav-icon bi bi-arrow-return-left"></i>
+                            <p>Data Pengembalian</p>
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/pengguna}" class="nav-link">
+                            <i class="nav-icon bi bi-people"></i>
+                            <p>Kelola Pengguna</p>
+                        </a>
+                    </li>
+
+                    <!-- --- Pemisah & Menu Lainnya --- -->
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a th:href="@{/organisasi/tree}" class="nav-link">
+                            <i class="nav-icon bi bi-diagram-3"></i>
+                            <p>Struktur Organisasi</p>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </aside>
 </body>
 </html>
+

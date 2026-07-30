@@ -19,10 +19,12 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sipenjam.peminjamanalattu.service.AuthService;
+import com.sipenjam.peminjamanalattu.model.Pengguna;
 
 /**
  * Autentikasi aplikasi ini sepenuhnya berbasis JWT (stateless) — tidak ada HttpSession.
@@ -48,8 +50,19 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(TndeAuthenticationProvider tndeAuthenticationProvider) {
-        return new ProviderManager(List.of(tndeAuthenticationProvider));
+    public TndeAuthenticationProvider tndeAuthenticationProvider(AuthService authService) {
+        return new TndeAuthenticationProvider(authService);
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(TndeAuthenticationProvider tndeProvider,
+                                                       LocalUserDetailsService localUserDetailsService,
+                                                       PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider localProvider = new DaoAuthenticationProvider();
+        localProvider.setUserDetailsService(localUserDetailsService);
+        localProvider.setPasswordEncoder(passwordEncoder);
+        // Prioritas: TNDE dulu, fallback ke lokal jika TNDE gagal (return null)
+        return new ProviderManager(List.of(tndeProvider, localProvider));
     }
 
     /**
@@ -157,6 +170,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/v1/peminjaman/inventaris/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/peminjaman/*/setujui").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/peminjaman/*/tolak").hasRole("ADMIN")
+                // Struktur organisasi: read-only, bisa diakses semua role yang sudah login
+                .requestMatchers(HttpMethod.GET, "/api/v1/organisasi/**").authenticated()
                 .anyRequest().authenticated()
             )
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -172,11 +187,14 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    public SecurityFilterChain webFilterChain(HttpSecurity http, JwtUtil jwtUtil,
+    public SecurityFilterChain webFilterChain(HttpSecurity http,
+                                              JwtUtil jwtUtil,
                                               JwtCookieService cookieService,
                                               AuthService authService,
-                                              AuthenticationFailureHandler failureHandler) throws Exception {
+                                              AuthenticationFailureHandler failureHandler,
+                                              AuthenticationManager authenticationManager) throws Exception {
         http
+            .authenticationManager(authenticationManager) // EKSPLISIT: pakai bean kita (TNDE + Dao)
             .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfTokenRepository())
                 .csrfTokenRequestHandler(csrfRequestHandler())
@@ -185,6 +203,8 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html", "/login", "/register",
                         "/css/**", "/js/**", "/images/**", "/error/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Halaman struktur organisasi: bisa diakses semua role yang sudah login
+                .requestMatchers("/organisasi/**").authenticated()
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

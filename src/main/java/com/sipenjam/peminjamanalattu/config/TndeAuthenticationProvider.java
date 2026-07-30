@@ -2,22 +2,32 @@ package com.sipenjam.peminjamanalattu.config;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.stereotype.Component;
 
 import com.sipenjam.peminjamanalattu.dto.TndeLoginResponseDto;
-import com.sipenjam.peminjamanalattu.exception.TndeLoginException;
 import com.sipenjam.peminjamanalattu.model.Role;
 import com.sipenjam.peminjamanalattu.service.AuthService;
 
-@Component
+/**
+ * AuthenticationProvider yang mencoba login ke API TNDE eksternal.
+ *
+ * TIDAK pakai @Component — bean-nya dibuat manual di SecurityConfig bersama
+ * DaoAuthenticationProvider, agar ProviderManager berisi kedua provider dan
+ * bisa fallback ke lokal jika TNDE gagal.
+ *
+ * Kalau TNDE gagal (koneksi, user tidak dikenal, dll), method authenticate()
+ * return null sebagai sinyal ke ProviderManager untuk mencoba provider berikutnya.
+ */
 public class TndeAuthenticationProvider implements AuthenticationProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(TndeAuthenticationProvider.class);
 
     private final AuthService authService;
 
@@ -31,16 +41,24 @@ public class TndeAuthenticationProvider implements AuthenticationProvider {
         Object credentials = authentication.getCredentials();
         String password = credentials == null ? "" : credentials.toString();
 
+        log.info("[TNDE Provider] Mencoba login TNDE untuk user: '{}'", username);
+
         TndeLoginResponseDto response;
         try {
             response = authService.loginTnde(username, password);
-        } catch (TndeLoginException ex) {
-            throw new BadCredentialsException(ex.getMessage(), ex);
+        } catch (Exception ex) {
+            log.warn("[TNDE Provider] Login TNDE GAGAL untuk user: '{}' — {} | type: {}",
+                    username, ex.getMessage(), ex.getClass().getName());
+            // return null = ProviderManager lanjut ke provider berikutnya (DaoAuthenticationProvider lokal)
+            return null;
         }
 
         if (response == null || response.getData() == null || response.getData().getUser() == null) {
-            throw new BadCredentialsException("Login TNDE gagal");
+            log.warn("[TNDE Provider] Response TNDE tidak lengkap untuk user: '{}' — fallback ke lokal", username);
+            return null;
         }
+
+        log.info("[TNDE Provider] Login TNDE BERHASIL untuk user: '{}'", username);
 
         Role role = mapLevelNameToRole(response.getData().getUser().getLevelName());
         GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role.name());
@@ -69,3 +87,4 @@ public class TndeAuthenticationProvider implements AuthenticationProvider {
         return Role.USER;
     }
 }
+
