@@ -30,3 +30,12 @@ application-local.properties
 ### OS ###
 .DS_Store
 Thumbs.db
+
+.claude/
+CLAUDE.md
+TODO.md
+cookies.txt
+target/
+*.log
+application-local.properties
+.env
