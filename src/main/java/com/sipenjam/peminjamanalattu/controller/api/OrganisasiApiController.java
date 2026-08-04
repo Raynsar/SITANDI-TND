@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sipenjam.peminjamanalattu.dto.OrganisasiBreadcrumbDto;
+import com.sipenjam.peminjamanalattu.dto.OrganisasiPersonalDto;
 import com.sipenjam.peminjamanalattu.dto.OrganisasiTreeNodeDto;
 import com.sipenjam.peminjamanalattu.service.OrganisasiService;
 
@@ -16,6 +18,11 @@ import lombok.RequiredArgsConstructor;
 /**
  * REST endpoint untuk struktur organisasi (tree OPD se-Jatim).
  * Base path: /api/v1/organisasi (terpisah dari /api/v1/peminjaman)
+ *
+ * <p>GET /tree — seluruh tree (Provinsi → Kab/Kota → OPD → Bidang).
+ * Tree TIDAK menyertakan leaf Jabatan, supaya payload tetap kecil untuk data
+ * produksi nanti. Personal di-load terpisah lewat /bidang/{id}/personal saat
+ * user memilih Bidang tertentu.</p>
  */
 @RestController
 @RequestMapping("/api/v1/organisasi")
@@ -26,7 +33,7 @@ public class OrganisasiApiController {
 
     /**
      * Mengembalikan seluruh tree struktur organisasi dari root (Provinsi)
-     * hingga level Jabatan. Cocok untuk render awal halaman tree.
+     * sampai level Bidang. Tidak termasuk jabatan per orang.
      */
     @GetMapping("/tree")
     public List<OrganisasiTreeNodeDto> getTree() {
@@ -44,6 +51,40 @@ public class OrganisasiApiController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(node);
+    }
+
+/**
+     * Ambil daftar personal (Nama + Jabatan + Username) untuk satu Bidang.
+     * Dipanggil saat user mengklik node Bidang di panel kiri tree.
+     * Mengembalikan array kosong (200) jika tidak ada data, bukan 404,
+     * agar JS tidak perlu special-handle 404 untuk empty state.
+     */
+    @GetMapping("/bidang/{id}/personal")
+    public ResponseEntity<List<OrganisasiPersonalDto>> getPersonal(@PathVariable Long id) {
+        List<OrganisasiPersonalDto> personal = organisasiService.getPersonal(id);
+        if (personal == null || personal.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(personal);
+    }
+
+    /**
+     * Bangun breadcrumb (path dari root ke node) untuk sembarang node. FE
+     * menyertakan parameter {@code tipe} supaya server tidak salah resolve
+     * ketika id yang sama muncul di lebih dari satu tabel (Bidang / OPD /
+     * Wilayah memakai sequence independent, sehingga tumpang tindih bisa
+     * terjadi, mis. Bidang id=10 dan OPD id=10). Tipe yang valid:
+     * {@code PROVINSI}, {@code KABUPATEN}, {@code KOTA}, {@code OPD},
+     * {@code BIDANG}.
+     */
+    @GetMapping("/breadcrumb/{tipe}/{id}")
+    public ResponseEntity<OrganisasiBreadcrumbDto> getBreadcrumb(@PathVariable String tipe,
+                                                                 @PathVariable Long id) {
+        OrganisasiBreadcrumbDto dto = organisasiService.getBreadcrumb(tipe, id);
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(dto);
     }
 }
 

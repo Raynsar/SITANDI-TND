@@ -4,71 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Akun - SIPENJAM Alat TU</title>
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- AdminLTE 4 CSS + Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/css/adminlte.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1/font/bootstrap-icons.min.css" />
+
     <th:block th:replace="~{common/context-path :: context-path}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center px-4 py-8">
+<body class="d-flex align-items-center justify-content-center min-vh-100 bg-body-tertiary" data-bs-theme="light">
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 w-full max-w-md">
-        <div class="flex justify-center mb-6">
-            <img th:src="@{/images/logo-tu.svg}" alt="Logo TU" class="h-10 w-10">
+    <div class="card shadow-sm" style="width: 100%; max-width: 440px;">
+        <div class="card-body p-5">
+            <div class="text-center mb-4">
+                <img th:src="@{/images/logo-tu.svg}" alt="Logo TU" class="mb-3" style="height: 48px; width: 48px;">
+                <h1 class="fs-4 fw-bold mb-1">Daftar Akun SIPENJAM</h1>
+                <p class="text-body-secondary small mb-0">
+                    Akun baru harus disetujui admin TU sebelum bisa dipakai masuk.
+                </p>
+            </div>
+
+            <div id="pesanError"
+                 class="alert alert-danger d-none" role="alert"></div>
+
+            <form id="formRegister" class="d-flex flex-column gap-3" novalidate>
+                <div>
+                    <label for="nama" class="form-label small fw-medium">Nama Lengkap</label>
+                    <input id="nama" name="nama" type="text" required autocomplete="name" maxlength="100" class="form-control">
+                </div>
+
+                <div>
+                    <label for="username" class="form-label small fw-medium">Username</label>
+                    <input id="username" name="username" type="text" required autocomplete="username"
+                           minlength="4" maxlength="30" pattern="[a-zA-Z0-9._\-]+" class="form-control">
+                    <div class="form-text">4-30 karakter. Huruf, angka, titik, garis bawah, strip.</div>
+                </div>
+
+                <div>
+                    <label for="email" class="form-label small fw-medium">Email</label>
+                    <input id="email" name="email" type="email" required autocomplete="email" maxlength="100" class="form-control">
+                </div>
+
+                <div>
+                    <label for="password" class="form-label small fw-medium">Password</label>
+                    <input id="password" name="password" type="password" required autocomplete="new-password"
+                           minlength="8" maxlength="72" class="form-control">
+                    <div class="form-text">Minimal 8 karakter.</div>
+                </div>
+
+                <div>
+                    <label for="konfirmasiPassword" class="form-label small fw-medium">Ulangi Password</label>
+                    <input id="konfirmasiPassword" name="konfirmasiPassword" type="password" required
+                           autocomplete="new-password" minlength="8" maxlength="72" class="form-control">
+                </div>
+
+                <button id="tombolDaftar" type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-person-plus me-1"></i>Daftar
+                </button>
+            </form>
+
+            <p class="text-center text-body-secondary small mt-4 mb-0">
+                Sudah punya akun?
+                <a th:href="@{/login}" class="text-decoration-none fw-medium">Masuk di sini</a>
+            </p>
         </div>
-        <h1 class="text-xl font-bold text-center text-slate-900 mb-1">Daftar Akun SIPENJAM</h1>
-        <p class="text-sm text-center text-slate-500 mb-6">
-            Akun baru harus disetujui admin TU sebelum bisa dipakai masuk.
-        </p>
-
-        <div id="pesanError"
-             class="hidden text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4"></div>
-
-        <form id="formRegister" class="flex flex-col gap-4" novalidate>
-            <div>
-                <label for="nama" class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
-                <input id="nama" name="nama" type="text" required autocomplete="name" maxlength="100"
-                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-
-            <div>
-                <label for="username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                <input id="username" name="username" type="text" required autocomplete="username"
-                       minlength="4" maxlength="30" pattern="[a-zA-Z0-9._\-]+"
-                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <p class="text-xs text-slate-400 mt-1">4-30 karakter. Huruf, angka, titik, garis bawah, strip.</p>
-            </div>
-
-            <div>
-                <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                <input id="email" name="email" type="email" required autocomplete="email" maxlength="100"
-                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-
-            <div>
-                <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
-                <input id="password" name="password" type="password" required autocomplete="new-password"
-                       minlength="8" maxlength="72"
-                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <p class="text-xs text-slate-400 mt-1">Minimal 8 karakter.</p>
-            </div>
-
-            <div>
-                <label for="konfirmasiPassword" class="block text-sm font-medium text-slate-700 mb-1">Ulangi Password</label>
-                <input id="konfirmasiPassword" name="konfirmasiPassword" type="password" required
-                       autocomplete="new-password" minlength="8" maxlength="72"
-                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            </div>
-
-            <button id="tombolDaftar" type="submit"
-                    class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-sm font-medium py-2.5 rounded-lg transition-colors shadow-sm">
-                Daftar
-            </button>
-        </form>
-
-        <p class="text-sm text-slate-500 text-center mt-6">
-            Sudah punya akun?
-            <a th:href="@{/login}" class="text-emerald-600 hover:text-emerald-700 font-medium">Masuk di sini</a>
-        </p>
     </div>
+
+    <!-- Core JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2/browser/overlayscrollbars.browser.es6.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/js/adminlte.min.js"></script>
 
     <script type="module">
         const form = document.getElementById('formRegister');
@@ -77,17 +83,15 @@
 
         function tampilkanError(teks) {
             pesanError.textContent = teks;
-            pesanError.classList.remove('hidden');
+            pesanError.classList.remove('d-none');
         }
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
-            pesanError.classList.add('hidden');
+            pesanError.classList.add('d-none');
 
             const data = Object.fromEntries(new FormData(form).entries());
 
-            // Dicek juga di server (AuthServiceImpl#register) — ini hanya agar user
-            // tidak perlu menunggu round-trip untuk kesalahan yang jelas.
             if (data.password !== data.konfirmasiPassword) {
                 tampilkanError('Konfirmasi password tidak cocok.');
                 return;
@@ -108,6 +112,6 @@
             }
         });
     </script>
-
 </body>
 </html>
+

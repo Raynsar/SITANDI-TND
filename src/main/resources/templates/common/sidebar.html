@@ -12,35 +12,12 @@
       • data-lte-toggle="treeview" — untuk menu dengan submenu
       ============================================================
     -->
-    <aside th:fragment="sidebar" class="app-sidebar" data-bs-theme="dark">
+<aside th:fragment="sidebar" class="app-sidebar" data-bs-theme="dark">
         <div class="sidebar">
-
-            <!-- Brand / Logo Area -->
-            <div th:replace="~{common/header :: sidebar-brand}"></div>
 
             <!-- ====== Primary Navigation Menu ====== -->
             <nav class="mt-2">
                 <ul class="nav nav-sidebar flex-column" data-lte-toggle="treeview" role="menu">
-
-                    <!-- --- User / General Menu (tampil untuk semua yang login) --- -->
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <a th:href="@{/surat-masuk}" class="nav-link">
-                            <i class="nav-icon bi bi-envelope"></i>
-                            <p>Surat Masuk</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a th:href="@{/katalog}" class="nav-link">
-                            <i class="nav-icon bi bi-box-seam"></i>
-                            <p>Katalog Alat</p>
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <a th:href="@{/riwayat}" class="nav-link">
-                            <i class="nav-icon bi bi-clock-history"></i>
-                            <p>Riwayat Peminjaman</p>
-                        </a>
-                    </li>
 
                     <!-- --- Admin Menu (hanya untuk ROLE_ADMIN) --- -->
                     <li class="nav-header" sec:authorize="hasRole('ADMIN')">
@@ -53,27 +30,9 @@
                         </a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a th:href="@{/admin/persetujuan}" class="nav-link">
-                            <i class="nav-icon bi bi-check2-square"></i>
-                            <p>Persetujuan Peminjaman</p>
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a th:href="@{/admin/inventory}" class="nav-link">
-                            <i class="nav-icon bi bi-archive"></i>
-                            <p>Manajemen Inventaris</p>
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a th:href="@{/admin/tambah-alat}" class="nav-link">
-                            <i class="nav-icon bi bi-plus-circle"></i>
-                            <p>Tambah Alat</p>
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a th:href="@{/admin/pengembalian}" class="nav-link">
-                            <i class="nav-icon bi bi-arrow-return-left"></i>
-                            <p>Data Pengembalian</p>
+                        <a sec:authorize="isAuthenticated()" th:href="@{/organisasi/tree}" class="nav-link">
+                            <i class="nav-icon bi bi-diagram-3"></i>
+                            <p>Struktur Organisasi</p>
                         </a>
                     </li>
                     <li class="nav-item" sec:authorize="hasRole('ADMIN')">
@@ -83,13 +42,6 @@
                         </a>
                     </li>
 
-                    <!-- --- Pemisah & Menu Lainnya --- -->
-                    <li class="nav-item" sec:authorize="isAuthenticated()">
-                        <a th:href="@{/organisasi/tree}" class="nav-link">
-                            <i class="nav-icon bi bi-diagram-3"></i>
-                            <p>Struktur Organisasi</p>
-                        </a>
-                    </li>
                 </ul>
             </nav>
         </div>

@@ -32,13 +32,16 @@ public class InboxController {
     @GetMapping("/surat-masuk")
     public String suratMasuk(HttpServletRequest request, Model model) {
         HttpSession session = request.getSession(false);
-        if (session == null) {
-            return "redirect:/login?session-expired";
-        }
+        String tndeToken = (session != null) ? (String) session.getAttribute("tndeToken") : null;
 
-        String tndeToken = (String) session.getAttribute("tndeToken");
         if (tndeToken == null || tndeToken.isBlank()) {
-            return "redirect:/login?session-expired";
+            // Akun login lokal (atau sesi TNDE sudah berakhir) — tampilkan halaman
+            // dengan pesan informatif, jangan redirect ke /login. JWT cookie masih
+            // valid sehingga user tidak benar-benar logout; redirect ke /login hanya
+            // membuat user bingung karena JWT tidak ikut terhapus.
+            int tahun = Year.now().getValue();
+            model.addAttribute("tahun", null);
+            return "user/surat-masuk";
         }
 
         int tahun = Year.now().getValue();
@@ -48,11 +51,14 @@ public class InboxController {
             model.addAttribute("daftarSurat", daftarSurat);
             model.addAttribute("tahun", tahun);
         } catch (TndeLoginException ex) {
-            // Token expired / invalid → redirect ke login
+            // Token expired / invalid — render halaman dengan pesan; user tetap
+            // bisa navigasi ke menu lain tanpa terlihat seperti 'logout'.
             session.invalidate();
-            return "redirect:/login?session-expired";
+            model.addAttribute("error", "Sesi TNDE telah berakhir. Silakan masuk ulang lewat TNDE untuk melihat surat masuk.");
+            model.addAttribute("daftarSurat", List.of());
+            model.addAttribute("tahun", tahun);
         } catch (TndeServerException ex) {
-            // Server TNDE error → tampilkan pesan di halaman, jangan crash
+            // Server TNDE error — tampilkan pesan di halaman, jangan crash
             model.addAttribute("error", ex.getMessage());
             model.addAttribute("daftarSurat", List.of());
             model.addAttribute("tahun", tahun);

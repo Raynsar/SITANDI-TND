@@ -15,7 +15,6 @@
  * (sengaja tidak http-only agar terbaca di sini) dan menantikannya kembali di header
  * X-XSRF-TOKEN.
  */
-const BASE_URL = (window.APP_CONTEXT_PATH || '/') + 'api/v1/peminjaman';
 const AUTH_URL = (window.APP_CONTEXT_PATH || '/') + 'api/v1/auth';
 
 /** Method yang tidak mengubah state tidak diperiksa CSRF oleh Spring Security. */
@@ -87,11 +86,6 @@ async function pesanError(response) {
         // Body bukan JSON (mis. halaman error Tomcat) — pakai pesan default.
     }
     return `Kesalahan Endpoint HTTP: ${response.status} - ${response.statusText}`;
-}
-
-/** Request ke /api/v1/peminjaman/** */
-export async function restRequest(endpoint, options = {}) {
-    return kirim(BASE_URL, endpoint, options);
 }
 
 /** Request ke /api/v1/auth/** (register, ganti password, kelola akun). */

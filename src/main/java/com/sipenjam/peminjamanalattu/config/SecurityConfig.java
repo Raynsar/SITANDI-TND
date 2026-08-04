@@ -165,11 +165,6 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
                 // Kelola akun: khusus ADMIN.
                 .requestMatchers("/api/v1/auth/pengguna/**").hasRole("ADMIN")
-                // Endpoint modifikasi inventaris & persetujuan: khusus ADMIN.
-                .requestMatchers(HttpMethod.POST, "/api/v1/peminjaman/inventaris").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/peminjaman/inventaris/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/v1/peminjaman/*/setujui").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/v1/peminjaman/*/tolak").hasRole("ADMIN")
                 // Struktur organisasi: read-only, bisa diakses semua role yang sudah login
                 .requestMatchers(HttpMethod.GET, "/api/v1/organisasi/**").authenticated()
                 .anyRequest().authenticated()

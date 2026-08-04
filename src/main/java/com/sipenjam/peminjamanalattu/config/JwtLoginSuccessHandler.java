@@ -65,7 +65,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
         // getContextPath() wajib: sendRedirect("/...") relatif ke root host, bukan ke
         // context path, jadi tanpa ini redirect 404 saat deploy WAR non-root.
         boolean isAdmin = role.contains("ADMIN");
-        String target = isAdmin ? "/admin/dashboard" : "/katalog";
+        String target = isAdmin ? "/admin/dashboard" : "/organisasi/tree";
         response.sendRedirect(contextPath + target);
     }
 }
