@@ -804,6 +804,14 @@
             expandAllBtn.addEventListener('click', function() { setAllExpanded(true); });
             collapseAllBtn.addEventListener('click', function() { setAllExpanded(false); });
 
+            // === Utility ===
+            function getCsrfToken() {
+                var value = "; " + document.cookie;
+                var parts = value.split("; XSRF-TOKEN=");
+                if (parts.length === 2) return decodeURIComponent(parts.pop().split(";").shift());
+                return '';
+            }
+
             // === CRUD Functions ===
             var bsModalPersonel = null;
             var bsModalHapus = null;
@@ -878,9 +886,16 @@
                 spinner.classList.remove('d-none');
                 document.getElementById('modalPersonelError').classList.add('d-none');
 
+                var headers = { 'Content-Type': 'application/json' };
+                var csrf = getCsrfToken();
+                if (csrf) {
+                    headers['X-XSRF-TOKEN'] = csrf;
+                }
+
                 fetch(url, {
                     method: method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: headers,
+                    credentials: 'same-origin',
                     body: JSON.stringify(data)
                 })
                 .then(function(response) {
@@ -911,8 +926,16 @@
                 spinner.classList.remove('d-none');
                 document.getElementById('modalHapusError').classList.add('d-none');
 
+                var headers = {};
+                var csrf = getCsrfToken();
+                if (csrf) {
+                    headers['X-XSRF-TOKEN'] = csrf;
+                }
+
                 fetch(APP_CTX + 'api/v1/organisasi/personal/' + currentDeleteId, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: headers,
+                    credentials: 'same-origin'
                 })
                 .then(function(response) {
                     if (response.ok) return;
