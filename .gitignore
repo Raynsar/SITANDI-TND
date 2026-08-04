@@ -39,3 +39,8 @@ target/
 *.log
 application-local.properties
 .env
+scratch/
+*.tmp
+*.png
+*.jpg
+*.jpeg
