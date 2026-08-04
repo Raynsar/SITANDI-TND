@@ -35,10 +35,12 @@ public class InboxController {
         String tndeToken = (session != null) ? (String) session.getAttribute("tndeToken") : null;
 
         if (tndeToken == null || tndeToken.isBlank()) {
-            // Akun login lokal (atau sesi TNDE sudah berakhir) — tampilkan halaman
-            // dengan pesan informatif, jangan redirect ke /login. JWT cookie masih
-            // valid sehingga user tidak benar-benar logout; redirect ke /login hanya
-            // membuat user bingung karena JWT tidak ikut terhapus.
+            /*
+             * Akun login lokal (atau sesi TNDE sudah berakhir) - tampilkan halaman
+             * dengan pesan informatif, jangan redirect ke /login. JWT cookie masih
+             * valid sehingga user tidak benar-benar logout; redirect ke /login hanya
+             * membuat user bingung karena JWT tidak ikut terhapus.
+             */
             int tahun = Year.now().getValue();
             model.addAttribute("tahun", null);
             return "user/surat-masuk";
@@ -51,14 +53,16 @@ public class InboxController {
             model.addAttribute("daftarSurat", daftarSurat);
             model.addAttribute("tahun", tahun);
         } catch (TndeLoginException ex) {
-            // Token expired / invalid — render halaman dengan pesan; user tetap
-            // bisa navigasi ke menu lain tanpa terlihat seperti 'logout'.
+            /*
+             * Token expired / invalid - render halaman dengan pesan; user tetap
+             * bisa navigasi ke menu lain tanpa terlihat seperti 'logout'.
+             */
             session.invalidate();
             model.addAttribute("error", "Sesi TNDE telah berakhir. Silakan masuk ulang lewat TNDE untuk melihat surat masuk.");
             model.addAttribute("daftarSurat", List.of());
             model.addAttribute("tahun", tahun);
         } catch (TndeServerException ex) {
-            // Server TNDE error — tampilkan pesan di halaman, jangan crash
+            /* Server TNDE error - tampilkan pesan di halaman, jangan crash */
             model.addAttribute("error", ex.getMessage());
             model.addAttribute("daftarSurat", List.of());
             model.addAttribute("tahun", tahun);

@@ -38,5 +38,5 @@ Aplikasi ini dikonfigurasi untuk dibuild sebagai file WAR agar bisa di-deploy ke
    `ash
    mvn clean package -DskipTests
    `
-2. File WAR akan ter-generate di folder 	arget/tata-naskah-dinas-0.0.1-SNAPSHOT.war.
+2. File WAR akan ter-generate di folder 	arget/sitandi.war.
 3. Deploy file WAR tersebut ke dalam folder webapps di Tomcat Anda. Perhatikan bahwa nama file akan menentukan _context-path_ URL aplikasi Anda (disarankan mengubah namanya menjadi sitandi.war agar URL menjadi /sitandi/).

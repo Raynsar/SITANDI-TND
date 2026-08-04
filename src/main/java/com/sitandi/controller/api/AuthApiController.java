@@ -74,8 +74,10 @@ public class AuthApiController {
     public ResponseEntity<Void> gantiPassword(@Valid @RequestBody GantiPasswordRequestDto request,
                                               Principal principal) {
         authService.gantiPassword(request, principal.getName());
-        // 204: berhasil, tidak ada isi. Token lama TETAP berlaku sampai kedaluwarsa —
-        // ganti password tidak mencabut token yang sudah terbit (lihat JwtLogoutHandler).
+        /*
+         * 204: berhasil, tidak ada isi. Token lama TETAP berlaku sampai kedaluwarsa -
+         * ganti password tidak mencabut token yang sudah terbit (lihat JwtLogoutHandler).
+         */
         return ResponseEntity.noContent().build();
     }
 
