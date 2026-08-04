@@ -75,54 +75,6 @@
         </div>
 </header>
 
-    <!-- Dark Mode Toggle Script -->
-    <script>
-        (function() {
-            'use strict';
-
-            var htmlEl = document.documentElement;
-            var STORAGE_KEY = 'sitandi-theme';
-
-            function getPreferredTheme() {
-                var stored = localStorage.getItem(STORAGE_KEY);
-                if (stored === 'dark' || stored === 'light') {
-                    return stored;
-                }
-                // Default to light if not set
-                return 'light';
-            }
-
-            function setTheme(theme) {
-                htmlEl.setAttribute('data-bs-theme', theme);
-                localStorage.setItem(STORAGE_KEY, theme);
-                // Update icon if toggle button exists
-                var icon = document.getElementById('darkModeIcon');
-                if (icon) {
-                    if (theme === 'dark') {
-                        icon.className = 'bi bi-sun-fill';
-                    } else {
-                        icon.className = 'bi bi-moon-fill';
-                    }
-                }
-            }
-
-            // Apply saved theme on page load
-            setTheme(getPreferredTheme());
-
-            // Setup toggle button listener after DOM ready
-            document.addEventListener('DOMContentLoaded', function() {
-                var toggleBtn = document.getElementById('darkModeToggle');
-                if (toggleBtn) {
-                    toggleBtn.addEventListener('click', function() {
-                        var current = htmlEl.getAttribute('data-bs-theme') || 'light';
-                        var next = current === 'dark' ? 'light' : 'dark';
-                        setTheme(next);
-                    });
-                }
-            });
-        })();
-    </script>
-
     <!--
       Brand-only alternative for app-sidebar (small logo area at top of sidebar).
       See sidebar.html for the sidebar fragment.
