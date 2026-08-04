@@ -13,5 +13,9 @@ public interface JabatanStrukturRepository extends JpaRepository<JabatanStruktur
     List<JabatanStruktur> findByBidangIdOrderByJabatan(Long bidangId);
 
     long countByBidangId(Long bidangId);
+
+    boolean existsByUsername(String username);
+
+    boolean existsByUsernameAndIdNot(String username, Long id);
 }
 

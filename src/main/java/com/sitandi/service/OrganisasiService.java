@@ -39,5 +39,19 @@ public interface OrganisasiService {
      *         tersebut tidak ditemukan.
      */
     OrganisasiBreadcrumbDto getBreadcrumb(String tipe, Long id);
-}
 
+    /**
+     * Tambah personel baru ke suatu bidang.
+     */
+    OrganisasiPersonalDto createPersonal(Long bidangId, com.sitandi.dto.OrganisasiPersonalRequestDto dto);
+
+    /**
+     * Update personel yang sudah ada.
+     */
+    OrganisasiPersonalDto updatePersonal(Long id, com.sitandi.dto.OrganisasiPersonalRequestDto dto);
+
+    /**
+     * Hapus personel.
+     */
+    void deletePersonal(Long id);
+}
