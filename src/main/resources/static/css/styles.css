@@ -34,12 +34,7 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Wrapper sidebar + main untuk layout flex */
-.app-layout {
-    display: flex;
-    flex: 1;
-    min-height: calc(100vh - 3.5rem); /* minus header height */
-}
+
 
 /* ============================================================
    Dark Mode Overrides untuk AdminLTE 4
@@ -49,48 +44,17 @@ body {
    ter-theme oleh Bootstrap 5.3.
    ============================================================ */
 
-/* Dark mode: body background */
-html[data-bs-theme="dark"] body {
-    background-color: #1a1d21;
-}
 
-/* Dark mode: app-main background */
-html[data-bs-theme="dark"] .app-main {
-    background-color: #1e1e1e;
-}
 
-/* Dark mode: card background */
-html[data-bs-theme="dark"] .card {
-    background-color: #2c2c2c;
-    border-color: #3d3d3d;
-}
 
-/* Dark mode: card header */
-html[data-bs-theme="dark"] .card-header {
-    background-color: #333;
-    border-bottom-color: #3d3d3d;
-}
 
-/* Dark mode: table */
-html[data-bs-theme="dark"] .table {
-    --bs-table-bg: #2c2c2c;
-    --bs-table-color: #e0e0e0;
-    --bs-table-striped-bg: #333;
-    --bs-table-hover-bg: #3a3a3a;
-    border-color: #3d3d3d;
-}
 
-html[data-bs-theme="dark"] .table-light {
-    --bs-table-bg: #3a3a3a;
-    --bs-table-color: #e0e0e0;
-}
 
-/* Dark mode: list group */
-html[data-bs-theme="dark"] .list-group-item {
-    background-color: #2c2c2c;
-    color: #e0e0e0;
-    border-color: #3d3d3d;
-}
+
+
+
+
+
 
 /* Dark mode: tree connector lines */
 html[data-bs-theme="dark"] .tree-list .tree-item::before,
@@ -107,16 +71,9 @@ html[data-bs-theme="dark"] .tree-toggle.selected {
     background-color: rgba(13, 110, 253, 0.25);
 }
 
-/* Dark mode: footer */
-html[data-bs-theme="dark"] .app-footer {
-    background-color: #1a1d21;
-    border-top-color: #3d3d3d;
-}
 
-/* Dark mode: sidebar overrides (already has data-bs-theme="dark") */
-html[data-bs-theme="dark"] .app-sidebar {
-    /* Keep sidebar dark regardless of page theme */
-}
+
+
 
 /* Dark mode: badge colors for tree */
 html[data-bs-theme="dark"] .badge-tipe.badge-provinsi {
@@ -139,3 +96,4 @@ html[data-bs-theme="dark"] .badge-tipe.badge-bidang {
     background-color: #880e4f;
     color: #f48fb1;
 }
+
