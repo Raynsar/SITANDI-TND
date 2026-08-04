@@ -13,7 +13,9 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -64,10 +66,16 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public TndeLoginResponseDto loginTnde(String username, String password) {
-        TndeLoginRequestDto request = TndeLoginRequestDto.builder()
+        TndeLoginRequestDto requestDto = TndeLoginRequestDto.builder()
                 .username(username)
                 .password(password)
                 .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
+        
+        HttpEntity<TndeLoginRequestDto> request = new HttpEntity<>(requestDto, headers);
 
         TndeLoginResponseDto response;
         try {
