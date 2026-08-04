@@ -36,7 +36,7 @@ public class DataSeeder implements CommandLineRunner {
                 .username("admin")
                 .password(passwordEncoder.encode("admin123"))
                 .role(Role.ADMIN)
-                .email("admin@sipenjam.local")
+                .email("admin@sitandi.local")
                 .aktif(true)
                 .build());
 
@@ -45,7 +45,7 @@ public class DataSeeder implements CommandLineRunner {
                 .username("user")
                 .password(passwordEncoder.encode("user123"))
                 .role(Role.USER)
-                .email("user@sipenjam.local")
+                .email("user@sitandi.local")
                 .aktif(true)
                 .build());
     }
