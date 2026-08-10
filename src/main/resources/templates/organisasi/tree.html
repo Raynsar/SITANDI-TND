@@ -96,13 +96,6 @@
             text-transform: uppercase;
             line-height: 1.2;
         }
-        .badge-tipe.badge-provinsi { background-color: #e8f5e9; color: #2e7d32; }
-        .badge-tipe.badge-kabupaten { background-color: #e3f2fd; color: #1565c0; }
-        .badge-tipe.badge-kota { background-color: #fff3e0; color: #e65100; }
-        .badge-tipe.badge-opd { background-color: #f3f5f5; color: #7b1fa2; }
-        .badge-tipe.badge-opd,
-        .badge-tipe.badge-opd + .badge-opd { background-color: #f3e5f5; color: #7b1fa2; }
-        .badge-tipe.badge-bidang { background-color: #fce4ec; color: #c62828; }
 
         .node-label {
             font-size: 0.875rem;
@@ -128,16 +121,6 @@
             color: var(--bs-secondary-color);
             padding: 3rem 1rem;
         }
-        .jabatan-badge {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 0.3rem;
-            font-weight: 600;
-        }
-        .jabatan-KETUA { background-color: #f8d7da; color: #842029; }
-        .jabatan-SEKRETARIS { background-color: #cfe2ff; color: #084298; }
-        .jabatan-BENDAHARA { background-color: #fff3cd; color: #664d03; }
-        .jabatan-ANGGOTA { background-color: #e2e3e5; color: #41464b; }
 
         @media (max-width: 768px) {
             .org-tree-card {
@@ -230,11 +213,11 @@
                             <div class="card-body py-2">
                                 <div class="d-flex flex-wrap gap-2 align-items-center">
                                     <span class="fw-bold small me-1">Keterangan:</span>
-                                    <span class="badge-tipe badge-provinsi">Provinsi</span>
-                                    <span class="badge-tipe badge-kabupaten">Kabupaten</span>
-                                    <span class="badge-tipe badge-kota">Kota</span>
-                                    <span class="badge-tipe badge-opd">OPD</span>
-                                    <span class="badge-tipe badge-bidang">Bidang</span>
+                                    <span class="badge text-bg-success">Provinsi</span>
+                                    <span class="badge text-bg-primary">Kabupaten</span>
+                                    <span class="badge text-bg-warning">Kota</span>
+                                    <span class="badge text-bg-info">OPD</span>
+                                    <span class="badge text-bg-danger">Bidang</span>
                                 </div>
                             </div>
                         </div>
@@ -444,6 +427,8 @@
     <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2/browser/overlayscrollbars.browser.es6.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/js/adminlte.min.js"></script>
 
+    <script th:src="@{/js/main.js}" type="module"></script>
+
     <script th:inline="javascript">
         var isAdmin = /*[[${#authorization.expression('hasRole(''ADMIN'')')}]]*/ false;
     </script>
@@ -490,34 +475,24 @@
             var nodeIndex = {}; // id -> node
 
             var ICON_MAP = {
-                'PROVINSI': 'bi bi-geo-alt-fill',
-                'KABUPATEN': 'bi bi-building',
-                'KOTA': 'bi bi-buildings',
-                'OPD': 'bi bi-building-gear',
-                'BIDANG': 'bi bi-folder'
-            };
-            var ICON_COLOR_MAP = {
-                'PROVINSI': '#2e7d32',
-                'KABUPATEN': '#1565c0',
-                'KOTA': '#e65100',
-                'OPD': '#7b1fa2',
-                'BIDANG': '#c62828'
+                'PROVINSI': 'bi bi-geo-alt-fill text-success',
+                'KABUPATEN': 'bi bi-building text-primary',
+                'KOTA': 'bi bi-buildings text-warning',
+                'OPD': 'bi bi-building-gear text-info',
+                'BIDANG': 'bi bi-folder text-danger'
             };
 
             function getBadgeClass(tipe) {
                 var t = (tipe || '').toLowerCase();
-                if (t === 'provinsi') return 'badge-provinsi';
-                if (t === 'kabupaten') return 'badge-kabupaten';
-                if (t === 'kota') return 'badge-kota';
-                if (t === 'opd') return 'badge-opd';
-                if (t === 'bidang') return 'badge-bidang';
-                return '';
+                if (t === 'provinsi') return 'badge text-bg-success';
+                if (t === 'kabupaten') return 'badge text-bg-primary';
+                if (t === 'kota') return 'badge text-bg-warning';
+                if (t === 'opd') return 'badge text-bg-info';
+                if (t === 'bidang') return 'badge text-bg-danger';
+                return 'badge text-bg-secondary';
             }
             function getIconClass(tipe) {
-                return ICON_MAP[(tipe || '').toUpperCase()] || 'bi bi-dot';
-            }
-            function getIconColor(tipe) {
-                return ICON_COLOR_MAP[(tipe || '').toUpperCase()] || '#6c757d';
+                return ICON_MAP[(tipe || '').toUpperCase()] || 'bi bi-dot text-secondary';
             }
 
             /**
@@ -559,7 +534,6 @@
                 // Icon
                 var icon = document.createElement('i');
                 icon.className = getIconClass(node.tipe) + ' me-1';
-                icon.style.color = getIconColor(node.tipe);
                 icon.style.fontSize = '1rem';
                 toggle.appendChild(icon);
 
@@ -571,7 +545,7 @@
 
                 // Badge tipe
                 var badge = document.createElement('span');
-                badge.className = 'badge-tipe ' + getBadgeClass(node.tipe) + ' ms-1';
+                badge.className = getBadgeClass(node.tipe) + ' ms-1';
                 badge.textContent = node.tipe || '';
                 toggle.appendChild(badge);
 
@@ -733,24 +707,23 @@
                 for (var i = 0; i < rows.length; i++) {
                     var row = rows[i];
                     var tr = document.createElement('tr');
-
+                    tr.style.cursor = 'pointer';
+                    tr.onclick = (function(r) {
+                        return function(e) {
+                            window.openDetailModal(r);
+                        };
+                    })(row);
+                    
                     var tdNo = document.createElement('td');
-                    tdNo.className = 'text-body-secondary';
-                    tdNo.textContent = (i + 1);
+                    tdNo.className = 'text-center fw-medium text-body-secondary';
+                    tdNo.textContent = i + 1;
                     tr.appendChild(tdNo);
 
                     var tdNama = document.createElement('td');
                     tdNama.className = 'fw-medium';
-                    var linkNama = document.createElement('a');
-                    linkNama.href = '#';
-                    linkNama.className = 'text-decoration-none fw-medium text-primary';
+                    var linkNama = document.createElement('span');
+                    linkNama.className = 'text-primary';
                     linkNama.textContent = row.nama || '-';
-                    linkNama.onclick = (function(r) {
-                        return function(e) {
-                            e.preventDefault();
-                            window.openDetailModal(r);
-                        };
-                    })(row);
                     tdNama.appendChild(linkNama);
                     tr.appendChild(tdNama);
 
@@ -774,13 +747,23 @@
                         btnEdit.type = 'button';
                         btnEdit.className = 'btn btn-sm btn-outline-primary me-1';
                         btnEdit.innerHTML = '<i class="bi bi-pencil"></i>';
-                        btnEdit.onclick = (function(r) { return function() { window.openEditModal(r); }; })(row);
+                        btnEdit.onclick = (function(r) { 
+                            return function(e) { 
+                                e.stopPropagation();
+                                window.openEditModal(r); 
+                            }; 
+                        })(row);
                         
                         var btnHapus = document.createElement('button');
                         btnHapus.type = 'button';
                         btnHapus.className = 'btn btn-sm btn-outline-danger';
                         btnHapus.innerHTML = '<i class="bi bi-trash"></i>';
-                        btnHapus.onclick = (function(r) { return function() { window.openHapusModal(r); }; })(row);
+                        btnHapus.onclick = (function(r) { 
+                            return function(e) { 
+                                e.stopPropagation();
+                                window.openHapusModal(r); 
+                            }; 
+                        })(row);
                         
                         tdAksi.appendChild(btnEdit);
                         tdAksi.appendChild(btnHapus);
