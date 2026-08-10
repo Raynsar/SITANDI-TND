@@ -125,6 +125,9 @@ public class OrganisasiServiceImpl implements OrganisasiService {
                 .nama(js.getNamaDummy())
                 .jabatan(js.getJabatan().name())
                 .username(js.getUsername())
+                .nip(js.getNip())
+                .email(js.getEmail())
+                .noHp(js.getNoHp())
                 .build();
     }
 
@@ -202,6 +205,9 @@ public class OrganisasiServiceImpl implements OrganisasiService {
                 .namaDummy(dto.getNama())
                 .jabatan(jabatanEnum)
                 .username(dto.getUsername())
+                .nip(dto.getNip())
+                .email(dto.getEmail())
+                .noHp(dto.getNoHp())
                 .build();
         
         js = jabatanStrukturRepository.save(js);
@@ -228,6 +234,9 @@ public class OrganisasiServiceImpl implements OrganisasiService {
         js.setNamaDummy(dto.getNama());
         js.setJabatan(jabatanEnum);
         js.setUsername(dto.getUsername());
+        js.setNip(dto.getNip());
+        js.setEmail(dto.getEmail());
+        js.setNoHp(dto.getNoHp());
         
         js = jabatanStrukturRepository.save(js);
         return toPersonalDto(js);

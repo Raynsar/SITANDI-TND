@@ -54,5 +54,17 @@ public class JabatanStruktur {
      */
     @Column(nullable = false, length = 100)
     private String username;
+
+    /** NIP dummy 18 digit (format: tanggal lahir dummy + urutan). */
+    @Column(nullable = false, length = 18)
+    private String nip;
+
+    /** Email dummy format username@slug-opd.go.id */
+    @Column(nullable = false, length = 100)
+    private String email;
+
+    /** No. HP dummy format 08xx-xxxx-xxxx */
+    @Column(nullable = false, length = 20)
+    private String noHp;
 }
 

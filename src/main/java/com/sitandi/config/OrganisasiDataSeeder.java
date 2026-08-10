@@ -217,11 +217,14 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
             boolean orphanedWilayah = (wilayahCount > 0 && opdCount == 0);
             boolean legacyMissingUsername = jabatanStrukturRepository.findAll().stream()
                     .anyMatch(js -> js.getUsername() == null || js.getUsername().isBlank());
+            boolean legacyMissingNip = jabatanStrukturRepository.findAll().stream()
+                    .anyMatch(js -> js.getNip() == null || js.getNip().isBlank());
             System.out.println("[OrganisasiDataSeeder] legacySeed=" + legacySeed
                     + " orphanedWilayah=" + orphanedWilayah
-                    + " legacyMissingUsername=" + legacyMissingUsername);
+                    + " legacyMissingUsername=" + legacyMissingUsername
+                    + " legacyMissingNip=" + legacyMissingNip);
 
-            if (legacySeed || orphanedWilayah || legacyMissingUsername) {
+            if (legacySeed || orphanedWilayah || legacyMissingUsername || legacyMissingNip) {
                 entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
                 entityManager.createNativeQuery("TRUNCATE TABLE jabatan_struktur").executeUpdate();
                 entityManager.createNativeQuery("TRUNCATE TABLE bidang").executeUpdate();
@@ -277,11 +280,15 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
                     // 5. Buat jabatan standar: Ketua, Sekretaris, Bendahara, 2 Anggota
                     for (Jabatan jabatan : STRUKTUR_JABATAN) {
                         String nama = nextNama();
+                        String username = nextUsername(nama);
                         jabatanStrukturRepository.save(JabatanStruktur.builder()
                                 .bidang(bidang)
                                 .jabatan(jabatan)
                                 .namaDummy(nama)
-                                .username(nextUsername(nama))
+                                .username(username)
+                                .nip(nextNip())
+                                .email(nextEmail(username, opd.getNamaOpd()))
+                                .noHp(nextNoHp())
                                 .build());
                         totalJabatan++;
                     }
@@ -325,6 +332,33 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
         int seen = usernameCounter.getOrDefault(base, 0);
         usernameCounter.put(base, seen + 1);
         return seen == 0 ? base : base + (seen + 1);
+    }
+
+    /** Generate NIP dummy 18 digit (format: tanggal lahir dummy + urutan). */
+    private String nextNip() {
+        int tahun = 1970 + (namaCounter % 20);
+        int bulan = (namaCounter % 12) + 1;
+        int tgl = (namaCounter % 28) + 1;
+        int urutan = namaCounter % 1000;
+        return String.format("%04d%02d%02d%06d%03d", tahun, bulan, tgl, 201001, urutan);
+    }
+
+    /** Generate email dummy format username@slug-opd.go.id */
+    private String nextEmail(String username, String namaOpd) {
+        String slug = namaOpd.toLowerCase()
+                .replaceAll("kota ", "")
+                .replaceAll("kabupaten ", "")
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("^-|-$", "");
+        return username + "@" + slug + ".go.id";
+    }
+
+    /** Generate no HP dummy format 08xx-xxxx-xxxx */
+    private String nextNoHp() {
+        int prefix = 11 + (namaCounter % 9); // 0811 - 0819
+        int mid = 1000 + (namaCounter % 9000);
+        int suffix = 1000 + ((namaCounter * 3) % 9000);
+        return String.format("08%d-%04d-%04d", prefix, mid, suffix);
     }
 
     /** Bikin kode singkat dari nama kab/kota untuk prefix kodeOpd yang unik secara global. */
