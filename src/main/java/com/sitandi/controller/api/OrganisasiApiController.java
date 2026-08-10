@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 
 import com.sitandi.dto.OrganisasiBreadcrumbDto;
 import com.sitandi.dto.OrganisasiPersonalDto;
+import com.sitandi.dto.OrganisasiSearchResultDto;
 import com.sitandi.dto.OrganisasiTreeNodeDto;
 import com.sitandi.dto.OrganisasiPersonalRequestDto;
 import com.sitandi.service.OrganisasiService;
@@ -121,6 +122,12 @@ public class OrganisasiApiController {
     public ResponseEntity<?> deletePersonal(@PathVariable Long id) {
         organisasiService.deletePersonal(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<OrganisasiSearchResultDto>> searchOrganisasi(@org.springframework.web.bind.annotation.RequestParam("q") String keyword) {
+        List<OrganisasiSearchResultDto> results = organisasiService.search(keyword);
+        return ResponseEntity.ok(results);
     }
 }
 

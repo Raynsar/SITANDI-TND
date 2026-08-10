@@ -13,5 +13,7 @@ public interface BidangRepository extends JpaRepository<Bidang, Long> {
     List<Bidang> findByOpdIdOrderByNamaBidang(Long opdId);
 
     long countByOpdId(Long opdId);
+
+    List<Bidang> findByNamaBidangContainingIgnoreCase(String namaBidang);
 }
 

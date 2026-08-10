@@ -16,5 +16,7 @@ public interface OpdRepository extends JpaRepository<Opd, Long> {
     Optional<Opd> findByKodeOpd(String kodeOpd);
 
     long countByWilayahId(Long wilayahId);
+
+    List<Opd> findByNamaOpdContainingIgnoreCase(String namaOpd);
 }
 

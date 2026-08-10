@@ -17,5 +17,8 @@ public interface JabatanStrukturRepository extends JpaRepository<JabatanStruktur
     boolean existsByUsername(String username);
 
     boolean existsByUsernameAndIdNot(String username, Long id);
+
+    List<JabatanStruktur> findByNamaDummyContainingIgnoreCaseOrNipContainingIgnoreCaseOrJabatanIn(
+            String namaDummy, String nip, List<com.sitandi.model.Jabatan> jabatans);
 }
 

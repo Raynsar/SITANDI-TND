@@ -18,5 +18,7 @@ public interface WilayahRepository extends JpaRepository<Wilayah, Long> {
     List<Wilayah> findByParentIdOrderByNama(Long parentId);
 
     List<Wilayah> findByTipeOrderByNama(TipeWilayah tipe);
+
+    List<Wilayah> findByNamaContainingIgnoreCase(String nama);
 }
 

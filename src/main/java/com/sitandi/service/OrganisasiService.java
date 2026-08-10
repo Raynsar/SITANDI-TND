@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.sitandi.dto.OrganisasiBreadcrumbDto;
 import com.sitandi.dto.OrganisasiPersonalDto;
+import com.sitandi.dto.OrganisasiSearchResultDto;
 import com.sitandi.dto.OrganisasiTreeNodeDto;
 
 public interface OrganisasiService {
@@ -54,4 +55,9 @@ public interface OrganisasiService {
      * Hapus personel.
      */
     void deletePersonal(Long id);
+
+    /**
+     * Pencarian global untuk wilayah, OPD, bidang, dan personel.
+     */
+    List<OrganisasiSearchResultDto> search(String keyword);
 }
