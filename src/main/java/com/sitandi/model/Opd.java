@@ -39,7 +39,7 @@ public class Opd {
     @Column(nullable = false)
     private String namaOpd;
 
-    @Column(nullable = false, unique = true, length = 10)
+    @Column(nullable = false, unique = true, length = 50)
     private String kodeOpd;
 }
 
