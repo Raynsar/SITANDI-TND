@@ -36,7 +36,7 @@ public class InboxApiController {
 
     private final InboxService inboxService;
 
-    @GetMapping
+    @GetMapping("")
     public ResponseEntity<Map<String, Object>> getInbox(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         String tndeToken = (session != null) ? (String) session.getAttribute("tndeToken") : null;
