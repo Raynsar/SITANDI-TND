@@ -4,12 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import com.sitandi.model.Pengguna;
 import com.sitandi.model.Role;
 
-@Repository
 public interface PenggunaRepository extends JpaRepository<Pengguna, Long> {
 
     Optional<Pengguna> findByUsername(String username);

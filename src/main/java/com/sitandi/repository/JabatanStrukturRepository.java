@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import com.sitandi.model.JabatanStruktur;
 
-@Repository
 public interface JabatanStrukturRepository extends JpaRepository<JabatanStruktur, Long> {
 
     List<JabatanStruktur> findByBidangIdOrderByJabatan(Long bidangId);

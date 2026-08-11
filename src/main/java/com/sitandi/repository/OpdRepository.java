@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 
 import com.sitandi.model.Opd;
 
-@Repository
 public interface OpdRepository extends JpaRepository<Opd, Long> {
 
     List<Opd> findByWilayahIdOrderByNamaOpd(Long wilayahId);

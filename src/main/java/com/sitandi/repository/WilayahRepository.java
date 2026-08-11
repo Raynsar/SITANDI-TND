@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 import com.sitandi.model.TipeWilayah;
 import com.sitandi.model.Wilayah;
 
-@Repository
 public interface WilayahRepository extends JpaRepository<Wilayah, Long> {
 
     /** Ambil semua root node (parent = null) — dalam hal ini Provinsi. */
