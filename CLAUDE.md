@@ -1,4 +1,4 @@
-﻿# Tata Naskah Dinas (SITANDI) - Panduan AI Agent
+# Tata Naskah Dinas (SITANDI) - Panduan AI Agent
 
 ## 1. Overview Project
 Proyek ini adalah sistem tata naskah dinas berbasis web.
@@ -12,9 +12,9 @@ Proyek ini adalah sistem tata naskah dinas berbasis web.
 
 ## 3. Struktur Modul & Fitur
 - **Dashboard**: Halaman utama ringkasan data.
-- **Struktur Organisasi**: Menampilkan tree hierarki bidang, OPD, dll.
+- **Struktur Organisasi**: Menampilkan tree hierarki bidang, OPD, dll. Dilengkapi dengan backend-based *Tree Filter Global Search*.
 - **Kelola Pengguna**: Menyetujui/menolak pendaftaran akun (Khusus ADMIN).
-- **Surat Masuk**: Mengambil data surat dari integrasi TNDE eksternal.
+- **Surat Masuk**: Mengambil data surat dari integrasi TNDE eksternal via API Entry Point (`/api/v1/*`).
 - **Ganti Password**: Fitur untuk mengubah kredensial.
 
 ## 4. Panduan & Aturan Koding Khusus
