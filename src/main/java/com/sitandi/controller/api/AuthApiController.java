@@ -1,7 +1,6 @@
 package com.sitandi.controller.api;
 
 import java.security.Principal;
-import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sitandi.config.JwtUtil;
 import com.sitandi.dto.GantiPasswordRequestDto;
+import com.sitandi.dto.KelolaPenggunaResponseDto;
 import com.sitandi.dto.LoginRequestDto;
 import com.sitandi.dto.LoginResponseDto;
 import com.sitandi.dto.PenggunaDto;
@@ -66,8 +66,11 @@ public class AuthApiController {
     }
 
     @GetMapping("/pengguna")
-    public ResponseEntity<List<PenggunaDto>> daftarPengguna() {
-        return ResponseEntity.ok(authService.daftarSemuaPengguna());
+    public ResponseEntity<KelolaPenggunaResponseDto> daftarPengguna() {
+        return ResponseEntity.ok(KelolaPenggunaResponseDto.builder()
+                .daftarPengguna(authService.daftarSemuaPengguna())
+                .jumlahMenungguAktivasi(authService.daftarMenungguAktivasi().size())
+                .build());
     }
 
     @PatchMapping("/pengguna/{id}/aktifkan")

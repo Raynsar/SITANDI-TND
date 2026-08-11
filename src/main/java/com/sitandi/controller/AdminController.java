@@ -10,7 +10,6 @@ import com.sitandi.repository.JabatanStrukturRepository;
 import com.sitandi.repository.OpdRepository;
 import com.sitandi.repository.PenggunaRepository;
 import com.sitandi.repository.WilayahRepository;
-import com.sitandi.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +24,6 @@ public class AdminController {
     private final BidangRepository bidangRepository;
     private final JabatanStrukturRepository jabatanStrukturRepository;
     private final PenggunaRepository penggunaRepository;
-    private final AuthService authService;
 
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -37,10 +35,10 @@ public class AdminController {
         return "admin/dashboard";
     }
 
+    /** Halaman kelola pengguna — data diambil via fetch JSON oleh JavaScript. */
     @GetMapping("/pengguna")
-    public String pengguna(Model model) {
-        model.addAttribute("daftarPengguna", authService.daftarSemuaPengguna());
-        model.addAttribute("jumlahMenungguAktivasi", authService.daftarMenungguAktivasi().size());
+    public String pengguna() {
         return "admin/pengguna";
     }
 }
+

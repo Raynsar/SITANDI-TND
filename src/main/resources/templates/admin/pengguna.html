@@ -32,14 +32,29 @@
                     Akun yang mendaftar sendiri harus disetujui di sini sebelum bisa masuk.
                 </p>
 
-                <div th:if="${jumlahMenungguAktivasi > 0}"
-                     class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+                <!-- Alert menunggu aktivasi — diisi oleh JavaScript -->
+                <div id="alertAktivasi" class="alert alert-warning d-flex align-items-center gap-2 d-none" role="alert">
                     <i class="bi bi-exclamation-triangle"></i>
-                    <strong th:text="${jumlahMenungguAktivasi}">0</strong>
+                    <strong id="jumlahMenunggu">0</strong>
                     akun menunggu persetujuan Anda.
                 </div>
 
-                <div class="card">
+                <!-- Loading spinner -->
+                <div id="loadingPengguna" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Memuat...</span>
+                    </div>
+                    <p class="text-body-secondary mt-2">Memuat data pengguna...</p>
+                </div>
+
+                <!-- Error container -->
+                <div id="errorPengguna" class="alert alert-danger d-none" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <span id="pesanErrorPengguna">Gagal memuat data.</span>
+                </div>
+
+                <!-- Tabel pengguna — diisi oleh JavaScript -->
+                <div id="tabelContainer" class="card d-none">
                     <div class="table-responsive">
                         <table class="table table-striped table-hover align-middle mb-0">
                             <thead class="table-light">
@@ -52,41 +67,8 @@
                                     <th class="fw-semibold small text-uppercase">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr th:each="pengguna : ${daftarPengguna}">
-                                    <td th:text="${pengguna.nama}">-</td>
-                                    <td class="font-monospace small" th:text="${pengguna.username}">-</td>
-                                    <td class="text-body-secondary" th:text="${pengguna.email}">-</td>
-                                    <td>
-                                        <span th:text="${pengguna.role}"
-                                              th:classappend="${pengguna.role == 'ADMIN'} ? 'badge bg-info-subtle text-info-emphasis' : 'badge bg-secondary-subtle text-secondary-emphasis'"
-                                              class="badge">-</span>
-                                    </td>
-                                    <td>
-                                        <span th:if="${pengguna.aktif}"
-                                              class="badge bg-success-subtle text-success-emphasis">Aktif</span>
-                                        <span th:unless="${pengguna.aktif}"
-                                              class="badge bg-warning-subtle text-warning-emphasis">Menunggu</span>
-                                    </td>
-                                    <td>
-                                        <button th:unless="${pengguna.aktif}" type="button"
-                                                class="btn-aksi btn btn-success btn-sm"
-                                                th:data-id="${pengguna.id}" data-aksi="aktifkan">
-                                            <i class="bi bi-check-lg me-1"></i>Setujui
-                                        </button>
-                                        <button th:if="${pengguna.aktif}" type="button"
-                                                class="btn-aksi btn btn-outline-danger btn-sm"
-                                                th:data-id="${pengguna.id}" data-aksi="nonaktifkan">
-                                            <i class="bi bi-x-lg me-1"></i>Nonaktifkan
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr th:if="${daftarPengguna == null or daftarPengguna.isEmpty()}">
-                                    <td class="text-center text-body-tertiary py-4" colspan="6">
-                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>
-                                        Belum ada pengguna.
-                                    </td>
-                                </tr>
+                            <tbody id="bodyPengguna">
+                                <!-- Baris dirender oleh JavaScript -->
                             </tbody>
                         </table>
                     </div>
@@ -107,11 +89,144 @@
 
     <script th:src="@{/js/main.js}" type="module"></script>
     <script type="module">
-        const { authRequest } = await import(window.APP_CONTEXT_PATH + 'js/api.js');
+        var APP_CTX = window.APP_CONTEXT_PATH || '/';
 
-        document.querySelectorAll('.btn-aksi').forEach((btn) => {
-            btn.addEventListener('click', async () => {
-                const { id, aksi } = btn.dataset;
+        var alertAktivasi     = document.getElementById('alertAktivasi');
+        var jumlahMenunggu    = document.getElementById('jumlahMenunggu');
+        var loadingPengguna   = document.getElementById('loadingPengguna');
+        var errorPengguna     = document.getElementById('errorPengguna');
+        var pesanErrorPengguna = document.getElementById('pesanErrorPengguna');
+        var tabelContainer    = document.getElementById('tabelContainer');
+        var bodyPengguna      = document.getElementById('bodyPengguna');
+
+        function bacaCookie(nama) {
+            var match = document.cookie.split('; ').find(function(c) { return c.startsWith(nama + '='); });
+            return match ? decodeURIComponent(match.split('=').slice(1).join('=')) : null;
+        }
+
+        function muatDaftarPengguna() {
+            var url = APP_CTX + 'api/v1/auth/pengguna';
+
+            fetch(url, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(function(res) {
+                if (res.status === 401) {
+                    window.location.href = APP_CTX + 'login';
+                    return Promise.reject('Unauthorized');
+                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function(data) {
+                loadingPengguna.classList.add('d-none');
+
+                /* Badge menunggu aktivasi */
+                if (data.jumlahMenungguAktivasi > 0) {
+                    jumlahMenunggu.textContent = data.jumlahMenungguAktivasi;
+                    alertAktivasi.classList.remove('d-none');
+                }
+
+                /* Render tabel */
+                renderTabel(data.daftarPengguna || []);
+            })
+            .catch(function(err) {
+                if (err === 'Unauthorized') return;
+                loadingPengguna.classList.add('d-none');
+                pesanErrorPengguna.textContent = 'Gagal memuat data: ' + (err.message || err);
+                errorPengguna.classList.remove('d-none');
+            });
+        }
+
+        function renderTabel(list) {
+            bodyPengguna.innerHTML = '';
+
+            if (!list || list.length === 0) {
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td class="text-center text-body-tertiary py-4" colspan="6">' +
+                    '<i class="bi bi-inbox fs-4 d-block mb-1"></i>Belum ada pengguna.</td>';
+                bodyPengguna.appendChild(tr);
+                tabelContainer.classList.remove('d-none');
+                return;
+            }
+
+            for (var i = 0; i < list.length; i++) {
+                var p = list[i];
+                var tr = document.createElement('tr');
+
+                /* Nama */
+                var tdNama = document.createElement('td');
+                tdNama.textContent = p.nama || '-';
+                tr.appendChild(tdNama);
+
+                /* Username */
+                var tdUser = document.createElement('td');
+                tdUser.className = 'font-monospace small';
+                tdUser.textContent = p.username || '-';
+                tr.appendChild(tdUser);
+
+                /* Email */
+                var tdEmail = document.createElement('td');
+                tdEmail.className = 'text-body-secondary';
+                tdEmail.textContent = p.email || '-';
+                tr.appendChild(tdEmail);
+
+                /* Role */
+                var tdRole = document.createElement('td');
+                var spanRole = document.createElement('span');
+                spanRole.textContent = p.role || '-';
+                spanRole.className = (p.role === 'ADMIN')
+                    ? 'badge bg-info-subtle text-info-emphasis'
+                    : 'badge bg-secondary-subtle text-secondary-emphasis';
+                tdRole.appendChild(spanRole);
+                tr.appendChild(tdRole);
+
+                /* Status */
+                var tdStatus = document.createElement('td');
+                var spanStatus = document.createElement('span');
+                if (p.aktif) {
+                    spanStatus.className = 'badge bg-success-subtle text-success-emphasis';
+                    spanStatus.textContent = 'Aktif';
+                } else {
+                    spanStatus.className = 'badge bg-warning-subtle text-warning-emphasis';
+                    spanStatus.textContent = 'Menunggu';
+                }
+                tdStatus.appendChild(spanStatus);
+                tr.appendChild(tdStatus);
+
+                /* Aksi */
+                var tdAksi = document.createElement('td');
+                var btn = document.createElement('button');
+                btn.type = 'button';
+
+                if (p.aktif) {
+                    btn.className = 'btn-aksi btn btn-outline-danger btn-sm';
+                    btn.dataset.id = p.id;
+                    btn.dataset.aksi = 'nonaktifkan';
+                    btn.innerHTML = '<i class="bi bi-x-lg me-1"></i>Nonaktifkan';
+                } else {
+                    btn.className = 'btn-aksi btn btn-success btn-sm';
+                    btn.dataset.id = p.id;
+                    btn.dataset.aksi = 'aktifkan';
+                    btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Setujui';
+                }
+
+                btn.addEventListener('click', buatHandlerAksi(btn));
+                tdAksi.appendChild(btn);
+                tr.appendChild(tdAksi);
+
+                bodyPengguna.appendChild(tr);
+            }
+
+            tabelContainer.classList.remove('d-none');
+        }
+
+        function buatHandlerAksi(btn) {
+            return async function() {
+                var id = btn.dataset.id;
+                var aksi = btn.dataset.aksi;
 
                 if (aksi === 'nonaktifkan'
                         && !confirm('Nonaktifkan akun ini? Pengguna tidak akan bisa masuk lagi.')) {
@@ -120,18 +235,32 @@
 
                 btn.disabled = true;
                 try {
-                    // PATCH /api/v1/auth/pengguna/{id}/{aksi}
-                    await authRequest(`/pengguna/${id}/${aksi}`, { method: 'PATCH' });
-                    window.location.reload();
+                    var csrf = bacaCookie('XSRF-TOKEN');
+                    var headers = { 'Content-Type': 'application/json' };
+                    if (csrf) headers['X-XSRF-TOKEN'] = csrf;
+
+                    var res = await fetch(APP_CTX + 'api/v1/auth/pengguna/' + id + '/' + aksi, {
+                        method: 'PATCH',
+                        headers: headers,
+                        credentials: 'same-origin'
+                    });
+
+                    if (!res.ok) {
+                        var body = await res.json().catch(function() { return {}; });
+                        throw new Error(body.message || 'Gagal memproses');
+                    }
+
+                    /* Reload data dari API (bukan full page reload) */
+                    muatDaftarPengguna();
                 } catch (err) {
                     alert(err.message || 'Gagal memproses akun.');
                     btn.disabled = false;
                 }
-            });
-        });
+            };
+        }
+
+        /* Muat data saat halaman selesai dimuat */
+        muatDaftarPengguna();
     </script>
 </body>
 </html>
-
-
-
