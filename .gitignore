@@ -44,3 +44,6 @@ scratch/
 *.png
 *.jpg
 *.jpeg
+# Claude Files
+.claude/
+CLAUDE.md

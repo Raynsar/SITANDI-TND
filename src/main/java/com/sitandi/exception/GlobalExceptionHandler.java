@@ -15,10 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * Menangani exception untuk seluruh REST controller di package controller.api
- * dan mengubahnya menjadi respons JSON yang rapi TANPA membocorkan stack trace.
- * Error pada halaman MVC (Thymeleaf) sengaja tidak ditangani di sini agar jatuh
- * ke halaman error templates/error/*.html.
+ * Global Exception Handler
  */
 @RestControllerAdvice(basePackages = "com.sitandi.controller.api")
 public class GlobalExceptionHandler {
@@ -45,7 +42,7 @@ public class GlobalExceptionHandler {
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             fieldErrors.put(error.getField(), error.getDefaultMessage());
         }
-        // error tingkat objek (mis. @AssertTrue rentang tanggal)
+        // Validation Errors
         ex.getBindingResult().getGlobalErrors()
                 .forEach(err -> fieldErrors.put(err.getObjectName(), err.getDefaultMessage()));
         body.put("errors", fieldErrors);
@@ -64,10 +61,7 @@ public class GlobalExceptionHandler {
                 .body(baseBody(HttpStatus.FORBIDDEN, "Anda tidak memiliki akses untuk operasi ini"));
     }
 
-    /**
-     * Akun terverifikasi passwordnya tapi belum disetujui admin. Dibalas 403 dengan
-     * pesan spesifik supaya pengguna tahu harus menunggu, bukan mengira salah password.
-     */
+    // Inactive Account
     @ExceptionHandler(AkunBelumAktifException.class)
     public ResponseEntity<Object> handleAkunBelumAktif(AkunBelumAktifException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -80,24 +74,14 @@ public class GlobalExceptionHandler {
                 .body(baseBody(HttpStatus.UNAUTHORIZED, ex.getMessage()));
     }
 
-    /**
-     * Error saat komunikasi dengan server TNDE (misal: timeout, connection refused).
-     * Kembalikan 502 Bad Gateway agar klien bisa membedakan dengan error autentikasi.
-     */
+    // TNDE Server Error
     @ExceptionHandler(TndeServerException.class)
     public ResponseEntity<Object> handleTndeServer(TndeServerException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
                 .body(baseBody(HttpStatus.BAD_GATEWAY, ex.getMessage()));
     }
 
-    /**
-     * Login API gagal (POST /api/v1/auth/login).
-     *
-     * Pesannya sengaja dibuat generik dan SATU untuk semua penyebab — username tidak
-     * ada, password salah, akun terkunci — supaya respons tidak bisa dipakai menebak
-     * username mana yang terdaftar (user enumeration). ex.getMessage() sengaja tidak
-     * disertakan karena justru membocorkan pembedaan itu.
-     */
+    // Authentication Error
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Object> handleAuthentication(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -106,7 +90,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneric(Exception ex) {
-        // Sengaja TIDAK menyertakan ex.getMessage()/stack trace pada respons demi keamanan.
+        // Generic Error
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(baseBody(HttpStatus.INTERNAL_SERVER_ERROR, "Terjadi kesalahan pada server"));
     }

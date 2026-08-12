@@ -29,14 +29,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InboxResponseDto {
+public class SuratMasukResponseDto {
 
     private boolean success;
 
     private String message;
 
     /** Data wrapper object — bukan array langsung. */
-    private InboxDataDto data;
+    private SuratMasukDataDto data;
 
     /**
      * Wrapper untuk field "data" yang berisi array "items".
@@ -45,7 +45,7 @@ public class InboxResponseDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class InboxDataDto {
+    public static class SuratMasukDataDto {
 
         /** Array daftar surat masuk. */
         private List<SuratDto> items;
@@ -54,10 +54,6 @@ public class InboxResponseDto {
     /**
      * Data surat masuk / disposisi dari TNDE.
      * Field menggunakan @JsonProperty untuk mapping field snake_case dari API TNDE.
-     *
-     * TODO: Struktur detail satu item surat masih menggunakan field default.
-     *       Jika nanti items sudah terisi (tidak kosong), kirimkan contoh JSON
-     *       response asli agar field-field di bawah bisa disesuaikan dengan tepat.
      */
     @Data
     @Builder

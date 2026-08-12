@@ -14,20 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Menaruh & menghapus JWT pada cookie http-only.
- *
- * Kenapa cookie, bukan sessionStorage: halaman ini di-render server (Thymeleaf).
- * Navigasi browser — klik link, ketik URL, refresh — tidak bisa menyertakan header
- * Authorization, jadi token HARUS ikut otomatis, dan cookie satu-satunya mekanisme
- * yang melakukan itu.
- *
- * Kenapa http-only: JavaScript tidak bisa membaca cookie ini, sehingga XSS tidak
- * bisa mencuri tokennya. Ini alasan token TIDAK disimpan di sessionStorage, yang
- * justru terbaca oleh script apa pun yang berhasil disuntikkan ke halaman.
- *
- * Konsekuensi yang harus disadari: karena cookie ikut terkirim otomatis di setiap
- * request lintas-situs yang diizinkan SameSite, proteksi CSRF menjadi WAJIB —
- * lihat SecurityConfig.
+ * JWT Cookie Management Service
  */
 @Component
 public class JwtCookieService {
@@ -44,19 +31,11 @@ public class JwtCookieService {
         this.secure = secure;
     }
 
-    /**
-     * @param contextPath dari request.getContextPath(); wajib dipakai sebagai Path
-     *                    cookie. Aplikasi berjalan di /sitandi, bukan root — cookie
-     *                    ber-Path "/" akan ikut terkirim ke aplikasi lain di Tomcat
-     *                    yang sama, dan Path yang salah membuat cookie tidak pernah
-     *                    dikirim balik sehingga user seperti tidak pernah login.
-     */
+    // Write Cookie
     public void tulis(HttpServletResponse response, String token, String contextPath) {
         ResponseCookie cookie = ResponseCookie.from(COOKIE_NAME, token)
                 .httpOnly(true)
                 .secure(secure)
-                // Lax: cookie tetap terkirim saat user mengklik link menuju aplikasi
-                // (navigasi top-level GET), tapi tidak pada POST lintas-situs.
                 .sameSite("Lax")
                 .path(pathAman(contextPath))
                 .maxAge(Duration.ofMillis(expirationMs))
@@ -64,7 +43,7 @@ public class JwtCookieService {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
-    /** Menghapus cookie dengan menimpanya memakai maxAge 0. */
+    // Delete Cookie
     public void hapus(HttpServletResponse response, String contextPath) {
         ResponseCookie cookie = ResponseCookie.from(COOKIE_NAME, "")
                 .httpOnly(true)
@@ -88,7 +67,7 @@ public class JwtCookieService {
                 .findFirst();
     }
 
-    /** Context path kosong (deploy di root) harus menjadi "/" agar cookie valid. */
+    // Safe Path Helper
     private String pathAman(String contextPath) {
         return (contextPath == null || contextPath.isBlank()) ? "/" : contextPath;
     }

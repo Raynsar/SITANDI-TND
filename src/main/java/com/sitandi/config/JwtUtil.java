@@ -15,19 +15,13 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 /**
- * Pembuatan & validasi JWT untuk REST API.
- *
- * Payload token HANYA berisi username (subject), role, iat, dan exp. JANGAN
- * menambahkan data sensitif: payload JWT cuma di-encode Base64URL, BUKAN
- * dienkripsi, jadi siapa pun yang memegang token bisa membacanya.
+ * JWT Utility
  */
 @Component
 public class JwtUtil {
 
-    /** Nama claim untuk role. Sengaja bukan "authorities" agar tidak tertukar dengan format Spring. */
     private static final String CLAIM_ROLE = "role";
 
-    /** HS256 mensyaratkan key >= 256 bit; di bawah itu jjwt menolak dengan WeakKeyException. */
     private static final int MIN_SECRET_BYTES = 32;
 
     private final SecretKey key;
@@ -35,8 +29,7 @@ public class JwtUtil {
 
     public JwtUtil(@Value("${jwt.secret:}") String secret,
                    @Value("${jwt.expiration-ms:3600000}") long expirationMs) {
-        // Fail-fast saat startup: lebih baik aplikasi menolak jalan daripada diam-diam
-        // memakai key lemah/default yang bisa dipakai menempa token.
+
         if (!StringUtils.hasText(secret)) {
             throw new IllegalStateException(
                     "jwt.secret belum diisi. Set environment variable JWT_SECRET (atau properti jwt.secret) "
@@ -57,10 +50,7 @@ public class JwtUtil {
         return expirationMs;
     }
 
-    /**
-     * @param username dipakai sebagai subject token
-     * @param role     format Spring ("ROLE_ADMIN"/"ROLE_USER")
-     */
+    // Token Generation
     public String generateToken(String username, String role) {
         Date now = new Date();
         return Jwts.builder()
@@ -72,11 +62,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    /**
-     * Memverifikasi signature + masa berlaku token lalu mengembalikan payload-nya.
-     *
-     * @throws JwtException bila signature salah, token kedaluwarsa, atau formatnya rusak
-     */
+    // Token Parsing
     public Claims parse(String token) {
         return Jwts.parser()
                 .verifyWith(key)
@@ -93,7 +79,7 @@ public class JwtUtil {
         return parse(token).get(CLAIM_ROLE, String.class);
     }
 
-    /** Varian parse() yang tidak melempar; dipakai bila cukup butuh valid/tidak. */
+    // Token Validation
     public boolean isValid(String token) {
         try {
             parse(token);

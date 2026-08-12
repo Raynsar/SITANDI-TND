@@ -54,8 +54,8 @@ Jika ingin mengatur `JWT_SECRET` sendiri (misalnya agar token tetap valid antar-
 Aplikasi ini dikonfigurasi untuk dibuild sebagai file WAR agar bisa di-deploy ke _standalone servlet container_ (misal: Apache Tomcat).
 
 1. Jalankan build:
-   `ash
+   ```bash
    mvn clean package -DskipTests
-   `
-2. File WAR akan ter-generate di folder 	arget/sitandi.war.
+   ```
+2. File WAR akan ter-generate di folder target/sitandi.war.
 3. Deploy file WAR tersebut ke dalam folder webapps di Tomcat Anda. Perhatikan bahwa nama file akan menentukan _context-path_ URL aplikasi Anda (disarankan mengubah namanya menjadi sitandi.war agar URL menjadi /sitandi/).

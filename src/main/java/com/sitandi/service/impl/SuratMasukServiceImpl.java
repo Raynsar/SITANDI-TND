@@ -15,30 +15,30 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.sitandi.dto.InboxResponseDto;
-import com.sitandi.dto.InboxResponseDto.SuratDto;
+import com.sitandi.dto.SuratMasukResponseDto;
+import com.sitandi.dto.SuratMasukResponseDto.SuratDto;
 import com.sitandi.exception.TndeLoginException;
 import com.sitandi.exception.TndeServerException;
-import com.sitandi.service.InboxService;
+import com.sitandi.service.SuratMasukService;
 
 /**
  * Implementasi pemanggilan API inbox TNDE.
  * Konsisten dengan pola AuthServiceImpl yang sudah ada.
  */
 @Service
-public class InboxServiceImpl implements InboxService {
+public class SuratMasukServiceImpl implements SuratMasukService {
 
     private final RestTemplate restTemplate;
     private final String tndeInboxUrl;
 
-    public InboxServiceImpl(RestTemplate restTemplate,
+    public SuratMasukServiceImpl(RestTemplate restTemplate,
                             @Value("${tnde.inbox-url:http://192.168.1.131:1323/api/inbox}") String tndeInboxUrl) {
         this.restTemplate = restTemplate;
         this.tndeInboxUrl = tndeInboxUrl;
     }
 
     @Override
-    public List<SuratDto> getInbox(String tndeToken, int tahun) {
+    public List<SuratDto> ambilSuratMasuk(String tndeToken, int tahun) {
         if (!StringUtils.hasText(tndeToken)) {
             throw new TndeLoginException("Token TNDE tidak tersedia, silakan login kembali");
         }
@@ -49,7 +49,7 @@ public class InboxServiceImpl implements InboxService {
         headers.setBearerAuth(tndeToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        InboxResponseDto response;
+        SuratMasukResponseDto response;
         /*
          * Penanganan error API TNDE:
          * - 401: Token invalid/expired -> minta login ulang
@@ -58,8 +58,8 @@ public class InboxServiceImpl implements InboxService {
          * - RestClientException: Error parsing/umum
          */
         try {
-            ResponseEntity<InboxResponseDto> responseEntity = restTemplate.exchange(
-                    url, HttpMethod.GET, entity, InboxResponseDto.class);
+            ResponseEntity<SuratMasukResponseDto> responseEntity = restTemplate.exchange(
+                    url, HttpMethod.GET, entity, SuratMasukResponseDto.class);
             response = responseEntity.getBody();
         } catch (HttpClientErrorException.Unauthorized ex) {
             throw new TndeLoginException("Sesi anda telah berakhir, silakan login kembali", ex);

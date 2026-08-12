@@ -27,21 +27,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Satu-satunya mekanisme autentikasi aplikasi ini: memvalidasi JWT dan mengisi
- * SecurityContext. Tidak ada HttpSession — token diverifikasi ulang setiap request.
- *
- * Token dicari dari dua tempat, sesuai jenis kliennya:
- *   1. Header "Authorization: Bearer <token>" — klien API (Postman, integrasi).
- *   2. Cookie http-only SITANDI_TOKEN — browser, karena navigasi halaman tidak
- *      bisa menyisipkan header.
- * Header diprioritaskan agar klien API yang memakai browser yang sama (mis. sedang
- * login di tab lain) tetap memakai identitas tokennya, bukan cookie-nya.
- *
- * Filter ini TIDAK menolak request tanpa token; ia hanya membiarkan SecurityContext
- * kosong dan menyerahkan keputusan ke authorizeHttpRequests. Itu penting supaya
- * halaman publik (/login, /register) tetap bisa diakses, dan supaya penolakan
- * ditangani entry point yang sesuai chain-nya — 401 JSON untuk API, redirect ke
- * /login untuk halaman.
+ * JWT Authentication Filter
  */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -86,8 +72,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new JwtException("Token tanpa role");
             }
 
-            // Kalau user terdaftar lokal, cek aktifitasnya; kalau tidak, teruskan sebagai
-            // pengguna eksternal yang diautentikasi oleh TNDE.
+            // Check User Active Status
             boolean active = true;
             try {
                 Pengguna pengguna = authService.getByUsername(username);
@@ -112,18 +97,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             context.setAuthentication(authentication);
             SecurityContextHolder.setContext(context);
 
-            // saveContext() WAJIB, bukan sekadar mengisi SecurityContextHolder.
-            // Repository-nya RequestAttributeSecurityContextRepository, jadi ini hanya
-            // menaruh context pada atribut request (tetap stateless, tidak ada session).
-            // Tanpa ini, containsContext() bernilai false dan SessionManagementFilter
-            // mengira tiap request adalah login baru, lalu merotasi token CSRF terus-
-            // menerus sampai cookie XSRF-TOKEN yang dipegang api.js jadi basi.
+            // Save Context to Repository
             securityContextRepository.saveContext(context, request, response);
 
         } catch (JwtException | IllegalArgumentException | UsernameNotFoundException ex) {
-            // Token kedaluwarsa, signature salah, formatnya rusak, atau akunnya sudah
-            // dihapus dari DB. Perlakukan sebagai anonim, bukan error: biarkan
-            // authorizeHttpRequests yang memutuskan 401/redirect sesuai chain.
+            // Invalid Token Handling
             tolak(response, request);
         }
     }

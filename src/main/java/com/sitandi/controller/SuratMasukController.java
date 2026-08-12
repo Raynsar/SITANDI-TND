@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * Data surat diambil oleh JavaScript dari REST API /api/v1/inbox.
  */
 @Controller
-public class InboxController {
+public class SuratMasukController {
 
     @GetMapping("/surat-masuk")
     public String suratMasuk() {
