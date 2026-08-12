@@ -81,15 +81,17 @@
         <div class="modal fade" id="modalHapus" tabindex="-1" aria-labelledby="modalHapusLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title" id="modalHapusLabel">Konfirmasi Hapus Pengguna</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="modalHapusLabel">
+                            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Konfirmasi Hapus
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p>Apakah Anda yakin ingin menghapus akun pengguna <strong id="hapusNamaPengguna"></strong> secara permanen?</p>
-                        <p class="text-danger small mb-0"><i class="bi bi-exclamation-triangle me-1"></i> Aksi ini tidak dapat dibatalkan!</p>
+                        <p class="mb-2">Apakah Anda yakin ingin menghapus akun pengguna <strong id="hapusNamaPengguna"></strong> secara permanen?</p>
+                        <p class="text-danger small mb-0 fw-semibold">Aksi ini tidak dapat dibatalkan!</p>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer border-top-0 pt-0">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                         <button type="button" class="btn btn-danger" id="btnKonfirmasiHapus">Hapus Permanen</button>
                     </div>
@@ -303,11 +305,14 @@
             };
         }
 
+        var isDeleting = false;
         btnKonfirmasiHapus.addEventListener('click', async function() {
-            if (!idHapusSementara) return;
+            if (!idHapusSementara || isDeleting) return;
             var id = idHapusSementara;
-            btnKonfirmasiHapus.disabled = true;
-            btnKonfirmasiHapus.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menghapus...';
+            isDeleting = true;
+            // Prevent blurry text by using inline style instead of disabled attribute
+            btnKonfirmasiHapus.style.pointerEvents = 'none';
+            btnKonfirmasiHapus.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Menghapus...';
 
             try {
                 var csrf = bacaCookie('XSRF-TOKEN');
@@ -330,7 +335,8 @@
             } catch (err) {
                 alert(err.message || 'Gagal memproses penghapusan akun.');
             } finally {
-                btnKonfirmasiHapus.disabled = false;
+                isDeleting = false;
+                btnKonfirmasiHapus.style.pointerEvents = 'auto';
                 btnKonfirmasiHapus.innerHTML = 'Hapus Permanen';
                 idHapusSementara = null;
             }
