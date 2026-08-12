@@ -14,15 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * Dijalankan setelah form login memverifikasi username+password. Tugasnya menerbitkan
- * JWT, menaruhnya di cookie http-only, lalu mengarahkan sesuai role.
- *
- * Di sinilah status "akun sudah disetujui admin" diperiksa — SETELAH password terbukti
- * benar, bukan sebelumnya. Kalau pemeriksaan ini dipindah ke UserDetails
- * ({@code User.disabled()}), Spring akan menolak akun nonaktif sebelum password dicek,
- * sehingga siapa pun bisa menembak username dengan password ngawur dan membedakan
- * "belum disetujui" dari "tidak terdaftar" — itu user enumeration. Lihat catatan di
- * AuthServiceImpl#loadUserByUsername.
+ * JWT Login Success Handler
  */
 public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
@@ -46,7 +38,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
         cookieService.tulis(response, jwtUtil.generateToken(username, role), contextPath);
 
-        // Simpan data TNDE ke session untuk digunakan fitur lain (misal: Surat Masuk)
+        // Save TNDE Data to Session
         Object details = authentication.getDetails();
         if (details instanceof TndeLoginResponseDto.TndeLoginDataDto tndeData) {
             TndeUserDataDto userData = tndeData.getUser();
@@ -58,8 +50,7 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
             session.setAttribute("tndeToken", tndeData.getToken());
         }
 
-        // getContextPath() wajib: sendRedirect("/...") relatif ke root host, bukan ke
-        // context path, jadi tanpa ini redirect 404 saat deploy WAR non-root.
+        // Redirect Based on Role
         boolean isAdmin = role.contains("ADMIN");
         String target = isAdmin ? "/admin/dashboard" : "/organisasi/tree";
         response.sendRedirect(contextPath + target);

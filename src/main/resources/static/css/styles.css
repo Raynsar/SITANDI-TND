@@ -67,12 +67,6 @@ body {
         background-color: var(--bs-tertiary-bg, #f8f9fa);
     }
 
-    .app-header .navbar-collapse .dropdown-menu {
-        position: static !important;
-        box-shadow: none;
-        border: none;
-        padding-left: 1rem;
-    }
 }
 
 /* Dark mode: mobile navbar overlay */
@@ -98,18 +92,6 @@ body {
    ter-theme oleh Bootstrap 5.3.
    ============================================================ */
 
-
-
-
-
-
-
-
-
-
-
-
-
 /* Dark mode: tree connector lines */
 html[data-bs-theme="dark"] .tree-list .tree-item::before,
 html[data-bs-theme="dark"] .tree-list .tree-item::after {
@@ -124,10 +106,6 @@ html[data-bs-theme="dark"] .tree-toggle:hover {
 html[data-bs-theme="dark"] .tree-toggle.selected {
     background-color: rgba(13, 110, 253, 0.25);
 }
-
-
-
-
 
 /* Dark mode: badge colors for tree */
 html[data-bs-theme="dark"] .badge-tipe.badge-provinsi {

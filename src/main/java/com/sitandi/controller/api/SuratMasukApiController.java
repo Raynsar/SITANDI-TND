@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sitandi.dto.InboxResponseDto.SuratDto;
+import com.sitandi.dto.SuratMasukResponseDto.SuratDto;
 import com.sitandi.exception.TndeLoginException;
 import com.sitandi.exception.TndeServerException;
-import com.sitandi.service.InboxService;
+import com.sitandi.service.SuratMasukService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -32,12 +32,12 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/inbox")
 @RequiredArgsConstructor
-public class InboxApiController {
+public class SuratMasukApiController {
 
-    private final InboxService inboxService;
+    private final SuratMasukService suratMasukService;
 
     @GetMapping("")
-    public ResponseEntity<Map<String, Object>> getInbox(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> ambilSuratMasuk(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         String tndeToken = (session != null) ? (String) session.getAttribute("tndeToken") : null;
 
@@ -54,7 +54,7 @@ public class InboxApiController {
         body.put("tahun", tahun);
 
         try {
-            List<SuratDto> daftarSurat = inboxService.getInbox(tndeToken, tahun);
+            List<SuratDto> daftarSurat = suratMasukService.ambilSuratMasuk(tndeToken, tahun);
             body.put("daftarSurat", daftarSurat);
         } catch (TndeLoginException ex) {
             session.invalidate();

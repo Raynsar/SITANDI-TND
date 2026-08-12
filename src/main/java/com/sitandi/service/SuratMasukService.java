@@ -2,12 +2,12 @@ package com.sitandi.service;
 
 import java.util.List;
 
-import com.sitandi.dto.InboxResponseDto.SuratDto;
+import com.sitandi.dto.SuratMasukResponseDto.SuratDto;
 
 /**
  * Layanan untuk mengambil data surat masuk / inbox dari API eksternal TNDE.
  */
-public interface InboxService {
+public interface SuratMasukService {
 
     /**
      * Ambil daftar surat masuk dari TNDE untuk tahun tertentu.
@@ -20,6 +20,6 @@ public interface InboxService {
      * @throws com.sitandi.exception.TndeLoginException
      *             bila token TNDE tidak valid / expired
      */
-    List<SuratDto> getInbox(String tndeToken, int tahun);
+    List<SuratDto> ambilSuratMasuk(String tndeToken, int tahun);
 }
 

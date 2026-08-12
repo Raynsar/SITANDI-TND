@@ -23,20 +23,7 @@ import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Mengisi data master struktur organisasi (Wilayah, OPD, Bidang, Jabatan) dengan
- * data dummy skala kecil — KHUSUS untuk kebutuhan PRESENTASI/DEMO.
- *
- * <p>Skala data: 38 Kabupaten/Kota se-Jawa Timur tetap ada di tree (struktur
- * wilayahnya tidak berubah), tapi hanya 4 (empat) kabupaten/kota SAMPEL yang
- * diisi instansi lengkap (Surabaya, Malang, Sidoarjo, Kediri). Sisanya tetap
- * muncul sebagai node kosong di tree, supaya pembimbing melihat struktur 38
- * kab/kota tanpa harus generate ribuan baris data.</p>
- *
- * <p>Perkiraan total personal: 4 kab/kota × ~3 OPD × ~3 bidang × ~5 orang
- * ≈ 180 baris. Ringan untuk demo, mudah diganti nanti saat data produksi
- * tersedia.</p>
- *
- * <p>Idempotent: hanya berjalan jika tabel wilayah masih kosong.</p>
+ * Organisasi Data Seeder
  */
 @Component
 @Order(2)
@@ -247,15 +234,7 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
                 + " jabatan=" + jabatanCount);
 
         if (wilayahCount > 0) {
-            /*
-             * Wilayah sudah ada. Cek kondisi:
-             * - legacySeed=true: ada OPD dari versi seed lama (semua 38 kab/kota punya OPD)
-             * - ada wilayah tapi OPD kosong: tabel baru di-truncate / seeder gagal sebelumnya
-             *   (reseed dengan skala kecil)
-             * - ada jabatan tapi belum punya username: kolom baru ditambahkan oleh ddl-auto=update
-             *   dengan nilai NULL (reseed biar DTO barisnya terisi)
-             * - wilayah + OPD sudah ada dari seed baru: skip
-             */
+            // Check Seed Conditions
             boolean legacySeed = opdRepository.findAll().stream()
                     .anyMatch(o -> o.getNamaOpd() != null
                             && o.getNamaOpd().contains("Kabupaten Bangkalan"));
@@ -372,12 +351,7 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
         return nama;
     }
 
-    /**
-     * Generate username dummy dari nama lengkap: inisial depan (1 huruf) +
-     * nama keluarga (token terakhir), lowercase, tanpa spasi. Tangani duplikat
-     * dengan suffix angka urut (afauzi, afauzi2, afauzi3, ...). Kolom username
-     * disimpan di jabatan_struktur, bukan dipakai untuk autentikasi.
-     */
+    // Generate Dummy Username
     private String nextUsername(String namaLengkap) {
         String[] tokens = namaLengkap.trim().toLowerCase().split("\\s+");
         String inisialDepan = tokens[0].substring(0, 1);
