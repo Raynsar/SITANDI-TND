@@ -3,76 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surat Masuk - SIPENJAM Alat TU</title>
+    <title>Surat Masuk - SITANDI</title>
+
+    <!-- AdminLTE 4 CSS + Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/css/adminlte.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1/font/bootstrap-icons.min.css" />
+
     <th:block th:replace="~{common/context-path :: context-path}"></th:block>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
-    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen">
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 
-    <header th:replace="~{common/header :: header}"></header>
+    <div class="app-wrapper">
 
-    <main class="flex-grow container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold text-slate-900 mb-6">
-            Surat Masuk
-            <span class="text-sm font-normal text-slate-500 ml-2">— Tahun <span th:text="${tahun}"></span></span>
-        </h1>
+    <!-- App Header -->
+    <div th:replace="~{common/header :: header}"></div>
 
-        <!-- Error message -->
-        <div th:if="${error}" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-            <p class="text-sm font-medium" th:text="${error}">Error message</p>
-        </div>
+    <!-- App Sidebar -->
+        <div th:replace="~{common/sidebar :: sidebar}"></div>
 
-        <!-- Empty state -->
-        <div th:if="${daftarSurat.empty and error == null}"
-             class="bg-white rounded-2xl border border-slate-100 shadow-sm text-center py-16">
-            <div class="text-slate-300 mb-4">
-                <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                </svg>
+        <!-- App Main Content -->
+        <main class="app-main">
+            <div class="container-fluid mt-4 mb-4">
+                <h1 class="fs-2 fw-bold mb-4">
+                    <i class="bi bi-envelope me-2 text-primary"></i>Surat Masuk
+                    <span id="labelTahun" class="fs-6 fw-normal text-body-secondary ms-2 d-none"></span>
+                </h1>
+
+                <!-- Loading spinner -->
+                <div id="loadingSurat" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Memuat...</span>
+                    </div>
+                    <p class="text-body-secondary mt-2">Memuat data surat masuk...</p>
+                </div>
+
+                <!-- Info: akun tanpa TNDE -->
+                <div id="infoTnde" class="card text-center py-5 d-none">
+                    <div class="card-body">
+                        <i class="bi bi-info-circle fs-1 text-body-tertiary d-block mb-3"></i>
+                        <h3 class="fs-5 fw-semibold mb-2">Fitur Khusus Akun TNDE</h3>
+                        <p id="pesanInfo" class="text-body-secondary mb-1">
+                            Fitur Surat Masuk hanya tersedia untuk akun yang masuk lewat sistem TNDE.
+                        </p>
+                        <p class="text-body-secondary small mb-0">
+                            Akun Anda saat ini login secara lokal sehingga tidak ada token TNDE yang tersimpan di sesi.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Error message -->
+                <div id="errorSurat" class="alert alert-danger d-none" role="alert">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <span id="pesanError">Error</span>
+                </div>
+
+                <!-- Empty state -->
+                <div id="emptySurat" class="card text-center py-5 d-none">
+                    <div class="card-body">
+                        <i class="bi bi-envelope-open fs-1 text-body-tertiary d-block mb-3"></i>
+                        <p class="text-body-tertiary">Belum ada surat masuk untuk tahun ini.</p>
+                    </div>
+                </div>
+
+                <!-- Table — diisi oleh JavaScript -->
+                <div id="tabelSurat" class="card d-none">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="fw-semibold small text-uppercase">No</th>
+                                    <th class="fw-semibold small text-uppercase">Nomor Surat</th>
+                                    <th class="fw-semibold small text-uppercase">Perihal</th>
+                                    <th class="fw-semibold small text-uppercase">Tanggal</th>
+                                    <th class="fw-semibold small text-uppercase">Pengirim</th>
+                                    <th class="fw-semibold small text-uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodySurat">
+                                <!-- Baris dirender oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <p class="text-slate-400">Belum ada surat masuk untuk tahun ini.</p>
-        </div>
+        </main>
+    </div>
 
-        <!-- Table -->
-        <div th:if="${not daftarSurat.empty}"
-             class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
-                        <tr>
-                            <th class="px-4 py-3">No</th>
-                            <th class="px-4 py-3">Nomor Surat</th>
-                            <th class="px-4 py-3">Perihal</th>
-                            <th class="px-4 py-3">Tanggal</th>
-                            <th class="px-4 py-3">Pengirim</th>
-                            <th class="px-4 py-3">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="surat, iter : ${daftarSurat}" class="border-t border-slate-100 hover:bg-slate-50 transition-colors">
-                            <td class="px-4 py-3 text-slate-500" th:text="${iter.index + 1}">1</td>
-                            <td class="px-4 py-3 font-medium text-slate-700" th:text="${surat.nomorSurat}">123/ABC</td>
-                            <td class="px-4 py-3 text-slate-600" th:text="${surat.perihal}">Perihal surat</td>
-                            <td class="px-4 py-3 text-slate-500" th:text="${surat.tanggal}">2024-01-01</td>
-                            <td class="px-4 py-3 text-slate-600" th:text="${surat.pengirim}">Pengirim</td>
-                            <td class="px-4 py-3">
-                                <span th:text="${surat.status}"
-                                      class="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
-                                    Proses
-                                </span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
+    <!-- App Footer -->
+    <div th:replace="~{common/footer :: footer}"></div>
 
-    <footer th:replace="~{common/footer :: footer}"></footer>
+    <!-- Core JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2/browser/overlayscrollbars.browser.es6.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/js/adminlte.min.js"></script>
 
     <script th:src="@{/js/main.js}" type="module"></script>
+    <script type="module">
+        var APP_CTX = window.APP_CONTEXT_PATH || '/';
+
+        var labelTahun   = document.getElementById('labelTahun');
+        var loadingSurat  = document.getElementById('loadingSurat');
+        var infoTnde      = document.getElementById('infoTnde');
+        var pesanInfo     = document.getElementById('pesanInfo');
+        var errorSurat    = document.getElementById('errorSurat');
+        var pesanError    = document.getElementById('pesanError');
+        var emptySurat    = document.getElementById('emptySurat');
+        var tabelSurat    = document.getElementById('tabelSurat');
+        var bodySurat     = document.getElementById('bodySurat');
+
+        function muatSuratMasuk() {
+            var url = APP_CTX + 'api/v1/inbox';
+
+            fetch(url, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(function(res) {
+                if (res.status === 401) {
+                    window.location.href = APP_CTX + 'login';
+                    return Promise.reject('Unauthorized');
+                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function(data) {
+                loadingSurat.classList.add('d-none');
+
+                /* Label tahun */
+                if (data.tahun) {
+                    labelTahun.textContent = '— Tahun ' + data.tahun;
+                    labelTahun.classList.remove('d-none');
+                }
+
+                /* Info: akun non-TNDE */
+                if (data.info) {
+                    pesanInfo.textContent = data.info;
+                    infoTnde.classList.remove('d-none');
+                    return;
+                }
+
+                /* Error dari TNDE */
+                if (data.error) {
+                    pesanError.textContent = data.error;
+                    errorSurat.classList.remove('d-none');
+                    return;
+                }
+
+                /* Render tabel */
+                var list = data.daftarSurat || [];
+                if (list.length === 0) {
+                    emptySurat.classList.remove('d-none');
+                } else {
+                    renderTabel(list);
+                }
+            })
+            .catch(function(err) {
+                if (err === 'Unauthorized') return;
+                loadingSurat.classList.add('d-none');
+                pesanError.textContent = 'Gagal memuat data: ' + (err.message || err);
+                errorSurat.classList.remove('d-none');
+            });
+        }
+
+        function renderTabel(list) {
+            bodySurat.innerHTML = '';
+
+            for (var i = 0; i < list.length; i++) {
+                var s = list[i];
+                var tr = document.createElement('tr');
+
+                /* No */
+                var tdNo = document.createElement('td');
+                tdNo.className = 'text-body-secondary';
+                tdNo.textContent = (i + 1);
+                tr.appendChild(tdNo);
+
+                /* Nomor Surat */
+                var tdNomor = document.createElement('td');
+                tdNomor.className = 'fw-medium';
+                tdNomor.textContent = s.nomorSurat || '-';
+                tr.appendChild(tdNomor);
+
+                /* Perihal */
+                var tdPerihal = document.createElement('td');
+                tdPerihal.textContent = s.perihal || '-';
+                tr.appendChild(tdPerihal);
+
+                /* Tanggal */
+                var tdTanggal = document.createElement('td');
+                tdTanggal.className = 'text-body-secondary';
+                tdTanggal.textContent = s.tanggal || '-';
+                tr.appendChild(tdTanggal);
+
+                /* Pengirim */
+                var tdPengirim = document.createElement('td');
+                tdPengirim.textContent = s.pengirim || '-';
+                tr.appendChild(tdPengirim);
+
+                /* Status */
+                var tdStatus = document.createElement('td');
+                var spanStatus = document.createElement('span');
+                spanStatus.className = 'badge bg-info-subtle text-info-emphasis';
+                spanStatus.textContent = s.status || '-';
+                tdStatus.appendChild(spanStatus);
+                tr.appendChild(tdStatus);
+
+                bodySurat.appendChild(tr);
+            }
+
+            tabelSurat.classList.remove('d-none');
+        }
+
+        /* Muat data saat halaman selesai dimuat */
+        muatSuratMasuk();
+    </script>
 </body>
 </html>
-

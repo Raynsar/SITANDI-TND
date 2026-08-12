@@ -1,114 +1,61 @@
-# SIPENJAM Alat TU — Aplikasi Manajemen Peminjaman Alat TU
+# Sistem Tata Naskah Dinas (SITANDI)
 
-Sistem informasi untuk pengajuan, approval, dan pengelolaan peminjaman alat/sarana milik Tata Usaha.
+SITANDI adalah aplikasi berbasis web yang digunakan untuk mengelola tata naskah dinas, manajemen struktur organisasi instansi, serta integrasi surat menyurat elektronik secara terpusat. Aplikasi ini dikembangkan menggunakan Spring Boot dan memiliki antarmuka (UI) berbasis AdminLTE 4.
 
-## Stack
+## Fitur Utama
+- **Autentikasi Terintegrasi**: Login terintegrasi dengan layanan TNDE eksternal (serta memiliki sistem fallback user lokal).
+- **Struktur Organisasi (Tree Filter Search)**: Visualisasi dan pengelolaan hierarki wilayah, OPD, bidang, serta personil. Dilengkapi dengan fitur **Global Search** berbasis *tree filter* yang sangat responsif.
+- **Kelola Pengguna**: Aktivasi akun pengguna oleh admin.
+- **Surat Masuk**: Integrasi API Entry Point ke inbox TNDE.
+- **API Entry Point Arsitektur**: Komunikasi terpusat melalui `/api/v1/*` sebagai pintu masuk frontend menuju backend.
+- **Dark Mode**: Dukungan mode gelap/terang bawaan AdminLTE 4.
 
-- Backend: Spring Boot 3.5.16 (Web, Thymeleaf, Spring Data JPA, Spring Security, Validation)
-- Java 17
-- Frontend: Thymeleaf + Tailwind CSS (CDN) + vanilla JS (fetch API)
-- Database: MySQL (default, bisa diganti driver di `pom.xml`)
-- Runtime produksi: Tomcat 10.1.x eksternal (WAR)
+## Prasyarat Lingkungan
+- Java 21 (JDK 21)
+- Apache Maven
+- MySQL 8.x
 
-## Status
+## Cara Konfigurasi & Menjalankan (Development)
 
-Struktur project & frontend awal sudah tersedia. **Seluruh kode backend (Java) sengaja dikosongkan** — dikerjakan menyusul menggunakan Claude Code.
+1. Clone repositori ini.
+2. Buat database MySQL baru, sesuaikan konfigurasinya pada properti (contoh file `application-local.properties`).
 
-## Menjalankan Lokal (development)
+### ⚡ Cara Tercepat (Rekomendasi)
 
-```bash
-mvn spring-boot:run
+Gunakan script helper yang sudah disediakan. Script ini otomatis men-generate `JWT_SECRET` acak dan langsung menjalankan aplikasi:
+
+```powershell
+.\run-dev.ps1
 ```
 
-Akses di `http://localhost:8080`
+> **Catatan:** `JWT_SECRET` di-generate ulang setiap kali script dijalankan. Ini aman untuk development karena token JWT hanya perlu valid selama sesi berjalan.
 
-Meski packaging-nya `war`, mode ini tetap jalan pakai embedded Tomcat karena `spring-boot-starter-tomcat` ber-scope `provided` (tetap ada di classpath saat `spring-boot:run` / `mvn test`, hanya dikecualikan dari isi WAR).
+### Cara Manual
 
-## Deployment ke Tomcat 10
+Jika ingin mengatur `JWT_SECRET` sendiri (misalnya agar token tetap valid antar-restart):
 
-Aplikasi di-package sebagai `.war` untuk di-deploy ke Tomcat 10 standalone milik Diskominfo Jatim, bukan pakai embedded Tomcat.
+3. Set environment variable `JWT_SECRET` dengan string acak (minimal 32 karakter) untuk keamanan token JWT.
+   
+   **Contoh di PowerShell (Windows):**
+   ```powershell
+   $env:JWT_SECRET = "rahasia-super-panjang-untuk-sitandi-dev-minimal-32-karakter"
+   ```
+4. Jalankan aplikasi menggunakan Maven:
+   ```bash
+   mvn spring-boot:run
+   ```
 
-> **Prasyarat: Tomcat harus versi 10.1.x, bukan 10.0.x.**
->
-> Spring Boot 3.x butuh Servlet 6.0 (Jakarta EE 10) — itu ada di Tomcat **10.1.x**.
-> Tomcat **10.0.x** masih Servlet 5.0 (Jakarta EE 9) dan aplikasi ini TIDAK akan start di sana.
-> Cek versi server dengan `$CATALINA_HOME/bin/version.sh`.
-> Build ini di-test terhadap tomcat-embed 10.1.55 (bawaan Spring Boot 3.5.16).
+### Akses Aplikasi
 
-### 1. Build
+5. Buka browser di: http://localhost:8080/
 
-```bash
-mvn clean package
-```
+## Cara Build untuk Production (WAR)
 
-Hasilnya: `target/peminjaman-alat-tu-0.0.1-SNAPSHOT.war`
+Aplikasi ini dikonfigurasi untuk dibuild sebagai file WAR agar bisa di-deploy ke _standalone servlet container_ (misal: Apache Tomcat).
 
-### 2. Deploy
-
-Rename WAR sesuai context path yang diinginkan, lalu copy ke folder `webapps/` Tomcat.
-**Nama file WAR menentukan context path**, jadi untuk context `/sipenjam`:
-
-```bash
-cp target/peminjaman-alat-tu-0.0.1-SNAPSHOT.war $CATALINA_HOME/webapps/sipenjam.war
-```
-
-Tomcat akan auto-deploy dan mengekstrak ke `webapps/sipenjam/`.
-Kasus khusus: `ROOT.war` → context path `/` (root).
-
-### 3. Akses
-
-```
-http://<host>/<nama-war>/      contoh: http://10.10.10.5/sipenjam/
-```
-
-Port ditentukan `<Connector port="80">` di `conf/server.xml` Tomcat — `server.port` di `application.properties` diabaikan saat mode WAR.
-
-### 4. Konfigurasi environment (DB, dll)
-
-`application.properties` ikut terbundel di dalam WAR. Untuk override tanpa rebuild, set via env var / system property di `bin/setenv.sh` Tomcat, contoh:
-
-```bash
-export JAVA_OPTS="$JAVA_OPTS -Dspring.datasource.url=jdbc:mysql://dbhost:3306/peminjaman_alat_tu \
-                             -Dspring.datasource.username=sipenjam \
-                             -Dspring.datasource.password=**** \
-                             -Dspring.jpa.hibernate.ddl-auto=validate"
-```
-
-### Catatan context path (penting)
-
-Semua URL di frontend harus context-path-aware, karena app tidak lagi jalan di root:
-
-- Template Thymeleaf: **selalu** pakai `@{/path}`, jangan `href="/path"` — `@{...}` otomatis menambahkan context path.
-- JavaScript: pakai `window.APP_CONTEXT_PATH` (di-inject fragment `templates/common/context-path.html`, nilainya sudah termasuk trailing slash). Jangan pakai `window.location.origin` — origin tidak menyertakan context path. Fragment ini wajib di-include di `<head>` setiap halaman yang memuat JS.
-- Java: `response.sendRedirect()` relatif ke root host, jadi prefix manual dengan `request.getContextPath()`.
-- Halaman baru sebaiknya ditaruh di `templates/` (bukan `static/`) supaya bisa pakai `@{...}`; file di `static/` tidak diproses Thymeleaf.
-
-## Kebijakan Versi (jangan diubah tanpa diskusi infra)
-
-Project ini dikunci di **Spring Boot 3.5.16** — patch terakhir cabang 3.x, dan cabang 3.x sudah **EOL (end of OSS support) sejak Juni 2026**. Ini keputusan sadar, bukan kelalaian update:
-
-- Runtime produksi Diskominfo Jatim adalah **Tomcat 10**, dan versi itu FIXED.
-- Spring Boot 4.x butuh **Servlet 6.1**, yang hanya ada di **Tomcat 11**. Naik ke 4.x tanpa upgrade Tomcat akan bikin aplikasi gagal start.
-- Jadi 3.5.16 dipilih sebagai versi 3.x paling baru di-patch selama constraint Tomcat 10 masih berlaku.
-
-**Konsekuensi:** cabang 3.x tidak lagi menerima security patch gratis. Selama masih di 3.5.16, CVE baru di Spring/Tomcat tidak otomatis ter-cover — pantau manual, dan jadikan upgrade Tomcat 11 + Spring Boot 4.x sebagai rencana jangka menengah. Kalau kebijakan infra memungkinkan, opsi lain adalah langganan komersial (Tanzu Spring Enterprise) yang masih menyediakan patch untuk 3.5.x setelah EOL OSS.
-
-**Namespace servlet:** Spring Boot 3.x + Tomcat 10 sudah pindah ke Jakarta EE 9+, jadi semua import servlet WAJIB `jakarta.servlet.*` — `javax.servlet.*` tidak akan resolve.
-
-## Struktur Utama
-
-- `controller/` — MVC controller untuk render halaman Thymeleaf
-- `controller/api/` — REST controller untuk `/api/v1/peminjaman/**` (dikonsumsi `static/js/api.js`)
-- `model/` — entity JPA
-- `repository/` — Spring Data JPA repository
-- `service/` — interface + implementasi business logic
-- `dto/` — request/response payload
-- `exception/` — global exception handler
-
-## Catatan Keamanan (perlu diisi saat implementasi backend)
-
-- `SecurityConfig` harus mengatur role `ADMIN` vs `USER` (endpoint `/admin/**` hanya untuk staf TU).
-- Password wajib di-hash (BCrypt), jangan disimpan plaintext.
-- Tambahkan proteksi CSRF untuk endpoint state-changing jika session-based auth dipakai; jika stateless (JWT), pastikan token divalidasi di setiap request `api.js`.
-- Validasi semua input DTO (`@Valid`) untuk cegah data korup/injection.
-- Thymeleaf: gunakan `th:text` (auto-escape), hindari `th:utext` untuk data dari user (risiko XSS).
+1. Jalankan build:
+   ```bash
+   mvn clean package -DskipTests
+   ```
+2. File WAR akan ter-generate di folder target/sitandi.war.
+3. Deploy file WAR tersebut ke dalam folder webapps di Tomcat Anda. Perhatikan bahwa nama file akan menentukan _context-path_ URL aplikasi Anda (disarankan mengubah namanya menjadi sitandi.war agar URL menjadi /sitandi/).

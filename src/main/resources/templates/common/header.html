@@ -2,43 +2,139 @@
 <html lang="id" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
-    <header th:fragment="header" class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <img th:src="@{/images/logo-tu.svg}" alt="Logo TU" class="h-8 w-8">
-                <span class="text-xl font-bold tracking-tight text-slate-800">
-                    SIPENJAM <span class="text-emerald-600">ALAT TU</span>
-                </span>
-            </div>
-            <nav class="hidden md:flex items-center gap-6">
-                <a sec:authorize="isAuthenticated()" th:href="@{/surat-masuk}"
-                   class="text-sm font-medium text-slate-600 hover:text-emerald-600">Surat Masuk</a>
-                <a th:href="@{/katalog}" class="text-sm font-medium text-slate-600 hover:text-emerald-600">Katalog Alat</a>
-                <a th:href="@{/riwayat}" class="text-sm font-medium text-slate-600 hover:text-emerald-600">Riwayat Peminjaman</a>
-                <a sec:authorize="isAuthenticated()" th:href="@{/ganti-password}"
-                   class="text-sm font-medium text-slate-600 hover:text-emerald-600">Ganti Password</a>
-            </nav>
-            <div class="flex items-center gap-4">
-                <span sec:authorize="isAuthenticated()" th:text="${#authentication.name}"
-                      class="text-sm text-slate-600"></span>
+    <!--
+      ============================================================
+      AdminLTE 4 — App Header (top navigation bar)
+      ============================================================
+      • .app-header      — fixed top bar
+      • .navbar-brand    — brand link (logo + app name)
+      • #sidebarToggle   — toggle button for sidebar (data-lte-toggle="sidebar")
+      ============================================================
+    -->
+    <header th:fragment="header" class="app-header navbar navbar-expand-md">
+        <div class="container-fluid">
 
-                <!--
-                  Logout WAJIB POST, bukan link biasa.
-                  Sejak proteksi CSRF diaktifkan (token pindah ke cookie), Spring Security
-                  hanya melayani POST /logout — GET /logout tidak lagi cocok dengan
-                  LogoutFilter dan berakhir 404. Form th:action juga otomatis diisi hidden
-                  input _csrf oleh Thymeleaf, yang memang diwajibkan endpoint ini.
-                  Bonus: logout lewat GET bisa dipicu paksa dari situs lain (mis. lewat
-                  <img src=".../logout">), POST + CSRF menutup itu.
-                -->
-                <form th:action="@{/logout}" method="post" class="inline">
-                    <button type="submit"
-                            class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium py-2 px-4 rounded-lg transition-colors">
-                        Keluar
-                    </button>
-                </form>
+            <!-- Brand (logo + app name) -->
+            <a th:href="@{/admin/dashboard}" class="navbar-brand text-nowrap me-auto me-md-3">
+                <img th:src="@{/images/logo-tu.svg}" alt="Logo TU" class="brand-image d-inline-flex me-2"
+                     style="height: 32px; width: 32px;">
+                <span class="fw-bold fs-6 lh-1">
+                    SITANDI <span class="text-success">TND</span>
+                </span>
+            </a>
+
+
+
+            <!-- Single hamburger for mobile (toggles combined menu) -->
+            <button class="navbar-toggler d-md-none order-1" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Combined navigation (on mobile: overlay with all items; on desktop: top navbar only) -->
+            <div class="collapse navbar-collapse order-3" id="navbarNav">
+                <!-- DESKTOP NAVBAR (hidden on mobile) -->
+                <ul class="navbar-nav ms-auto d-none d-md-flex">
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a th:href="@{/surat-masuk}" class="nav-link">
+                            <i class="bi bi-envelope me-1"></i>Surat Masuk
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a th:href="@{/ganti-password}" class="nav-link">
+                            <i class="bi bi-key me-1"></i>Ganti Password
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <button id="darkModeToggle" class="nav-link btn btn-link" type="button"
+                                title="Toggle Dark Mode" aria-label="Toggle Dark Mode">
+                            <i class="bi bi-moon-fill" id="darkModeIcon"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i>
+                            <span th:text="${#authentication.name}">user</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="d-inline">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right me-1"></i>Keluar
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- MOBILE MENU OVERLAY (hidden on desktop) -->
+                <div class="d-md-none" sec:authorize="isAuthenticated()">
+                    <!-- User info label -->
+                    <div class="px-3 pt-3 pb-2 text-body-secondary fw-bold text-uppercase fs-6">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span th:text="${#authentication.name}">user</span>
+                    </div>
+
+                    <!-- Flat navigation links -->
+                    <ul class="navbar-nav px-2">
+                        <li class="nav-item">
+                            <a th:href="@{/ganti-password}" class="nav-link px-3">
+                                <i class="bi bi-key me-2"></i>Ganti Password
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a th:href="@{/admin/dashboard}" class="nav-link px-3">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a th:href="@{/organisasi/tree}" class="nav-link px-3">
+                                <i class="bi bi-diagram-3 me-2"></i>Struktur Organisasi
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/surat-masuk}" class="nav-link px-3">
+                                <i class="bi bi-envelope me-2"></i>Surat Masuk
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a th:href="@{/admin/pengguna}" class="nav-link px-3">
+                                <i class="bi bi-people me-2"></i>Kelola Pengguna
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Dark mode toggle & Logout row at the bottom -->
+                    <div class="d-flex justify-content-between align-items-center px-3 mt-2 pt-3 pb-3 border-top">
+                        <button id="darkModeToggle" class="btn btn-link text-body p-0 text-decoration-none" type="button" aria-label="Toggle Dark Mode">
+                            <i class="bi bi-moon-fill fs-4" id="darkModeIcon"></i>
+                        </button>
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-sm btn-outline-danger px-3">
+                                <i class="bi bi-box-arrow-right me-1"></i>Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
-    </header>
+</header>
+
+    <!--
+      Brand-only alternative for app-sidebar (small logo area at top of sidebar).
+      See sidebar.html for the sidebar fragment.
+    -->
+    <th:block th:fragment="sidebar-brand">
+        <a th:href="@{/admin/dashboard}" class="brand-link">
+            <img th:src="@{/images/logo-tu.svg}" alt="Logo TU" class="brand-image me-2"
+                 style="height: 32px; width: 32px;">
+            <span class="brand-text fw-bold">SITANDI</span>
+        </a>
+    </th:block>
 </body>
 </html>
+
+

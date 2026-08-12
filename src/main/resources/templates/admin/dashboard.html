@@ -3,49 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - SIPENJAM Alat TU</title>
+    <title>Dashboard Admin - SITANDI</title>
+
+    <!-- AdminLTE 4 CSS + Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/css/adminlte.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1/font/bootstrap-icons.min.css" />
+
     <th:block th:replace="~{common/context-path :: context-path}"></th:block>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
-    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 flex flex-col min-h-screen">
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 
-    <header th:replace="~{common/header :: header}"></header>
+    <div class="app-wrapper">
 
-    <div class="flex flex-grow">
-        <aside th:replace="~{common/sidebar :: sidebar}"></aside>
+    <!-- App Header -->
+    <div th:replace="~{common/header :: header}"></div>
 
-        <main class="flex-grow container mx-auto px-4 py-8">
-            <h1 class="text-2xl font-bold text-slate-900 mb-6">Dashboard</h1>
+    <!-- App Sidebar -->
+        <div th:replace="~{common/sidebar :: sidebar}"></div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                    <p class="text-sm text-slate-500 mb-1">Peminjaman Aktif</p>
-                    <p class="text-2xl font-bold text-slate-900" th:text="${jumlahAktif != null ? jumlahAktif : 0}">0</p>
+        <!-- App Main Content -->
+        <main class="app-main">
+            <div class="container-fluid mt-4 mb-4">
+                <h1 class="fs-2 fw-bold mb-4">
+                    <i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard
+                </h1>
+
+                <!-- Loading spinner -->
+                <div id="loadingStats" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Memuat...</span>
+                    </div>
+                    <p class="text-body-secondary mt-2">Memuat statistik...</p>
                 </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                    <p class="text-sm text-slate-500 mb-1">Menunggu Persetujuan</p>
-                    <p class="text-2xl font-bold text-amber-600" th:text="${jumlahMenunggu != null ? jumlahMenunggu : 0}">0</p>
-                </div>
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                    <p class="text-sm text-slate-500 mb-1">Total Alat</p>
-                    <p class="text-2xl font-bold text-slate-900" th:text="${totalAlat != null ? totalAlat : 0}">0</p>
-                </div>
-            </div>
 
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                <h2 class="font-semibold text-slate-900 mb-3">Log Aktivitas Terbaru</h2>
-                <ul th:if="${logAktivitas != null and !logAktivitas.isEmpty()}" class="flex flex-col divide-y divide-slate-100">
-                    <li th:each="log : ${logAktivitas}" th:text="${log}"
-                        class="text-sm text-slate-600 py-2">Aktivitas</li>
-                </ul>
-                <p th:if="${logAktivitas == null or logAktivitas.isEmpty()}" class="text-sm text-slate-400">Belum ada aktivitas.</p>
+                <!-- Error container -->
+                <div id="errorStats" class="alert alert-danger d-none" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <span id="pesanErrorStats">Gagal memuat statistik.</span>
+                </div>
+
+                <!-- Stats Cards -->
+                <div id="statsContainer" class="row g-4 mb-4 d-none">
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-primary-subtle text-primary-emphasis rounded-3 p-3 fs-3">
+                                        <i class="bi bi-building"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-body-secondary small mb-0">Total Instansi/OPD</p>
+                                        <p id="statOpd" class="fs-3 fw-bold mb-0">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-success-subtle text-success-emphasis rounded-3 p-3 fs-3">
+                                        <i class="bi bi-diagram-3"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-body-secondary small mb-0">Total Bidang</p>
+                                        <p id="statBidang" class="fs-3 fw-bold mb-0">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-warning-subtle text-warning-emphasis rounded-3 p-3 fs-3">
+                                        <i class="bi bi-people-fill"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-body-secondary small mb-0">Total Personal</p>
+                                        <p id="statPersonal" class="fs-3 fw-bold mb-0">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-info-subtle text-info-emphasis rounded-3 p-3 fs-3">
+                                        <i class="bi bi-person-badge"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-body-secondary small mb-0">Total Pengguna</p>
+                                        <p id="statPengguna" class="fs-3 fw-bold mb-0">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
+
+        <!-- App Footer -->
+        <div th:replace="~{common/footer :: footer}"></div>
     </div>
 
-    <footer th:replace="~{common/footer :: footer}"></footer>
+    <!-- Core JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2/browser/overlayscrollbars.browser.es6.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/js/adminlte.min.js"></script>
 
     <script th:src="@{/js/main.js}" type="module"></script>
+    <script type="module">
+        var APP_CTX = window.APP_CONTEXT_PATH || '/';
+
+        var loadingStats = document.getElementById('loadingStats');
+        var errorStats = document.getElementById('errorStats');
+        var pesanErrorStats = document.getElementById('pesanErrorStats');
+        var statsContainer = document.getElementById('statsContainer');
+
+        var statOpd = document.getElementById('statOpd');
+        var statBidang = document.getElementById('statBidang');
+        var statPersonal = document.getElementById('statPersonal');
+        var statPengguna = document.getElementById('statPengguna');
+
+        function muatStatistik() {
+            var url = APP_CTX + 'api/v1/dashboard/stats';
+
+            fetch(url, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            })
+            .then(function(res) {
+                if (res.status === 401) {
+                    window.location.href = APP_CTX + 'login';
+                    return Promise.reject('Unauthorized');
+                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function(data) {
+                loadingStats.classList.add('d-none');
+
+                statOpd.textContent = data.totalOpd || 0;
+                statBidang.textContent = data.totalBidang || 0;
+                statPersonal.textContent = data.totalPersonal || 0;
+                statPengguna.textContent = data.totalPengguna || 0;
+
+                statsContainer.classList.remove('d-none');
+            })
+            .catch(function(err) {
+                if (err === 'Unauthorized') return;
+                loadingStats.classList.add('d-none');
+                pesanErrorStats.textContent = 'Gagal memuat statistik: ' + (err.message || err);
+                errorStats.classList.remove('d-none');
+            });
+        }
+
+        muatStatistik();
+    </script>
 </body>
 </html>

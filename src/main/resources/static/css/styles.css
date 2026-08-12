@@ -1,4 +1,131 @@
-/* Kustomisasi stylesheet dasar untuk elemen form / tabel dinamis */
+/* Kustomisasi stylesheet untuk AdminLTE 4 (Bootstrap 5.3 overrides) */
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+/* Pastikan .app-main punya min-height penuh */
+.app-main {
+    min-height: 100vh;
+}
+
+/* Card border-radius konsisten */
+.card {
+    border-radius: 0.75rem;
+}
+
+/* Badge dan label konsisten */
+.badge {
+    font-weight: 500;
+}
+
+/* Sidebar nav link active state */
+.nav-sidebar .nav-item > .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Tinggi minimal konten agar footer tidak melayang */
+.content-wrapper {
+    min-height: calc(100vh - 3.5rem - 3.5rem);
+}
+
+/* Responsive table wrapper untuk overflow-x */
+.table-responsive-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================
+   Mobile Navbar Overlay
+   ============================================================
+   Di bawah breakpoint md (768px), navbar-collapse muncul sebagai
+   overlay floating panel, BUKAN mendorong konten ke bawah.
+   ============================================================ */
+@media (max-width: 767.98px) {
+    .app-header .navbar-collapse {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background-color: var(--bs-body-bg, #fff);
+        border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        padding: 0.5rem 1rem;
+    }
+
+    .app-header .navbar-collapse .navbar-nav {
+        gap: 0;
+    }
+
+    .app-header .navbar-collapse .nav-link {
+        padding: 0.625rem 0.75rem;
+        border-radius: 0.375rem;
+        transition: background-color 0.15s ease;
+    }
+
+    .app-header .navbar-collapse .nav-link:hover {
+        background-color: var(--bs-tertiary-bg, #f8f9fa);
+    }
+
+}
+
+/* Dark mode: mobile navbar overlay */
+@media (max-width: 767.98px) {
+    html[data-bs-theme="dark"] .app-header .navbar-collapse {
+        background-color: var(--bs-body-bg, #212529);
+        border-bottom-color: var(--bs-border-color, #495057);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
+    }
+
+    html[data-bs-theme="dark"] .app-header .navbar-collapse .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+}
+
+
+
+/* ============================================================
+   Dark Mode Overrides untuk AdminLTE 4
+   ============================================================
+   AdminLTE 4 menggunakan data-bs-theme="dark" pada elemen <html>.
+   CSS di bawah menyesuaikan elemen-elemen yang tidak otomatis
+   ter-theme oleh Bootstrap 5.3.
+   ============================================================ */
+
+/* Dark mode: tree connector lines */
+html[data-bs-theme="dark"] .tree-list .tree-item::before,
+html[data-bs-theme="dark"] .tree-list .tree-item::after {
+    border-color: #555;
+}
+
+/* Dark mode: tree toggle hover */
+html[data-bs-theme="dark"] .tree-toggle:hover {
+    background-color: rgba(255,255,255,0.08);
+}
+
+html[data-bs-theme="dark"] .tree-toggle.selected {
+    background-color: rgba(13, 110, 253, 0.25);
+}
+
+/* Dark mode: badge colors for tree */
+html[data-bs-theme="dark"] .badge-tipe.badge-provinsi {
+    background-color: #1b5e20;
+    color: #a5d6a7;
+}
+html[data-bs-theme="dark"] .badge-tipe.badge-kabupaten {
+    background-color: #0d47a1;
+    color: #90caf9;
+}
+html[data-bs-theme="dark"] .badge-tipe.badge-kota {
+    background-color: #e65100;
+    color: #ffcc80;
+}
+html[data-bs-theme="dark"] .badge-tipe.badge-opd {
+    background-color: #4a148c;
+    color: #ce93d8;
+}
+html[data-bs-theme="dark"] .badge-tipe.badge-bidang {
+    background-color: #880e4f;
+    color: #f48fb1;
+}
+

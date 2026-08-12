@@ -17,11 +17,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.sipenjam</groupId>
-    <artifactId>peminjaman-alat-tu</artifactId>
+    <groupId>com.sitandi</groupId>
+    <artifactId>tata-naskah-dinas</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>peminjaman-alat-tu</name>
-    <description>Aplikasi Manajemen Peminjaman Alat TU</description>
+    <name>tata-naskah-dinas</name>
+    <description>SITANDI — Sistem Tata Naskah Dinas</description>
     <!-- Dideploy sebagai .war ke Tomcat eksternal (lihat README: Deployment ke Tomcat Eksternal) -->
     <packaging>war</packaging>
 
@@ -121,11 +121,30 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- H2 in-memory DB untuk test (smoke test context load tanpa MySQL) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
-        <finalName>sipenjam</finalName>
+        <finalName>sitandi</finalName>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
