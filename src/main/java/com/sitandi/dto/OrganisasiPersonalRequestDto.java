@@ -25,4 +25,13 @@ public class OrganisasiPersonalRequestDto {
 
     @NotBlank(message = "Username tidak boleh kosong")
     private String username;
+
+    @NotBlank(message = "NIP tidak boleh kosong")
+    private String nip;
+
+    @NotBlank(message = "Email tidak boleh kosong")
+    private String email;
+
+    @NotBlank(message = "No. HP tidak boleh kosong")
+    private String noHp;
 }

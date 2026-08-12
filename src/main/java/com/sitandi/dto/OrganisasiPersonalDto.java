@@ -34,4 +34,8 @@ public class OrganisasiPersonalDto {
      * (inisial depan + nama belakang, lowercase, tanpa spasi).
      */
     private String username;
+
+    private String nip;
+    private String email;
+    private String noHp;
 }
