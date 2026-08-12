@@ -94,70 +94,115 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
     );
 
     /**
-     * Kab/kota SAMPEL yang akan diisi lengkap dengan OPD + Bidang + Jabatan.
-     * Kab/kota lain tetap muncul di tree tapi tanpa OPD di bawahnya (kosong).
+     * Daftar Instansi / OPD yang akan digenerate untuk SETIAP Kabupaten/Kota.
      */
-    private static final List<SampleKabKota> SAMPEL_LENGKAP = List.of(
-            new SampleKabKota("Kota Surabaya", List.of(
-                    "Dinas Komunikasi dan Informatika",
-                    "Dinas Pendidikan",
-                    "Dinas Kesehatan"
-            )),
-            new SampleKabKota("Kabupaten Malang", List.of(
-                    "Dinas Komunikasi dan Informatika",
-                    "Dinas Pekerjaan Umum dan Penataan Ruang"
-            )),
-            new SampleKabKota("Kabupaten Sidoarjo", List.of(
-                    "Dinas Komunikasi dan Informatika"
-            )),
-            new SampleKabKota("Kota Kediri", List.of(
-                    "Dinas Komunikasi dan Informatika",
-                    "Dinas Perhubungan"
-            ))
+    private static final List<String> DAFTAR_OPD = List.of(
+            // Instansi besar (4-6 Bidang)
+            "Dinas Komunikasi dan Informatika",
+            "Dinas Pendidikan",
+            "Dinas Kesehatan",
+            "Dinas Pekerjaan Umum dan Penataan Ruang",
+            // Instansi sedang (3-4 Bidang)
+            "Dinas Sosial",
+            "Dinas Lingkungan Hidup",
+            "Dinas Pertanian",
+            "Dinas Perindustrian dan Perdagangan",
+            "Dinas Perhubungan",
+            // Instansi kecil (2-3 Bidang)
+            "Badan Kepegawaian Daerah",
+            "Badan Pengelolaan Keuangan dan Aset Daerah",
+            "Satuan Polisi Pamong Praja",
+            "Inspektorat Daerah"
     );
-
-    /** Lookup cepat nama → tipe kab/kota untuk sampel. */
-    private static final java.util.Map<String, List<String>> SAMPEL_BY_NAMA = new java.util.HashMap<>();
-    static {
-        for (SampleKabKota s : SAMPEL_LENGKAP) {
-            SAMPEL_BY_NAMA.put(s.nama(), s.opdList());
-        }
-    }
 
     /** Daftar Bidang generik untuk setiap OPD contoh Kominfo. */
     private static final List<String> BIDANG_KOMINFO = List.of(
             "Sekretariat",
             "Bidang Infrastruktur Teknologi Informasi",
             "Bidang Layanan Aplikasi Informatika",
-            "Bidang Komunikasi dan Informasi Publik"
+            "Bidang Komunikasi dan Informasi Publik",
+            "Bidang Persandian dan Statistik"
     );
 
     /** Daftar Bidang generik untuk Dinas Pendidikan. */
     private static final List<String> BIDANG_PENDIDIKAN = List.of(
             "Sekretariat",
             "Bidang Pembinaan PAUD dan Pendidikan Non Formal",
-            "Bidang Pembinaan Sekolah Dasar"
+            "Bidang Pembinaan Sekolah Dasar",
+            "Bidang Pembinaan Sekolah Menengah Pertama",
+            "Bidang Pembinaan Ketenagaan"
     );
 
     /** Daftar Bidang generik untuk Dinas Kesehatan. */
     private static final List<String> BIDANG_KESEHATAN = List.of(
             "Sekretariat",
+            "Bidang Kesehatan Masyarakat",
+            "Bidang Pencegahan dan Pengendalian Penyakit",
             "Bidang Pelayanan Kesehatan",
-            "Bidang Pencegahan dan Pengendalian Penyakit"
+            "Bidang Sumber Daya Kesehatan"
     );
 
     /** Daftar Bidang generik untuk DPUPR. */
     private static final List<String> BIDANG_PUPR = List.of(
             "Sekretariat",
             "Bidang Bina Marga",
-            "Bidang Cipta Karya"
+            "Bidang Sumber Daya Air",
+            "Bidang Cipta Karya",
+            "Bidang Penataan Ruang"
     );
 
     /** Daftar Bidang generik untuk Dinas Perhubungan. */
     private static final List<String> BIDANG_PERHUBUNGAN = List.of(
             "Sekretariat",
             "Bidang Lalu Lintas",
-            "Bidang Angkutan"
+            "Bidang Angkutan",
+            "Bidang Sarana dan Prasarana"
+    );
+
+    private static final List<String> BIDANG_SOSIAL = List.of(
+            "Sekretariat", 
+            "Bidang Perlindungan dan Jaminan Sosial", 
+            "Bidang Rehabilitasi Sosial", 
+            "Bidang Pemberdayaan Sosial"
+    );
+    private static final List<String> BIDANG_DLH = List.of(
+            "Sekretariat", 
+            "Bidang Tata Lingkungan", 
+            "Bidang Pengelolaan Sampah dan B3", 
+            "Bidang Pengendalian Pencemaran"
+    );
+    private static final List<String> BIDANG_PERTANIAN = List.of(
+            "Sekretariat", 
+            "Bidang Tanaman Pangan", 
+            "Bidang Hortikultura", 
+            "Bidang Peternakan"
+    );
+    private static final List<String> BIDANG_PERINDAG = List.of(
+            "Sekretariat", 
+            "Bidang Perindustrian", 
+            "Bidang Perdagangan Dalam Negeri", 
+            "Bidang Metrologi Legal"
+    );
+    private static final List<String> BIDANG_BKD = List.of(
+            "Sekretariat", 
+            "Bidang Mutasi dan Promosi", 
+            "Bidang Pengembangan Aparatur"
+    );
+    private static final List<String> BIDANG_BPKAD = List.of(
+            "Sekretariat", 
+            "Bidang Anggaran", 
+            "Bidang Perbendaharaan", 
+            "Bidang Aset"
+    );
+    private static final List<String> BIDANG_SATPOL = List.of(
+            "Sekretariat", 
+            "Bidang Penegakan Perda", 
+            "Bidang Ketertiban Umum"
+    );
+    private static final List<String> BIDANG_INSPEKTORAT = List.of(
+            "Sekretariat", 
+            "Inspektur Pembantu I", 
+            "Inspektur Pembantu II"
     );
 
     /** Struktur jabatan standar untuk tiap Bidang (5 orang: Ketua, Sekretaris, Bendahara, 2 Anggota). */
@@ -219,12 +264,16 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
                     .anyMatch(js -> js.getUsername() == null || js.getUsername().isBlank());
             boolean legacyMissingNip = jabatanStrukturRepository.findAll().stream()
                     .anyMatch(js -> js.getNip() == null || js.getNip().isBlank());
+            long expectedOpdCount = (long) DAFTAR_KAB_KOTA.size() * DAFTAR_OPD.size();
+            boolean scaleChanged = (opdCount != expectedOpdCount && opdCount > 0);
+            
             System.out.println("[OrganisasiDataSeeder] legacySeed=" + legacySeed
                     + " orphanedWilayah=" + orphanedWilayah
                     + " legacyMissingUsername=" + legacyMissingUsername
-                    + " legacyMissingNip=" + legacyMissingNip);
+                    + " legacyMissingNip=" + legacyMissingNip
+                    + " scaleChanged=" + scaleChanged);
 
-            if (legacySeed || orphanedWilayah || legacyMissingUsername || legacyMissingNip) {
+            if (legacySeed || orphanedWilayah || legacyMissingUsername || legacyMissingNip || scaleChanged) {
                 entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
                 entityManager.createNativeQuery("TRUNCATE TABLE jabatan_struktur").executeUpdate();
                 entityManager.createNativeQuery("TRUNCATE TABLE bidang").executeUpdate();
@@ -251,14 +300,8 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
                     .parent(provinsi)
                     .build());
 
-            List<String> opdList = SAMPEL_BY_NAMA.get(kk.nama());
-            if (opdList == null) {
-                /* Bukan sampel - node tetap ada tapi kosong (tidak ada OPD/Bidang) */
-                continue;
-            }
-
             int opdCounter = 1;
-            for (String namaOpd : opdList) {
+            for (String namaOpd : DAFTAR_OPD) {
                 Opd opd = opdRepository.save(Opd.builder()
                         .wilayah(wilayah)
                         .namaOpd(namaOpd + " " + kk.nama())
@@ -307,6 +350,17 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
         if (lower.contains("kesehatan")) return BIDANG_KESEHATAN;
         if (lower.contains("pekerjaan umum") || lower.contains("pupr")) return BIDANG_PUPR;
         if (lower.contains("perhubungan")) return BIDANG_PERHUBUNGAN;
+        
+        if (lower.contains("sosial")) return BIDANG_SOSIAL;
+        if (lower.contains("lingkungan hidup")) return BIDANG_DLH;
+        if (lower.contains("pertanian")) return BIDANG_PERTANIAN;
+        if (lower.contains("perindustrian") || lower.contains("perdagangan")) return BIDANG_PERINDAG;
+        
+        if (lower.contains("kepegawaian")) return BIDANG_BKD;
+        if (lower.contains("keuangan") || lower.contains("aset")) return BIDANG_BPKAD;
+        if (lower.contains("pamong praja") || lower.contains("satpol")) return BIDANG_SATPOL;
+        if (lower.contains("inspektorat")) return BIDANG_INSPEKTORAT;
+
         // Default fallback
         return List.of("Sekretariat", "Bidang Umum");
     }
@@ -371,7 +425,4 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
 
     /** Record sederhana untuk pasangan nama + tipe kab/kota (seluruh daftar 38). */
     private record KabKota(String nama, TipeWilayah tipe) {}
-
-    /** Record untuk sampel lengkap: nama kab/kota + daftar OPD di dalamnya. */
-    private record SampleKabKota(String nama, List<String> opdList) {}
 }
