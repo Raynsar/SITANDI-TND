@@ -29,22 +29,8 @@
                     <i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard
                 </h1>
 
-                <!-- Loading spinner -->
-                <div id="loadingStats" class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Memuat...</span>
-                    </div>
-                    <p class="text-body-secondary mt-2">Memuat statistik...</p>
-                </div>
-
-                <!-- Error container -->
-                <div id="errorStats" class="alert alert-danger d-none" role="alert">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <span id="pesanErrorStats">Gagal memuat statistik.</span>
-                </div>
-
                 <!-- Stats Cards -->
-                <div id="statsContainer" class="row g-4 mb-4 d-none">
+                <div class="row g-4 mb-4">
                     <div class="col-12 col-sm-6 col-lg-3">
                         <div class="card">
                             <div class="card-body">
@@ -54,7 +40,7 @@
                                     </div>
                                     <div>
                                         <p class="text-body-secondary small mb-0">Total Instansi/OPD</p>
-                                        <p id="statOpd" class="fs-3 fw-bold mb-0">0</p>
+                                        <p class="fs-3 fw-bold mb-0" th:text="${totalOpd != null ? totalOpd : 0}">0</p>
                                     </div>
                                 </div>
                             </div>
@@ -69,7 +55,7 @@
                                     </div>
                                     <div>
                                         <p class="text-body-secondary small mb-0">Total Bidang</p>
-                                        <p id="statBidang" class="fs-3 fw-bold mb-0">0</p>
+                                        <p class="fs-3 fw-bold mb-0" th:text="${totalBidang != null ? totalBidang : 0}">0</p>
                                     </div>
                                 </div>
                             </div>
@@ -84,7 +70,7 @@
                                     </div>
                                     <div>
                                         <p class="text-body-secondary small mb-0">Total Personal</p>
-                                        <p id="statPersonal" class="fs-3 fw-bold mb-0">0</p>
+                                        <p class="fs-3 fw-bold mb-0" th:text="${totalPersonal != null ? totalPersonal : 0}">0</p>
                                     </div>
                                 </div>
                             </div>
@@ -99,7 +85,7 @@
                                     </div>
                                     <div>
                                         <p class="text-body-secondary small mb-0">Total Pengguna</p>
-                                        <p id="statPengguna" class="fs-3 fw-bold mb-0">0</p>
+                                        <p class="fs-3 fw-bold mb-0" th:text="${totalPengguna != null ? totalPengguna : 0}">0</p>
                                     </div>
                                 </div>
                             </div>
@@ -107,7 +93,8 @@
                     </div>
                 </div>
             </div>
-        </main>
+
+            </main>
 
         <!-- App Footer -->
         <div th:replace="~{common/footer :: footer}"></div>
@@ -120,54 +107,6 @@
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/js/adminlte.min.js"></script>
 
     <script th:src="@{/js/main.js}" type="module"></script>
-    <script type="module">
-        var APP_CTX = window.APP_CONTEXT_PATH || '/';
-
-        var loadingStats = document.getElementById('loadingStats');
-        var errorStats = document.getElementById('errorStats');
-        var pesanErrorStats = document.getElementById('pesanErrorStats');
-        var statsContainer = document.getElementById('statsContainer');
-
-        var statOpd = document.getElementById('statOpd');
-        var statBidang = document.getElementById('statBidang');
-        var statPersonal = document.getElementById('statPersonal');
-        var statPengguna = document.getElementById('statPengguna');
-
-        function muatStatistik() {
-            var url = APP_CTX + 'api/v1/dashboard/stats';
-
-            fetch(url, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' },
-                credentials: 'same-origin'
-            })
-            .then(function(res) {
-                if (res.status === 401) {
-                    window.location.href = APP_CTX + 'login';
-                    return Promise.reject('Unauthorized');
-                }
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.json();
-            })
-            .then(function(data) {
-                loadingStats.classList.add('d-none');
-
-                statOpd.textContent = data.totalOpd || 0;
-                statBidang.textContent = data.totalBidang || 0;
-                statPersonal.textContent = data.totalPersonal || 0;
-                statPengguna.textContent = data.totalPengguna || 0;
-
-                statsContainer.classList.remove('d-none');
-            })
-            .catch(function(err) {
-                if (err === 'Unauthorized') return;
-                loadingStats.classList.add('d-none');
-                pesanErrorStats.textContent = 'Gagal memuat statistik: ' + (err.message || err);
-                errorStats.classList.remove('d-none');
-            });
-        }
-
-        muatStatistik();
-    </script>
 </body>
 </html>
+

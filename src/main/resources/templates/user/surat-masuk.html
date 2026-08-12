@@ -27,23 +27,16 @@
             <div class="container-fluid mt-4 mb-4">
                 <h1 class="fs-2 fw-bold mb-4">
                     <i class="bi bi-envelope me-2 text-primary"></i>Surat Masuk
-                    <span id="labelTahun" class="fs-6 fw-normal text-body-secondary ms-2 d-none"></span>
+                    <span th:if="${tahun != null}" class="fs-6 fw-normal text-body-secondary ms-2">— Tahun <span th:text="${tahun}"></span></span>
                 </h1>
 
-                <!-- Loading spinner -->
-                <div id="loadingSurat" class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Memuat...</span>
-                    </div>
-                    <p class="text-body-secondary mt-2">Memuat data surat masuk...</p>
-                </div>
-
-                <!-- Info: akun tanpa TNDE -->
-                <div id="infoTnde" class="card text-center py-5 d-none">
+                <!-- Pesan TNDE-only: tampil jika session tidak punya tndeToken -->
+                <div th:if="${session == null or session.tndeToken == null}"
+                     class="card text-center py-5">
                     <div class="card-body">
                         <i class="bi bi-info-circle fs-1 text-body-tertiary d-block mb-3"></i>
                         <h3 class="fs-5 fw-semibold mb-2">Fitur Khusus Akun TNDE</h3>
-                        <p id="pesanInfo" class="text-body-secondary mb-1">
+                        <p class="text-body-secondary mb-1">
                             Fitur Surat Masuk hanya tersedia untuk akun yang masuk lewat sistem TNDE.
                         </p>
                         <p class="text-body-secondary small mb-0">
@@ -53,21 +46,22 @@
                 </div>
 
                 <!-- Error message -->
-                <div id="errorSurat" class="alert alert-danger d-none" role="alert">
+                <div th:if="${session != null and session.tndeToken != null and error}" class="alert alert-danger" role="alert">
                     <i class="bi bi-exclamation-triangle me-1"></i>
-                    <span id="pesanError">Error</span>
+                    <span th:text="${error}">Error message</span>
                 </div>
 
                 <!-- Empty state -->
-                <div id="emptySurat" class="card text-center py-5 d-none">
+                <div th:if="${session != null and session.tndeToken != null and daftarSurat != null and daftarSurat.empty and error == null}"
+                     class="card text-center py-5">
                     <div class="card-body">
                         <i class="bi bi-envelope-open fs-1 text-body-tertiary d-block mb-3"></i>
                         <p class="text-body-tertiary">Belum ada surat masuk untuk tahun ini.</p>
                     </div>
                 </div>
 
-                <!-- Table — diisi oleh JavaScript -->
-                <div id="tabelSurat" class="card d-none">
+                <!-- Table -->
+                <div th:if="${session != null and session.tndeToken != null and daftarSurat != null and not daftarSurat.empty}" class="card">
                     <div class="table-responsive">
                         <table class="table table-striped table-hover align-middle mb-0">
                             <thead class="table-light">
@@ -80,8 +74,20 @@
                                     <th class="fw-semibold small text-uppercase">Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="bodySurat">
-                                <!-- Baris dirender oleh JavaScript -->
+                            <tbody>
+                                <tr th:each="surat, iter : ${daftarSurat}">
+                                    <td class="text-body-secondary" th:text="${iter.index + 1}">1</td>
+                                    <td class="fw-medium" th:text="${surat.nomorSurat}">123/ABC</td>
+                                    <td th:text="${surat.perihal}">Perihal surat</td>
+                                    <td class="text-body-secondary" th:text="${surat.tanggal}">2024-01-01</td>
+                                    <td th:text="${surat.pengirim}">Pengirim</td>
+                                    <td>
+                                        <span th:text="${surat.status}"
+                                              class="badge bg-info-subtle text-info-emphasis">
+                                            Proses
+                                        </span>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -100,125 +106,8 @@
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/js/adminlte.min.js"></script>
 
     <script th:src="@{/js/main.js}" type="module"></script>
-    <script type="module">
-        var APP_CTX = window.APP_CONTEXT_PATH || '/';
-
-        var labelTahun   = document.getElementById('labelTahun');
-        var loadingSurat  = document.getElementById('loadingSurat');
-        var infoTnde      = document.getElementById('infoTnde');
-        var pesanInfo     = document.getElementById('pesanInfo');
-        var errorSurat    = document.getElementById('errorSurat');
-        var pesanError    = document.getElementById('pesanError');
-        var emptySurat    = document.getElementById('emptySurat');
-        var tabelSurat    = document.getElementById('tabelSurat');
-        var bodySurat     = document.getElementById('bodySurat');
-
-        function muatSuratMasuk() {
-            var url = APP_CTX + 'api/v1/inbox';
-
-            fetch(url, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' },
-                credentials: 'same-origin'
-            })
-            .then(function(res) {
-                if (res.status === 401) {
-                    window.location.href = APP_CTX + 'login';
-                    return Promise.reject('Unauthorized');
-                }
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.json();
-            })
-            .then(function(data) {
-                loadingSurat.classList.add('d-none');
-
-                /* Label tahun */
-                if (data.tahun) {
-                    labelTahun.textContent = '— Tahun ' + data.tahun;
-                    labelTahun.classList.remove('d-none');
-                }
-
-                /* Info: akun non-TNDE */
-                if (data.info) {
-                    pesanInfo.textContent = data.info;
-                    infoTnde.classList.remove('d-none');
-                    return;
-                }
-
-                /* Error dari TNDE */
-                if (data.error) {
-                    pesanError.textContent = data.error;
-                    errorSurat.classList.remove('d-none');
-                    return;
-                }
-
-                /* Render tabel */
-                var list = data.daftarSurat || [];
-                if (list.length === 0) {
-                    emptySurat.classList.remove('d-none');
-                } else {
-                    renderTabel(list);
-                }
-            })
-            .catch(function(err) {
-                if (err === 'Unauthorized') return;
-                loadingSurat.classList.add('d-none');
-                pesanError.textContent = 'Gagal memuat data: ' + (err.message || err);
-                errorSurat.classList.remove('d-none');
-            });
-        }
-
-        function renderTabel(list) {
-            bodySurat.innerHTML = '';
-
-            for (var i = 0; i < list.length; i++) {
-                var s = list[i];
-                var tr = document.createElement('tr');
-
-                /* No */
-                var tdNo = document.createElement('td');
-                tdNo.className = 'text-body-secondary';
-                tdNo.textContent = (i + 1);
-                tr.appendChild(tdNo);
-
-                /* Nomor Surat */
-                var tdNomor = document.createElement('td');
-                tdNomor.className = 'fw-medium';
-                tdNomor.textContent = s.nomorSurat || '-';
-                tr.appendChild(tdNomor);
-
-                /* Perihal */
-                var tdPerihal = document.createElement('td');
-                tdPerihal.textContent = s.perihal || '-';
-                tr.appendChild(tdPerihal);
-
-                /* Tanggal */
-                var tdTanggal = document.createElement('td');
-                tdTanggal.className = 'text-body-secondary';
-                tdTanggal.textContent = s.tanggal || '-';
-                tr.appendChild(tdTanggal);
-
-                /* Pengirim */
-                var tdPengirim = document.createElement('td');
-                tdPengirim.textContent = s.pengirim || '-';
-                tr.appendChild(tdPengirim);
-
-                /* Status */
-                var tdStatus = document.createElement('td');
-                var spanStatus = document.createElement('span');
-                spanStatus.className = 'badge bg-info-subtle text-info-emphasis';
-                spanStatus.textContent = s.status || '-';
-                tdStatus.appendChild(spanStatus);
-                tr.appendChild(tdStatus);
-
-                bodySurat.appendChild(tr);
-            }
-
-            tabelSurat.classList.remove('d-none');
-        }
-
-        /* Muat data saat halaman selesai dimuat */
-        muatSuratMasuk();
-    </script>
 </body>
 </html>
+
+
+
