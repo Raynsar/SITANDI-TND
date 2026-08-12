@@ -1,11 +1,16 @@
 package com.sipenjam.peminjamanalattu.exception;
 
+import org.springframework.security.core.AuthenticationException;
+
 /**
  * Exception ketika login ke API eksternal TNDE gagal.
- * Digunakan untuk membedakan error login lokal (AuthenticationException) dengan
- * error koneksi/response dari API TNDE.
+ *
+ * EXTENDS AuthenticationException (bukan RuntimeException biasa) agar konsisten
+ * dengan hierarki exception Spring Security. Meski begitu, TndeAuthenticationProvider
+ * TIDAK boleh melempar exception ini ke ProviderManager — ia harus return null
+ * agar fallback ke DaoAuthenticationProvider berjalan.
  */
-public class TndeLoginException extends RuntimeException {
+public class TndeLoginException extends AuthenticationException {
 
     public TndeLoginException(String message) {
         super(message);
@@ -15,3 +20,4 @@ public class TndeLoginException extends RuntimeException {
         super(message, cause);
     }
 }
+
