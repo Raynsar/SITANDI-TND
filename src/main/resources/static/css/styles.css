@@ -1,4 +1,42 @@
-/* Kustomisasi stylesheet dasar untuk elemen form / tabel dinamis */
+/* Kustomisasi stylesheet untuk AdminLTE 4 (Bootstrap 5.3 overrides) */
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Pastikan .app-main punya min-height penuh */
+.app-main {
+    min-height: 100vh;
+}
+
+/* Card border-radius konsisten */
+.card {
+    border-radius: 0.75rem;
+}
+
+/* Badge dan label konsisten */
+.badge {
+    font-weight: 500;
+}
+
+/* Sidebar nav link active state */
+.nav-sidebar .nav-item > .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Tinggi minimal konten agar footer tidak melayang */
+.content-wrapper {
+    min-height: calc(100vh - 3.5rem - 3.5rem);
+}
+
+/* Responsive table wrapper untuk overflow-x */
+.table-responsive-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Wrapper sidebar + main untuk layout flex */
+.app-layout {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 3.5rem); /* minus header height */
 }
