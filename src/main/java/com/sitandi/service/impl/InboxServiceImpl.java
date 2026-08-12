@@ -51,21 +51,24 @@ public class InboxServiceImpl implements InboxService {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         InboxResponseDto response;
+        /*
+         * Penanganan error API TNDE:
+         * - 401: Token invalid/expired -> minta login ulang
+         * - 4xx/5xx: HTTP error lain dari server
+         * - ResourceAccessException: Connection timeout / unreachable
+         * - RestClientException: Error parsing/umum
+         */
         try {
             ResponseEntity<InboxResponseDto> responseEntity = restTemplate.exchange(
                     url, HttpMethod.GET, entity, InboxResponseDto.class);
             response = responseEntity.getBody();
         } catch (HttpClientErrorException.Unauthorized ex) {
-            // 401 — token invalid / expired
             throw new TndeLoginException("Sesi anda telah berakhir, silakan login kembali", ex);
         } catch (HttpStatusCodeException ex) {
-            // 4xx / 5xx lainnya
             throw new TndeServerException("Gagal mengambil data surat dari server TNDE", ex);
         } catch (ResourceAccessException ex) {
-            // Connection timeout / server unreachable
             throw new TndeServerException("Server TNDE tidak dapat dihubungi, silakan coba lagi nanti", ex);
         } catch (RestClientException ex) {
-            // Error umum
             throw new TndeServerException("Gagal memproses respons dari server TNDE", ex);
         }
 
@@ -79,7 +82,6 @@ public class InboxServiceImpl implements InboxService {
             throw new TndeServerException(message);
         }
 
-        // Data response: { "data": { "items": [ ... ] } }
         if (response.getData() == null || response.getData().getItems() == null) {
             return Collections.emptyList();
         }

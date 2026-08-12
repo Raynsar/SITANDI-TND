@@ -160,10 +160,12 @@ public class AuthServiceImpl implements AuthService {
                 .username(request.getUsername().trim())
                 .email(request.getEmail().trim())
                 .password(passwordEncoder.encode(request.getPassword()))
-                // Pendaftaran mandiri SELALU role USER. Role tidak boleh datang dari
-                // request — kalau tidak, siapa pun bisa mendaftar sebagai ADMIN.
+                /*
+                 * Pendaftaran mandiri SELALU role USER. Role tidak boleh datang dari
+                 * request — kalau tidak, siapa pun bisa mendaftar sebagai ADMIN.
+                 * Status aktif false berarti menunggu persetujuan admin.
+                 */
                 .role(Role.USER)
-                // Menunggu persetujuan admin.
                 .aktif(false)
                 .build());
 
@@ -178,13 +180,14 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Pengguna pengguna = getByUsername(username);
-
-        // Sengaja IllegalArgumentException (-> 400), bukan BadCredentialsException:
-        // BadCredentialsException adalah AuthenticationException, sehingga akan
-        // tertangkap handler login dan dibalas 401 "Username atau password salah" —
-        // menyesatkan, karena pengguna sudah terautentikasi dan hanya salah mengetik
-        // password lamanya. Membocorkan "password lama salah" ke pemilik akun sendiri
-        // bukan masalah keamanan.
+        /*
+         * Sengaja IllegalArgumentException (-> 400), bukan BadCredentialsException:
+         * BadCredentialsException adalah AuthenticationException, sehingga akan
+         * tertangkap handler login dan dibalas 401 "Username atau password salah".
+         * Ini menyesatkan karena pengguna sudah terautentikasi dan hanya salah mengetik
+         * password lamanya. Membocorkan "password lama salah" ke pemilik akun sendiri
+         * bukan masalah keamanan.
+         */
         if (!passwordEncoder.matches(request.getPasswordLama(), pengguna.getPassword())) {
             throw new IllegalArgumentException("Password lama salah");
         }
@@ -223,8 +226,10 @@ public class AuthServiceImpl implements AuthService {
         Pengguna pengguna = penggunaRepository.findById(penggunaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pengguna tidak ditemukan: " + penggunaId));
 
-        // Tanpa ini, admin terakhir bisa mengunci dirinya sendiri keluar dan tidak
-        // ada lagi yang bisa mengaktifkan akun siapa pun.
+        /*
+         * Tanpa ini, admin terakhir bisa mengunci dirinya sendiri keluar dan tidak
+         * ada lagi yang bisa mengaktifkan akun siapa pun.
+         */
         if (pengguna.getUsername().equals(usernamePelaku)) {
             throw new IllegalArgumentException("Anda tidak bisa menonaktifkan akun Anda sendiri");
         }

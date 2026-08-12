@@ -36,7 +36,6 @@ public class OrganisasiServiceImpl implements OrganisasiService {
     @Override
     @Transactional(readOnly = true)
     public List<OrganisasiTreeNodeDto> getTree() {
-        // Ambil semua root nodes (Provinsi)
         List<Wilayah> roots = wilayahRepository.findByParentIsNullOrderByNama();
         return roots.stream()
                 .map(this::buildWilayahNode)
@@ -54,9 +53,6 @@ public class OrganisasiServiceImpl implements OrganisasiService {
     @Override
     @Transactional(readOnly = true)
     public List<OrganisasiPersonalDto> getPersonal(Long bidangId) {
-        // Load jabatan_struktur rows langsung (lebih ringan dari load Bidang + relasi).
-        // Repository.findByBidangIdOrderByJabatan sudah mengurutkan dengan urutan
-        // enum (KETUA, SEKRETARIS, BENDAHARA, ANGGOTA) — yang sudah sesuai untuk display.
         return jabatanStrukturRepository.findByBidangIdOrderByJabatan(bidangId).stream()
                 .map(this::toPersonalDto)
                 .toList();
@@ -138,13 +134,11 @@ public class OrganisasiServiceImpl implements OrganisasiService {
         node.setNama(wilayah.getNama());
         node.setTipe(wilayah.getTipe().name());
 
-        // Ambil child wilayah (kab/kota)
         List<Wilayah> childWilayah = wilayahRepository.findByParentIdOrderByNama(wilayah.getId());
         List<OrganisasiTreeNodeDto> children = childWilayah.stream()
                 .map(this::buildWilayahNode)
                 .toList();
 
-        // Ambil OPD di wilayah ini
         List<Opd> opds = opdRepository.findByWilayahIdOrderByNamaOpd(wilayah.getId());
         List<OrganisasiTreeNodeDto> opdNodes = opds.stream()
                 .map(this::buildOpdNode)
@@ -170,10 +164,6 @@ public class OrganisasiServiceImpl implements OrganisasiService {
     }
 
     private OrganisasiTreeNodeDto buildBidangNode(Bidang bidang) {
-        // Tree berhenti di level Bidang. Jabatan AKAN di-load terpisah lewat
-        // endpoint /bidang/{id}/personal saat user klik Bidang di panel kiri.
-        // Ini menjaga payload tree tetap kecil — kalau data produksi nanti
-        // punya ratusan jabatan per Bidang, payload tidak meledak.
         OrganisasiTreeNodeDto node = new OrganisasiTreeNodeDto();
         node.setId(bidang.getId());
         node.setNama(bidang.getNamaBidang());

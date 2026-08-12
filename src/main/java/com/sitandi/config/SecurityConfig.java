@@ -61,7 +61,7 @@ public class SecurityConfig {
         DaoAuthenticationProvider localProvider = new DaoAuthenticationProvider();
         localProvider.setUserDetailsService(localUserDetailsService);
         localProvider.setPasswordEncoder(passwordEncoder);
-        // Prioritas: TNDE dulu, fallback ke lokal jika TNDE gagal (return null)
+        /* Prioritas: TNDE dulu, fallback ke lokal jika TNDE gagal (return null) */
         return new ProviderManager(List.of(tndeProvider, localProvider));
     }
 
@@ -156,8 +156,10 @@ public class SecurityConfig {
                 .csrfTokenRepository(csrfTokenRepository())
                 .csrfTokenRequestHandler(csrfRequestHandler())
                 .ignoringRequestMatchers(klienBearer())
-                // Login & register belum punya identitas apa pun untuk dicuri, dan
-                // keduanya dipanggil sebelum token CSRF sempat terbit.
+                /*
+                 * Login & register belum punya identitas apa pun untuk dicuri, dan
+                 * keduanya dipanggil sebelum token CSRF sempat terbit.
+                 */
                 .ignoringRequestMatchers("/api/v1/auth/login", "/api/v1/auth/register")
             )
             .authorizeHttpRequests(auth -> auth
@@ -205,7 +207,11 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
-                // Menerbitkan JWT + menaruhnya di cookie, lalu redirect sesuai role.
+                /*
+                 * Menerbitkan JWT + menaruhnya di cookie, lalu redirect sesuai role.
+                 * Tidak ada session untuk di-invalidate; JSESSIONID pun tidak pernah
+                 * dibuat lagi. Yang perlu dibuang hanya cookie JWT di atas.
+                 */
                 .successHandler(new JwtLoginSuccessHandler(jwtUtil, cookieService, authService))
                 .failureHandler(failureHandler)
                 .permitAll()
@@ -214,12 +220,12 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .addLogoutHandler(new JwtLogoutHandler(cookieService))
                 .logoutSuccessUrl("/login?logout")
-                // Tidak ada session untuk di-invalidate; JSESSIONID pun tidak pernah
-                // dibuat lagi. Yang perlu dibuang hanya cookie JWT di atas.
                 .permitAll()
             )
-            // Stateless: SecurityContext TIDAK disimpan antar request. Identitas
-            // dibangun ulang dari cookie JWT oleh JwtAuthenticationFilter setiap kali.
+            /*
+             * Stateless: SecurityContext TIDAK disimpan antar request. Identitas
+             * dibangun ulang dari cookie JWT oleh JwtAuthenticationFilter setiap kali.
+             */
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .securityContext(c -> c.securityContextRepository(securityContextRepository()))
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, cookieService, authService,

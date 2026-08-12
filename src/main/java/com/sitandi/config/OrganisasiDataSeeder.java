@@ -202,13 +202,15 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
                 + " jabatan=" + jabatanCount);
 
         if (wilayahCount > 0) {
-            // Wilayah sudah ada. Cek kondisi:
-            // - legacySeed=true: ada OPD dari versi seed lama (semua 38 kab/kota punya OPD)
-            // - ada wilayah tapi OPD kosong: tabel baru di-truncate / seeder gagal
-            //   sebelumnya — reseed dengan skala kecil
-            // - ada jabatan tapi belum punya username: kolom baru ditambahkan oleh
-            //   ddl-auto=update dengan nilai NULL — reseed biar DTO baris-nya terisi
-            // - wilayah + OPD sudah ada dari seed baru: skip
+            /*
+             * Wilayah sudah ada. Cek kondisi:
+             * - legacySeed=true: ada OPD dari versi seed lama (semua 38 kab/kota punya OPD)
+             * - ada wilayah tapi OPD kosong: tabel baru di-truncate / seeder gagal sebelumnya
+             *   (reseed dengan skala kecil)
+             * - ada jabatan tapi belum punya username: kolom baru ditambahkan oleh ddl-auto=update
+             *   dengan nilai NULL (reseed biar DTO barisnya terisi)
+             * - wilayah + OPD sudah ada dari seed baru: skip
+             */
             boolean legacySeed = opdRepository.findAll().stream()
                     .anyMatch(o -> o.getNamaOpd() != null
                             && o.getNamaOpd().contains("Kabupaten Bangkalan"));
@@ -220,33 +222,24 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
                     + " legacyMissingUsername=" + legacyMissingUsername);
 
             if (legacySeed || orphanedWilayah || legacyMissingUsername) {
-                // Reset agar bisa di-seed ulang dengan skala kecil.
-                // Hanya jalan di environment demo.
                 entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
                 entityManager.createNativeQuery("TRUNCATE TABLE jabatan_struktur").executeUpdate();
                 entityManager.createNativeQuery("TRUNCATE TABLE bidang").executeUpdate();
                 entityManager.createNativeQuery("TRUNCATE TABLE opd").executeUpdate();
                 entityManager.createNativeQuery("TRUNCATE TABLE wilayah").executeUpdate();
                 entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
-                // Penting: clear persistence context setelah truncate. Sebelumnya kita
-                // sudah load all() di legacyMissingUsername check, sehingga Hibernate
-                // masih memegang entity JabatanStruktur id=N di session cache. Tanpa
-                // clear(), save() berikutnya akan melempar NonUniqueObjectException
-                // karena Hibernate mengira id itu sudah dipakai object lain.
                 entityManager.clear();
             } else {
-                return; // sudah pakai seed baru, jangan duplikasi
+                return;
             }
         }
 
-        // 1. Buat root Provinsi Jawa Timur
         Wilayah provinsi = wilayahRepository.save(Wilayah.builder()
                 .nama("Jawa Timur")
                 .tipe(TipeWilayah.PROVINSI)
                 .parent(null)
                 .build());
 
-        // 2. Buat 38 Kabupaten/Kota
         int totalOpd = 0, totalBidang = 0, totalJabatan = 0;
         for (KabKota kk : DAFTAR_KAB_KOTA) {
             Wilayah wilayah = wilayahRepository.save(Wilayah.builder()
@@ -255,14 +248,12 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
                     .parent(provinsi)
                     .build());
 
-            // Cek apakah kabupaten/kota ini ada di daftar sampel
             List<String> opdList = SAMPEL_BY_NAMA.get(kk.nama());
             if (opdList == null) {
-                // Bukan sampel — node tetap ada tapi kosong (tidak ada OPD/Bidang)
+                /* Bukan sampel - node tetap ada tapi kosong (tidak ada OPD/Bidang) */
                 continue;
             }
 
-            // 3. Buat OPD untuk sampel
             int opdCounter = 1;
             for (String namaOpd : opdList) {
                 Opd opd = opdRepository.save(Opd.builder()

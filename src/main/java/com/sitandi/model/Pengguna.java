@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Akun pengguna aplikasi (admin TU maupun pengguna biasa/pemohon).
+ * Akun pengguna aplikasi (admin).
  */
 @Entity
 @Table(name = "pengguna")
