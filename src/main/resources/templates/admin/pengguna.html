@@ -77,6 +77,28 @@
 
             </main>
 
+        <!-- Delete Confirmation Modal -->
+        <div class="modal fade" id="modalHapus" tabindex="-1" aria-labelledby="modalHapusLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="modalHapusLabel">
+                            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Konfirmasi Hapus
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-2">Apakah Anda yakin ingin menghapus akun pengguna <strong id="hapusNamaPengguna"></strong> secara permanen?</p>
+                        <p class="text-danger small mb-0 fw-semibold">Aksi ini tidak dapat dibatalkan!</p>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-danger" id="btnKonfirmasiHapus">Hapus Permanen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- App Footer -->
         <div th:replace="~{common/footer :: footer}"></div>
     </div>
@@ -98,6 +120,11 @@
         var pesanErrorPengguna = document.getElementById('pesanErrorPengguna');
         var tabelContainer    = document.getElementById('tabelContainer');
         var bodyPengguna      = document.getElementById('bodyPengguna');
+        var modalHapusEl      = document.getElementById('modalHapus');
+        var modalHapus        = new bootstrap.Modal(modalHapusEl);
+        var hapusNamaPengguna = document.getElementById('hapusNamaPengguna');
+        var btnKonfirmasiHapus = document.getElementById('btnKonfirmasiHapus');
+        var idHapusSementara  = null;
 
         function bacaCookie(nama) {
             var match = document.cookie.split('; ').find(function(c) { return c.startsWith(nama + '='); });
@@ -198,11 +225,14 @@
 
                 /* Aksi */
                 var tdAksi = document.createElement('td');
+                var divAksi = document.createElement('div');
+                divAksi.className = 'd-flex gap-1';
+
                 var btn = document.createElement('button');
                 btn.type = 'button';
 
                 if (p.aktif) {
-                    btn.className = 'btn-aksi btn btn-outline-danger btn-sm';
+                    btn.className = 'btn-aksi btn btn-outline-warning btn-sm';
                     btn.dataset.id = p.id;
                     btn.dataset.aksi = 'nonaktifkan';
                     btn.innerHTML = '<i class="bi bi-x-lg me-1"></i>Nonaktifkan';
@@ -214,7 +244,23 @@
                 }
 
                 btn.addEventListener('click', buatHandlerAksi(btn));
-                tdAksi.appendChild(btn);
+                divAksi.appendChild(btn);
+
+                // Tambah tombol Hapus
+                var btnHapus = document.createElement('button');
+                btnHapus.type = 'button';
+                btnHapus.className = 'btn btn-outline-danger btn-sm';
+                btnHapus.innerHTML = '<i class="bi bi-trash"></i> Hapus';
+                btnHapus.addEventListener('click', (function(userId, userName) {
+                    return function() {
+                        idHapusSementara = userId;
+                        hapusNamaPengguna.textContent = userName;
+                        modalHapus.show();
+                    };
+                })(p.id, p.nama || p.username));
+                divAksi.appendChild(btnHapus);
+
+                tdAksi.appendChild(divAksi);
                 tr.appendChild(tdAksi);
 
                 bodyPengguna.appendChild(tr);
@@ -258,6 +304,43 @@
                 }
             };
         }
+
+        var isDeleting = false;
+        btnKonfirmasiHapus.addEventListener('click', async function() {
+            if (!idHapusSementara || isDeleting) return;
+            var id = idHapusSementara;
+            isDeleting = true;
+            // Prevent blurry text by using inline style instead of disabled attribute
+            btnKonfirmasiHapus.style.pointerEvents = 'none';
+            btnKonfirmasiHapus.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Menghapus...';
+
+            try {
+                var csrf = bacaCookie('XSRF-TOKEN');
+                var headers = { 'Content-Type': 'application/json' };
+                if (csrf) headers['X-XSRF-TOKEN'] = csrf;
+
+                var res = await fetch(APP_CTX + 'api/v1/auth/pengguna/' + id, {
+                    method: 'DELETE',
+                    headers: headers,
+                    credentials: 'same-origin'
+                });
+
+                if (!res.ok) {
+                    var body = await res.json().catch(function() { return {}; });
+                    throw new Error(body.message || 'Gagal menghapus pengguna');
+                }
+
+                modalHapus.hide();
+                muatDaftarPengguna();
+            } catch (err) {
+                alert(err.message || 'Gagal memproses penghapusan akun.');
+            } finally {
+                isDeleting = false;
+                btnKonfirmasiHapus.style.pointerEvents = 'auto';
+                btnKonfirmasiHapus.innerHTML = 'Hapus Permanen';
+                idHapusSementara = null;
+            }
+        });
 
         /* Muat data saat halaman selesai dimuat */
         muatDaftarPengguna();

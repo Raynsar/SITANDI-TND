@@ -242,6 +242,23 @@ public class AuthServiceImpl implements AuthService {
         return toDto(penggunaRepository.save(pengguna));
     }
 
+    @Override
+    @Transactional
+    public void hapusPengguna(Long penggunaId, String usernamePelaku) {
+        Pengguna pengguna = penggunaRepository.findById(penggunaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pengguna tidak ditemukan: " + penggunaId));
+
+        if (pengguna.getUsername().equals(usernamePelaku)) {
+            throw new IllegalArgumentException("Anda tidak bisa menghapus akun Anda sendiri");
+        }
+        if (pengguna.getRole() == Role.ADMIN
+                && penggunaRepository.countByRoleAndAktifTrue(Role.ADMIN) <= 1) {
+            throw new IllegalStateException("Tidak bisa menghapus admin aktif terakhir");
+        }
+
+        penggunaRepository.delete(pengguna);
+    }
+
     private PenggunaDto toDto(Pengguna pengguna) {
         return PenggunaDto.builder()
                 .id(pengguna.getId())

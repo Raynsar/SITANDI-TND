@@ -23,37 +23,35 @@
                 </span>
             </a>
 
-            <!-- Sidebar toggle button (visible on small screens) -->
-            <button class="navbar-toggler order-1" type="button"
-                    data-lte-toggle="sidebar"
-                    aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">
+
+
+            <!-- Single hamburger for mobile (toggles combined menu) -->
+            <button class="navbar-toggler d-md-none order-1" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle menu">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <!-- Top navigation links (hidden on small screens) -->
+            <!-- Combined navigation (on mobile: overlay with all items; on desktop: top navbar only) -->
             <div class="collapse navbar-collapse order-3" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item" th:if="${session != null and session.tndeToken != null}">
+                <!-- DESKTOP NAVBAR (hidden on mobile) -->
+                <ul class="navbar-nav ms-auto d-none d-md-flex">
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
                         <a th:href="@{/surat-masuk}" class="nav-link">
                             <i class="bi bi-envelope me-1"></i>Surat Masuk
                         </a>
                     </li>
-                    
-                    <li class="nav-item">
-                        <a sec:authorize="isAuthenticated()" th:href="@{/ganti-password}" class="nav-link">
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a th:href="@{/ganti-password}" class="nav-link">
                             <i class="bi bi-key me-1"></i>Ganti Password
                         </a>
                     </li>
-
-                    <!-- Dark Mode Toggle -->
                     <li class="nav-item" sec:authorize="isAuthenticated()">
                         <button id="darkModeToggle" class="nav-link btn btn-link" type="button"
                                 title="Toggle Dark Mode" aria-label="Toggle Dark Mode">
                             <i class="bi bi-moon-fill" id="darkModeIcon"></i>
                         </button>
                     </li>
-
-                    <!-- User info & logout -->
                     <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
                         <a class="nav-link dropdown-toggle" href="#" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
@@ -71,6 +69,56 @@
                         </ul>
                     </li>
                 </ul>
+
+                <!-- MOBILE MENU OVERLAY (hidden on desktop) -->
+                <div class="d-md-none" sec:authorize="isAuthenticated()">
+                    <!-- User info label -->
+                    <div class="px-3 pt-3 pb-2 text-body-secondary fw-bold text-uppercase fs-6">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <span th:text="${#authentication.name}">user</span>
+                    </div>
+
+                    <!-- Flat navigation links -->
+                    <ul class="navbar-nav px-2">
+                        <li class="nav-item">
+                            <a th:href="@{/ganti-password}" class="nav-link px-3">
+                                <i class="bi bi-key me-2"></i>Ganti Password
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a th:href="@{/admin/dashboard}" class="nav-link px-3">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a th:href="@{/organisasi/tree}" class="nav-link px-3">
+                                <i class="bi bi-diagram-3 me-2"></i>Struktur Organisasi
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a th:href="@{/surat-masuk}" class="nav-link px-3">
+                                <i class="bi bi-envelope me-2"></i>Surat Masuk
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a th:href="@{/admin/pengguna}" class="nav-link px-3">
+                                <i class="bi bi-people me-2"></i>Kelola Pengguna
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Dark mode toggle & Logout row at the bottom -->
+                    <div class="d-flex justify-content-between align-items-center px-3 mt-2 pt-3 pb-3 border-top">
+                        <button id="darkModeToggle" class="btn btn-link text-body p-0 text-decoration-none" type="button" aria-label="Toggle Dark Mode">
+                            <i class="bi bi-moon-fill fs-4" id="darkModeIcon"></i>
+                        </button>
+                        <form th:action="@{/logout}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-sm btn-outline-danger px-3">
+                                <i class="bi bi-box-arrow-right me-1"></i>Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 </header>
