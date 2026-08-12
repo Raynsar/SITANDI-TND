@@ -15,7 +15,7 @@
         <div class="container-fluid">
 
             <!-- Brand (logo + app name) -->
-            <a th:href="@{/}" class="navbar-brand text-nowrap me-auto me-md-3">
+            <a th:href="@{/admin/dashboard}" class="navbar-brand text-nowrap me-auto me-md-3">
                 <img th:src="@{/images/logo-tu.svg}" alt="Logo TU" class="brand-image d-inline-flex me-2"
                      style="height: 32px; width: 32px;">
                 <span class="fw-bold fs-6 lh-1">
@@ -33,26 +33,28 @@
             <!-- Top navigation links (hidden on small screens) -->
             <div class="collapse navbar-collapse order-3" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a sec:authorize="isAuthenticated()" th:href="@{/surat-masuk}"
-                           class="nav-link">
+                    <li class="nav-item" th:if="${session != null and session.tndeToken != null}">
+                        <a th:href="@{/surat-masuk}" class="nav-link">
                             <i class="bi bi-envelope me-1"></i>Surat Masuk
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a th:href="@{/katalog}" class="nav-link">
-                            <i class="bi bi-box-seam me-1"></i>Katalog Alat
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a sec:authorize="isAuthenticated()" th:href="@{/riwayat}" class="nav-link">
-                            <i class="bi bi-clock-history me-1"></i>Riwayat Peminjaman
+                        <a sec:authorize="isAuthenticated()" th:href="@{/organisasi/tree}" class="nav-link">
+                            <i class="bi bi-diagram-3 me-1"></i>Struktur Organisasi
                         </a>
                     </li>
                     <li class="nav-item">
                         <a sec:authorize="isAuthenticated()" th:href="@{/ganti-password}" class="nav-link">
                             <i class="bi bi-key me-1"></i>Ganti Password
                         </a>
+                    </li>
+
+                    <!-- Dark Mode Toggle -->
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <button id="darkModeToggle" class="nav-link btn btn-link" type="button"
+                                title="Toggle Dark Mode" aria-label="Toggle Dark Mode">
+                            <i class="bi bi-moon-fill" id="darkModeIcon"></i>
+                        </button>
                     </li>
 
                     <!-- User info & logout -->
@@ -75,14 +77,62 @@
                 </ul>
             </div>
         </div>
-    </header>
+</header>
+
+    <!-- Dark Mode Toggle Script -->
+    <script>
+        (function() {
+            'use strict';
+
+            var htmlEl = document.documentElement;
+            var STORAGE_KEY = 'sipenjam-tu-theme';
+
+            function getPreferredTheme() {
+                var stored = localStorage.getItem(STORAGE_KEY);
+                if (stored === 'dark' || stored === 'light') {
+                    return stored;
+                }
+                // Default to light if not set
+                return 'light';
+            }
+
+            function setTheme(theme) {
+                htmlEl.setAttribute('data-bs-theme', theme);
+                localStorage.setItem(STORAGE_KEY, theme);
+                // Update icon if toggle button exists
+                var icon = document.getElementById('darkModeIcon');
+                if (icon) {
+                    if (theme === 'dark') {
+                        icon.className = 'bi bi-sun-fill';
+                    } else {
+                        icon.className = 'bi bi-moon-fill';
+                    }
+                }
+            }
+
+            // Apply saved theme on page load
+            setTheme(getPreferredTheme());
+
+            // Setup toggle button listener after DOM ready
+            document.addEventListener('DOMContentLoaded', function() {
+                var toggleBtn = document.getElementById('darkModeToggle');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', function() {
+                        var current = htmlEl.getAttribute('data-bs-theme') || 'light';
+                        var next = current === 'dark' ? 'light' : 'dark';
+                        setTheme(next);
+                    });
+                }
+            });
+        })();
+    </script>
 
     <!--
       Brand-only alternative for app-sidebar (small logo area at top of sidebar).
       See sidebar.html for the sidebar fragment.
     -->
     <th:block th:fragment="sidebar-brand">
-        <a th:href="@{/}" class="brand-link">
+        <a th:href="@{/admin/dashboard}" class="brand-link">
             <img th:src="@{/images/logo-tu.svg}" alt="Logo TU" class="brand-image me-2"
                  style="height: 32px; width: 32px;">
             <span class="brand-text fw-bold">SIPENJAM TU</span>

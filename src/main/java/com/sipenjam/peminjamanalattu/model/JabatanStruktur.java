@@ -44,5 +44,15 @@ public class JabatanStruktur {
 
     @Column(nullable = false)
     private String namaDummy;
+
+    /**
+     * Username dummy untuk tampilan (kolom Username di tabel Daftar Personal).
+     * Bukan akun login sungguhan dan tidak terhubung ke tabel User. Selalu
+     * digenerate oleh seeder mengikuti format: inisial depan + nama belakang,
+     * lowercase, tanpa spasi (mis. "Ahmad Fauzi" -> "afauzi"). Nullable=false
+     * setelah seeder berjalan; data lama tanpa nilai akan dipicu reseed.
+     */
+    @Column(nullable = false, length = 100)
+    private String username;
 }
 

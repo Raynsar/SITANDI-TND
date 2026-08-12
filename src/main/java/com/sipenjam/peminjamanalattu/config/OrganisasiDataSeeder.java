@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sipenjam.peminjamanalattu.model.Bidang;
 import com.sipenjam.peminjamanalattu.model.Jabatan;
@@ -17,14 +18,25 @@ import com.sipenjam.peminjamanalattu.repository.JabatanStrukturRepository;
 import com.sipenjam.peminjamanalattu.repository.OpdRepository;
 import com.sipenjam.peminjamanalattu.repository.WilayahRepository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 /**
  * Mengisi data master struktur organisasi (Wilayah, OPD, Bidang, Jabatan) dengan
- * data dummy 38 Kabupaten/Kota se-Jawa Timur.
+ * data dummy skala kecil — KHUSUS untuk kebutuhan PRESENTASI/DEMO.
  *
- * Idempotent: hanya berjalan jika tabel wilayah masih kosong.
- * Di-order setelah DataSeeder (Order(2)) agar berjalan setelah seeder utama.
+ * <p>Skala data: 38 Kabupaten/Kota se-Jawa Timur tetap ada di tree (struktur
+ * wilayahnya tidak berubah), tapi hanya 4 (empat) kabupaten/kota SAMPEL yang
+ * diisi instansi lengkap (Surabaya, Malang, Sidoarjo, Kediri). Sisanya tetap
+ * muncul sebagai node kosong di tree, supaya pembimbing melihat struktur 38
+ * kab/kota tanpa harus generate ribuan baris data.</p>
+ *
+ * <p>Perkiraan total personal: 4 kab/kota × ~3 OPD × ~3 bidang × ~5 orang
+ * ≈ 180 baris. Ringan untuk demo, mudah diganti nanti saat data produksi
+ * tersedia.</p>
+ *
+ * <p>Idempotent: hanya berjalan jika tabel wilayah masih kosong.</p>
  */
 @Component
 @Order(2)
@@ -35,6 +47,9 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
     private final OpdRepository opdRepository;
     private final BidangRepository bidangRepository;
     private final JabatanStrukturRepository jabatanStrukturRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /** Daftar 38 Kabupaten/Kota di Jawa Timur dengan tipenya. */
     private static final List<KabKota> DAFTAR_KAB_KOTA = List.of(
@@ -78,40 +93,86 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
             new KabKota("Kota Surabaya", TipeWilayah.KOTA)
     );
 
-    /** 7 Bidang generik untuk setiap OPD. */
-    private static final List<String> DAFTAR_BIDANG = List.of(
+    /**
+     * Kab/kota SAMPEL yang akan diisi lengkap dengan OPD + Bidang + Jabatan.
+     * Kab/kota lain tetap muncul di tree tapi tanpa OPD di bawahnya (kosong).
+     */
+    private static final List<SampleKabKota> SAMPEL_LENGKAP = List.of(
+            new SampleKabKota("Kota Surabaya", List.of(
+                    "Dinas Komunikasi dan Informatika",
+                    "Dinas Pendidikan",
+                    "Dinas Kesehatan"
+            )),
+            new SampleKabKota("Kabupaten Malang", List.of(
+                    "Dinas Komunikasi dan Informatika",
+                    "Dinas Pekerjaan Umum dan Penataan Ruang"
+            )),
+            new SampleKabKota("Kabupaten Sidoarjo", List.of(
+                    "Dinas Komunikasi dan Informatika"
+            )),
+            new SampleKabKota("Kota Kediri", List.of(
+                    "Dinas Komunikasi dan Informatika",
+                    "Dinas Perhubungan"
+            ))
+    );
+
+    /** Lookup cepat nama → tipe kab/kota untuk sampel. */
+    private static final java.util.Map<String, List<String>> SAMPEL_BY_NAMA = new java.util.HashMap<>();
+    static {
+        for (SampleKabKota s : SAMPEL_LENGKAP) {
+            SAMPEL_BY_NAMA.put(s.nama(), s.opdList());
+        }
+    }
+
+    /** Daftar Bidang generik untuk setiap OPD contoh Kominfo. */
+    private static final List<String> BIDANG_KOMINFO = List.of(
             "Sekretariat",
             "Bidang Infrastruktur Teknologi Informasi",
             "Bidang Layanan Aplikasi Informatika",
-            "Bidang Komunikasi dan Informasi Publik",
-            "Bidang Statistik",
-            "Bidang Persandian dan Keamanan Informasi",
-            "Bidang Teknologi Informasi dan Komunikasi"
+            "Bidang Komunikasi dan Informasi Publik"
     );
 
-    /** Nama-nama dummy untuk jabatan. */
-    private static final List<String> NAMA_KETUA = List.of(
-            "Drs. H. Suhartono, M.Si", "Drs. Bambang Wijaya, MM",
-            "Dra. Siti Nurhayati, M.Pd", "Ir. H. Agus Supriyanto, MT",
-            "Hj. Dewi Sartika, S.Sos, M.Si", "Dr. H. Mochammad Rizal, SE, MM",
-            "Drs. H. Abdul Malik, M.M.", "H. Sutrisno, S.Pd, M.Kes",
-            "Dra. Hj. Endang Purwanti, M.Si", "Ir. H. Sunaryo, MT"
+    /** Daftar Bidang generik untuk Dinas Pendidikan. */
+    private static final List<String> BIDANG_PENDIDIKAN = List.of(
+            "Sekretariat",
+            "Bidang Pembinaan PAUD dan Pendidikan Non Formal",
+            "Bidang Pembinaan Sekolah Dasar"
     );
-    private static final List<String> NAMA_SEKRETARIS = List.of(
-            "Rini Ambarwati, S.Kom", "Hendra Gunawan, S.Sos",
-            "Yuliana Dewi, S.E., M.M.", "Arief Rachman, S.T., M.T.",
-            "Fitri Handayani, S.IP", "Eko Prasetyo, S.Kom., M.Kom",
-            "Nina Marlina, S.E.", "Doni Kusuma, S.Sos., M.Si",
-            "Ratna Puspita, S.T.", "Adi Saputra, S.Kom"
+
+    /** Daftar Bidang generik untuk Dinas Kesehatan. */
+    private static final List<String> BIDANG_KESEHATAN = List.of(
+            "Sekretariat",
+            "Bidang Pelayanan Kesehatan",
+            "Bidang Pencegahan dan Pengendalian Penyakit"
     );
-    private static final List<String> NAMA_BENDAHARA = List.of(
-            "Tuti Alawiyah, S.E.", "Agus Salim, S.E.",
-            "Lilis Suryani, A.Md", "Bambang Santoso, S.E.",
-            "Rina Sulistiani, S.Kom", "Fajar Nugroho, S.E.",
-            "Diana Permata Sari, S.E.", "Haryanto, S.E., M.M.",
-            "Ani Rahmawati, A.Md", "Slamet Riyadi, S.E."
+
+    /** Daftar Bidang generik untuk DPUPR. */
+    private static final List<String> BIDANG_PUPR = List.of(
+            "Sekretariat",
+            "Bidang Bina Marga",
+            "Bidang Cipta Karya"
     );
-    private static final List<String> NAMA_ANGGOTA = List.of(
+
+    /** Daftar Bidang generik untuk Dinas Perhubungan. */
+    private static final List<String> BIDANG_PERHUBUNGAN = List.of(
+            "Sekretariat",
+            "Bidang Lalu Lintas",
+            "Bidang Angkutan"
+    );
+
+    /** Struktur jabatan standar untuk tiap Bidang (5 orang: Ketua, Sekretaris, Bendahara, 2 Anggota). */
+    private static final List<Jabatan> STRUKTUR_JABATAN = List.of(
+            Jabatan.KETUA, Jabatan.SEKRETARIS, Jabatan.BENDAHARA,
+            Jabatan.ANGGOTA, Jabatan.ANGGOTA
+    );
+
+    /** Counter deterministik untuk pengulangan nama dummy. */
+    private int namaCounter = 0;
+
+    /** Counter username untuk suffix urut saat terjadi duplikat. */
+    private final java.util.Map<String, Integer> usernameCounter = new java.util.HashMap<>();
+
+    private static final String[] NAMA_POOL = {
             "Ahmad Fauzi", "Budi Hartono", "Citra Dewi Lestari",
             "Deni Prasetyo", "Eka Fitriani", "Fajar Setiawan",
             "Gita Permata Sari", "Hendra Kusuma", "Indah Permatasari",
@@ -119,14 +180,63 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
             "Mega Puspita Rini", "Nugroho Adi Wibowo", "Olivia Putri Maharani",
             "Prasetyo Budi Utomo", "Ratna Dewi Kusumawati", "Rizky Fadhilah",
             "Sari Dewi Anggraini", "Taufik Hidayat", "Umi Kalsum",
-            "Vina Aulia Rahmah", "Wahyu Nugroho", "Yuni Astuti"
-    );
+            "Vina Aulia Rahmah", "Wahyu Nugroho", "Yuni Astuti",
+            "Bambang Wijaya", "Siti Nurhayati", "Agus Supriyanto",
+            "Dewi Sartika", "Mochammad Rizal", "Abdul Malik",
+            "Sutrisno", "Endang Purwanti", "Sunaryo",
+            "Rini Ambarwati", "Hendra Gunawan", "Yuliana Dewi",
+            "Arief Rachman", "Fitri Handayani", "Eko Prasetyo",
+            "Nina Marlina", "Doni Kusuma", "Ratna Puspita",
+            "Adi Saputra", "Tuti Alawiyah", "Agus Salim",
+            "Lilis Suryani", "Diana Permata Sari", "Haryanto",
+            "Ani Rahmawati", "Slamet Riyadi"
+    };
 
     @Override
+    @Transactional
     public void run(String... args) {
-        // Idempotent: cek apakah data wilayah sudah ada
-        if (wilayahRepository.count() > 0) {
-            return;
+        long wilayahCount = wilayahRepository.count();
+        long opdCount = opdRepository.count();
+        long jabatanCount = jabatanStrukturRepository.count();
+        System.out.println("[OrganisasiDataSeeder] wilayah=" + wilayahCount + " opd=" + opdCount
+                + " jabatan=" + jabatanCount);
+
+        if (wilayahCount > 0) {
+            // Wilayah sudah ada. Cek kondisi:
+            // - legacySeed=true: ada OPD dari versi seed lama (semua 38 kab/kota punya OPD)
+            // - ada wilayah tapi OPD kosong: tabel baru di-truncate / seeder gagal
+            //   sebelumnya — reseed dengan skala kecil
+            // - ada jabatan tapi belum punya username: kolom baru ditambahkan oleh
+            //   ddl-auto=update dengan nilai NULL — reseed biar DTO baris-nya terisi
+            // - wilayah + OPD sudah ada dari seed baru: skip
+            boolean legacySeed = opdRepository.findAll().stream()
+                    .anyMatch(o -> o.getNamaOpd() != null
+                            && o.getNamaOpd().contains("Kabupaten Bangkalan"));
+            boolean orphanedWilayah = (wilayahCount > 0 && opdCount == 0);
+            boolean legacyMissingUsername = jabatanStrukturRepository.findAll().stream()
+                    .anyMatch(js -> js.getUsername() == null || js.getUsername().isBlank());
+            System.out.println("[OrganisasiDataSeeder] legacySeed=" + legacySeed
+                    + " orphanedWilayah=" + orphanedWilayah
+                    + " legacyMissingUsername=" + legacyMissingUsername);
+
+            if (legacySeed || orphanedWilayah || legacyMissingUsername) {
+                // Reset agar bisa di-seed ulang dengan skala kecil.
+                // Hanya jalan di environment demo.
+                entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 0").executeUpdate();
+                entityManager.createNativeQuery("TRUNCATE TABLE jabatan_struktur").executeUpdate();
+                entityManager.createNativeQuery("TRUNCATE TABLE bidang").executeUpdate();
+                entityManager.createNativeQuery("TRUNCATE TABLE opd").executeUpdate();
+                entityManager.createNativeQuery("TRUNCATE TABLE wilayah").executeUpdate();
+                entityManager.createNativeQuery("SET FOREIGN_KEY_CHECKS = 1").executeUpdate();
+                // Penting: clear persistence context setelah truncate. Sebelumnya kita
+                // sudah load all() di legacyMissingUsername check, sehingga Hibernate
+                // masih memegang entity JabatanStruktur id=N di session cache. Tanpa
+                // clear(), save() berikutnya akan melempar NonUniqueObjectException
+                // karena Hibernate mengira id itu sudah dipakai object lain.
+                entityManager.clear();
+            } else {
+                return; // sudah pakai seed baru, jangan duplikasi
+            }
         }
 
         // 1. Buat root Provinsi Jawa Timur
@@ -136,75 +246,107 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
                 .parent(null)
                 .build());
 
-        // 2. Buat 38 Kabupaten/Kota sebagai child Provinsi
-        for (int i = 0; i < DAFTAR_KAB_KOTA.size(); i++) {
-            KabKota kabKota = DAFTAR_KAB_KOTA.get(i);
+        // 2. Buat 38 Kabupaten/Kota
+        int totalOpd = 0, totalBidang = 0, totalJabatan = 0;
+        for (KabKota kk : DAFTAR_KAB_KOTA) {
             Wilayah wilayah = wilayahRepository.save(Wilayah.builder()
-                    .nama(kabKota.nama())
-                    .tipe(kabKota.tipe())
+                    .nama(kk.nama())
+                    .tipe(kk.tipe())
                     .parent(provinsi)
                     .build());
 
-            // 3. Buat 1 OPD per Kabupaten/Kota
-            String kodeOpd = "OPD-" + String.format("%02d", (i + 1));
-            String namaOpd = "Dinas Komunikasi dan Informatika " + kabKota.nama();
-            Opd opd = opdRepository.save(Opd.builder()
-                    .wilayah(wilayah)
-                    .namaOpd(namaOpd)
-                    .kodeOpd(kodeOpd)
-                    .build());
+            // Cek apakah kabupaten/kota ini ada di daftar sampel
+            List<String> opdList = SAMPEL_BY_NAMA.get(kk.nama());
+            if (opdList == null) {
+                // Bukan sampel — node tetap ada tapi kosong (tidak ada OPD/Bidang)
+                continue;
+            }
 
-            // 4. Buat 7 Bidang per OPD
-            for (String namaBidang : DAFTAR_BIDANG) {
-                Bidang bidang = bidangRepository.save(Bidang.builder()
-                        .opd(opd)
-                        .namaBidang(namaBidang)
+            // 3. Buat OPD untuk sampel
+            int opdCounter = 1;
+            for (String namaOpd : opdList) {
+                Opd opd = opdRepository.save(Opd.builder()
+                        .wilayah(wilayah)
+                        .namaOpd(namaOpd + " " + kk.nama())
+                        .kodeOpd(kodeWilayah(kk.nama()) + "-OPD-" + String.format("%02d", opdCounter++))
                         .build());
+                totalOpd++;
 
-                // 5. Buat Ketua
-                jabatanStrukturRepository.save(JabatanStruktur.builder()
-                        .bidang(bidang)
-                        .jabatan(Jabatan.KETUA)
-                        .namaDummy(pickRandom(NAMA_KETUA))
-                        .build());
+                // Pilih daftar bidang sesuai tipe OPD
+                List<String> daftarBidang = pilihBidang(namaOpd);
 
-                // 6. Buat Sekretaris
-                jabatanStrukturRepository.save(JabatanStruktur.builder()
-                        .bidang(bidang)
-                        .jabatan(Jabatan.SEKRETARIS)
-                        .namaDummy(pickRandom(NAMA_SEKRETARIS))
-                        .build());
-
-                // 7. Buat Bendahara
-                jabatanStrukturRepository.save(JabatanStruktur.builder()
-                        .bidang(bidang)
-                        .jabatan(Jabatan.BENDAHARA)
-                        .namaDummy(pickRandom(NAMA_BENDAHARA))
-                        .build());
-
-                // 8. Buat 3 Anggota
-                for (int a = 0; a < 3; a++) {
-                    jabatanStrukturRepository.save(JabatanStruktur.builder()
-                            .bidang(bidang)
-                            .jabatan(Jabatan.ANGGOTA)
-                            .namaDummy(pickRandom(NAMA_ANGGOTA))
+                // 4. Buat Bidang per OPD
+                for (String namaBidang : daftarBidang) {
+                    Bidang bidang = bidangRepository.save(Bidang.builder()
+                            .opd(opd)
+                            .namaBidang(namaBidang)
                             .build());
+                    totalBidang++;
+
+                    // 5. Buat jabatan standar: Ketua, Sekretaris, Bendahara, 2 Anggota
+                    for (Jabatan jabatan : STRUKTUR_JABATAN) {
+                        String nama = nextNama();
+                        jabatanStrukturRepository.save(JabatanStruktur.builder()
+                                .bidang(bidang)
+                                .jabatan(jabatan)
+                                .namaDummy(nama)
+                                .username(nextUsername(nama))
+                                .build());
+                        totalJabatan++;
+                    }
                 }
             }
         }
+        System.out.println("[OrganisasiDataSeeder] Seeded: " + totalOpd + " OPD, "
+                + totalBidang + " Bidang, " + totalJabatan + " Jabatan");
+    }
+
+    /** Pilih daftar bidang berdasarkan prefiks nama OPD. */
+    private List<String> pilihBidang(String namaOpd) {
+        String lower = namaOpd.toLowerCase();
+        if (lower.contains("komunikasi") || lower.contains("informatika")) return BIDANG_KOMINFO;
+        if (lower.contains("pendidikan")) return BIDANG_PENDIDIKAN;
+        if (lower.contains("kesehatan")) return BIDANG_KESEHATAN;
+        if (lower.contains("pekerjaan umum") || lower.contains("pupr")) return BIDANG_PUPR;
+        if (lower.contains("perhubungan")) return BIDANG_PERHUBUNGAN;
+        // Default fallback
+        return List.of("Sekretariat", "Bidang Umum");
+    }
+
+    /** Nama dummy deterministik dari pool, diulang dengan indeks. */
+    private String nextNama() {
+        String nama = NAMA_POOL[namaCounter % NAMA_POOL.length];
+        namaCounter++;
+        return nama;
     }
 
     /**
-     * Pilih nama acak dari daftar.
-     * Sederhana: pakai hashCode index untuk variasi deterministik per panggilan.
+     * Generate username dummy dari nama lengkap: inisial depan (1 huruf) +
+     * nama keluarga (token terakhir), lowercase, tanpa spasi. Tangani duplikat
+     * dengan suffix angka urut (afauzi, afauzi2, afauzi3, ...). Kolom username
+     * disimpan di jabatan_struktur, bukan dipakai untuk autentikasi.
      */
-    private String pickRandom(List<String> names) {
-        int index = (int) (System.nanoTime() % names.size());
-        if (index < 0) index = -index;
-        return names.get(index);
+    private String nextUsername(String namaLengkap) {
+        String[] tokens = namaLengkap.trim().toLowerCase().split("\\s+");
+        String inisialDepan = tokens[0].substring(0, 1);
+        String namaBelakang = tokens[tokens.length - 1].replaceAll("[^a-z0-9]", "");
+        String base = inisialDepan + namaBelakang;
+        int seen = usernameCounter.getOrDefault(base, 0);
+        usernameCounter.put(base, seen + 1);
+        return seen == 0 ? base : base + (seen + 1);
     }
 
-    /** Record sederhana untuk pasangan nama + tipe kab/kota. */
-    private record KabKota(String nama, TipeWilayah tipe) {}
-}
+    /** Bikin kode singkat dari nama kab/kota untuk prefix kodeOpd yang unik secara global. */
+    private String kodeWilayah(String namaKabKota) {
+        String bersih = namaKabKota.replace("Kabupaten ", "").replace("Kota ", "");
+        return bersih.length() >= 3
+                ? bersih.substring(0, 3).toUpperCase()
+                : bersih.toUpperCase();
+    }
 
+    /** Record sederhana untuk pasangan nama + tipe kab/kota (seluruh daftar 38). */
+    private record KabKota(String nama, TipeWilayah tipe) {}
+
+    /** Record untuk sampel lengkap: nama kab/kota + daftar OPD di dalamnya. */
+    private record SampleKabKota(String nama, List<String> opdList) {}
+}

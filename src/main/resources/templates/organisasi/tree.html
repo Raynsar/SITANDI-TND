@@ -6,18 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Struktur Organisasi - SIPENJAM Alat TU</title>
 
-    <!-- Tabler Core via CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/css/tabler.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
+    <!-- AdminLTE 4 CSS + Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/css/adminlte.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1/font/bootstrap-icons.min.css" />
 
-    <th:block th:insert="~{common/context-path :: context-path}"/>
+    <th:block th:replace="~{common/context-path :: context-path}"/>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
 
     <style>
-        /* Tree styling */
+        /* === Tree styling (Bootstrap 5 compatible) === */
         .tree-list {
             list-style: none;
             padding-left: 1.5rem;
             margin: 0;
+        }
+        .tree-list > .tree-item:first-child {
+            padding-left: 0;
         }
         .tree-list .tree-item {
             position: relative;
@@ -30,8 +34,8 @@
             left: -1rem;
             bottom: 50%;
             width: 1rem;
-            border-left: 2px solid #dce1e7;
-            border-bottom: 2px solid #dce1e7;
+            border-left: 2px solid #dee2e6;
+            border-bottom: 2px solid #dee2e6;
         }
         .tree-list .tree-item:last-child::before {
             border-bottom-left-radius: 0.25rem;
@@ -43,7 +47,7 @@
             left: -1rem;
             bottom: 0;
             width: 1rem;
-            border-left: 2px solid #dce1e7;
+            border-left: 2px solid #dee2e6;
         }
         .tree-list .tree-item:last-child::after {
             border-left: none;
@@ -61,14 +65,18 @@
         .tree-toggle:hover {
             background-color: rgba(0,0,0,0.05);
         }
-        .tree-toggle .ti {
+        .tree-toggle.selected {
+            background-color: rgba(13, 110, 253, 0.12);
+            color: var(--bs-primary);
+        }
+        .tree-toggle .bi {
             font-size: 1rem;
             transition: transform 0.2s;
         }
-        .tree-toggle .ti-chevron-down {
+        .tree-toggle .bi-chevron-down {
             transform: rotate(-90deg);
         }
-        .tree-toggle.expanded .ti-chevron-down {
+        .tree-toggle.expanded .bi-chevron-down {
             transform: rotate(0deg);
         }
         .tree-children {
@@ -78,7 +86,7 @@
             display: block;
         }
 
-        /* Badge tipe */
+        /* === Badge tipe — warna konsisten dengan legend === */
         .badge-tipe {
             display: inline-block;
             font-size: 0.65rem;
@@ -91,9 +99,10 @@
         .badge-tipe.badge-provinsi { background-color: #e8f5e9; color: #2e7d32; }
         .badge-tipe.badge-kabupaten { background-color: #e3f2fd; color: #1565c0; }
         .badge-tipe.badge-kota { background-color: #fff3e0; color: #e65100; }
-        .badge-tipe.badge-opd { background-color: #f3e5f5; color: #7b1fa2; }
+        .badge-tipe.badge-opd { background-color: #f3f5f5; color: #7b1fa2; }
+        .badge-tipe.badge-opd,
+        .badge-tipe.badge-opd + .badge-opd { background-color: #f3e5f5; color: #7b1fa2; }
         .badge-tipe.badge-bidang { background-color: #fce4ec; color: #c62828; }
-        .badge-tipe.badge-jabatan { background-color: #e0f2f1; color: #00695c; }
 
         .node-label {
             font-size: 0.875rem;
@@ -108,17 +117,33 @@
         .loading-spinner.active {
             display: block;
         }
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #6c757d;
-        }
-        .empty-state .ti {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
 
-        /* Responsive tree padding */
+        /* === Layout 2 kolom === */
+        .org-tree-card {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .org-personal-empty {
+            text-align: center;
+            color: var(--bs-secondary-color);
+            padding: 3rem 1rem;
+        }
+        .jabatan-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.3rem;
+            font-weight: 600;
+        }
+        .jabatan-KETUA { background-color: #f8d7da; color: #842029; }
+        .jabatan-SEKRETARIS { background-color: #cfe2ff; color: #084298; }
+        .jabatan-BENDAHARA { background-color: #fff3cd; color: #664d03; }
+        .jabatan-ANGGOTA { background-color: #e2e3e5; color: #41464b; }
+
+        @media (max-width: 768px) {
+            .org-tree-card {
+                max-height: 50vh;
+            }
+        }
         @media (max-width: 576px) {
             .tree-list { padding-left: 1rem; }
             .tree-list .tree-item::before { left: -0.75rem; width: 0.75rem; }
@@ -127,164 +152,207 @@
         }
     </style>
 </head>
-<body>
-    <div class="page">
-        <!-- Navbar -->
-        <header class="navbar navbar-expand-md navbar-light d-print-none">
-            <div class="container-xl">
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <h1 class="navbar-brand navbar-brand-autodark d-none d-md-block pe-0 pe-md-3">
-                    <a th:href="@{/}">
-                        <span class="fw-bold">SIPENJAM</span>
-                        <span class="text-primary">ALAT TU</span>
-                    </a>
-                </h1>
-                <div class="navbar-nav flex-row order-md-last align-items-center gap-2 ms-auto">
-                    <span class="nav-link px-0 small" sec:authorize="isAuthenticated()"
-                          th:text="${#authentication.name}"></span>
-                    <form th:action="@{/logout}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-outline-secondary btn-sm">
-                            <span class="ti ti-logout me-1"></span>Keluar
-                        </button>
-                    </form>
-                </div>
-                <div class="collapse navbar-collapse" id="navbar-menu">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" th:href="@{/}">
-                                <span class="ti ti-home me-1"></span>Beranda
-                            </a>
-                        </li>
-                        <li class="nav-item active">
-                            <a class="nav-link" th:href="@{/organisasi/tree}">
-                                <span class="ti ti-hierarchy-2 me-1"></span>Struktur Organisasi
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </header>
+<body class="app-wrapper d-flex flex-column" data-bs-theme="light">
 
-        <div class="page-wrapper">
-            <div class="page-header d-print-none">
-                <div class="container-xl">
-                    <div class="row g-2 align-items-center">
-                        <div class="col">
-                            <h2 class="page-title">
-                                <span class="ti ti-hierarchy-2 me-2 text-primary"></span>
-                                Struktur Organisasi Perangkat Daerah Se-Jawa Timur
-                            </h2>
-                            <div class="text-muted mt-1 small">
-                                Master data OPD, Bidang, dan Jabatan di lingkungan Pemerintah Provinsi Jawa Timur
-                            </div>
-                        </div>
+    <!-- App Header -->
+    <div th:replace="~{common/header :: header}"></div>
+
+    <!-- App Layout: Sidebar + Main -->
+    <div class="app-layout">
+        <!-- App Sidebar -->
+        <div th:replace="~{common/sidebar :: sidebar}"></div>
+
+        <!-- App Main Content -->
+        <main class="app-main d-flex flex-column">
+            <div class="container-fluid mt-4 mb-4">
+                <!-- Page Header -->
+                <div class="row g-2 align-items-center mb-4">
+                    <div class="col">
+                        <h1 class="fs-2 fw-bold mb-1">
+                            <i class="bi bi-diagram-3 me-2 text-primary"></i>
+                            Struktur Organisasi Perangkat Daerah Se-Jawa Timur
+                        </h1>
+                        <p class="text-body-secondary small mb-0">
+                            Pilih Bidang di tree untuk menampilkan daftar personal (nama & jabatan) di panel kanan.
+                        </p>
                     </div>
                 </div>
-            </div>
 
-            <div class="page-body">
-                <div class="container-xl">
-                    <!-- Card Tree -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="ti ti-tree me-2 text-success"></span>
-                                Pohon Struktur Organisasi
-                            </h3>
-                            <div class="card-actions">
-                                <button id="expandAllBtn" class="btn btn-outline-primary btn-sm">
-                                    <span class="ti ti-arrows-expand me-1"></span>Expand All
-                                </button>
-                                <button id="collapseAllBtn" class="btn btn-outline-secondary btn-sm">
-                                    <span class="ti ti-arrows-collapse me-1"></span>Collapse All
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <!-- Loading -->
-                            <div id="loadingSpinner" class="loading-spinner active">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Memuat data...</span>
-                                </div>
-                                <p class="text-muted mt-2">Memuat data struktur organisasi...</p>
-                            </div>
-
-                            <!-- Error -->
-                            <div id="errorContainer" class="alert alert-danger d-none" role="alert">
-                                <span class="ti ti-alert-circle me-1"></span>
-                                <span id="errorMessage">Gagal memuat data struktur organisasi.</span>
-                                <div class="mt-2">
-                                    <button id="retryBtn" class="btn btn-sm btn-outline-danger">
-                                        <span class="ti ti-refresh me-1"></span>Coba Lagi
+<div class="row g-3">
+                    <!-- ============ KOLOM KIRI: Treeview ============ -->
+                    <div class="col-12 col-md-5">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h3 class="card-title mb-0">
+                                    <i class="bi bi-tree me-2 text-success"></i>
+                                    Pohon Struktur Organisasi
+                                </h3>
+                                <div class="d-flex gap-2">
+                                    <button id="expandAllBtn" type="button" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-arrows-expand me-1"></i>Expand
+                                    </button>
+                                    <button id="collapseAllBtn" type="button" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-arrows-collapse me-1"></i>Collapse
                                     </button>
                                 </div>
                             </div>
+                            <div class="card-body org-tree-card">
+                                <div id="loadingSpinner" class="loading-spinner active">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Memuat data...</span>
+                                    </div>
+                                    <p class="text-muted mt-2">Memuat data struktur organisasi...</p>
+                                </div>
 
-                            <!-- Empty state -->
-                            <div id="emptyState" class="empty-state d-none">
-                                <span class="ti ti-database"></span>
-                                <p class="mb-0">Tidak ada data struktur organisasi.</p>
-                                <p class="small text-muted">Seeder mungkin belum berjalan. Jalankan ulang aplikasi.</p>
+                                <div id="errorContainer" class="alert alert-danger d-none" role="alert">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    <span id="errorMessage">Gagal memuat data struktur organisasi.</span>
+                                    <div class="mt-2">
+                                        <button id="retryBtn" type="button" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-arrow-clockwise me-1"></i>Coba Lagi
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="emptyState" class="text-center py-5 d-none">
+                                    <i class="bi bi-database fs-1 text-body-tertiary d-block mb-2"></i>
+                                    <p class="mb-0">Tidak ada data struktur organisasi.</p>
+                                    <p class="small text-body-secondary">Seeder mungkin belum berjalan.</p>
+                                </div>
+
+                                <div id="treeContainer" class="d-none">
+                                    <ul id="treeRoot" class="tree-list" style="padding-left: 0;"></ul>
+                                </div>
                             </div>
+                        </div>
 
-                            <!-- Tree Container -->
-                            <div id="treeContainer">
-                                <ul id="treeRoot" class="tree-list" style="padding-left: 0;"></ul>
+                        <div class="card mt-3">
+                            <div class="card-body py-2">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="fw-bold small me-1">Keterangan:</span>
+                                    <span class="badge-tipe badge-provinsi">Provinsi</span>
+                                    <span class="badge-tipe badge-kabupaten">Kabupaten</span>
+                                    <span class="badge-tipe badge-kota">Kota</span>
+                                    <span class="badge-tipe badge-opd">OPD</span>
+                                    <span class="badge-tipe badge-bidang">Bidang</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Legend -->
-                    <div class="card mt-3">
-                        <div class="card-body py-2">
-                            <div class="d-flex flex-wrap gap-2 align-items-center">
-                                <span class="fw-bold small me-1">Keterangan:</span>
-                                <span class="badge-tipe badge-provinsi">Provinsi</span>
-                                <span class="badge-tipe badge-kabupaten">Kabupaten</span>
-                                <span class="badge-tipe badge-kota">Kota</span>
-                                <span class="badge-tipe badge-opd">OPD</span>
-                                <span class="badge-tipe badge-bidang">Bidang</span>
-                                <span class="badge-tipe badge-jabatan">Jabatan</span>
+                    <!-- ============ KOLOM KANAN: Personal table ============ -->
+                    <div class="col-12 col-md-7">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h3 class="card-title mb-0">
+                                    <i class="bi bi-people me-2 text-primary"></i>
+                                    Daftar Personal
+                                </h3>
+                            </div>
+                            <div class="card-body" id="personalContainer">
+                                <div id="personalPlaceholder" class="org-personal-empty">
+                                    <i class="bi bi-arrow-left-circle fs-1 d-block mb-2 text-body-tertiary"></i>
+                                    <p class="mb-0">Pilih salah satu <strong>Bidang</strong> di tree untuk melihat daftar personal.</p>
+                                </div>
+
+                                <div id="personalLoading" class="loading-spinner">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Memuat personal...</span>
+                                    </div>
+                                </div>
+
+                                <div id="personalError" class="alert alert-danger d-none" role="alert">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    <span id="personalErrorMessage">Gagal memuat personal.</span>
+                                </div>
+
+                                <div id="personalContent" class="d-none">
+                                    <h4 id="personalBidangName" class="fs-5 fw-semibold mb-1"></h4>
+                                    <p id="personalBreadcrumb" class="text-body-secondary small mb-3"></p>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th class="fw-semibold small text-uppercase" style="width: 60px;">No</th>
+                                                    <th class="fw-semibold small text-uppercase">Nama</th>
+                                                    <th class="fw-semibold small text-uppercase">Jabatan</th>
+                                                    <th class="fw-semibold small text-uppercase">Username</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="personalTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <footer class="footer footer-transparent d-print-none">
-                <div class="container-xl">
-                    <div class="row text-center align-items-center">
-                        <div class="col-12 mt-3">
-                            <p class="text-muted mb-0 small">
-                                &copy; 2025 SIPENJAM Alat TU.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </footer>
-        </div>
+        </main>
     </div>
 
-    <!-- Tabler JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta20/dist/js/tabler.min.js"></script>
+    <!-- App Footer -->
+    <div th:replace="~{common/footer :: footer}"></div>
 
-    <script>
+    <!-- Core JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2/browser/overlayscrollbars.browser.es6.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0/dist/js/adminlte.min.js"></script>
+
+    <script th:inline="none">
         (function() {
             'use strict';
 
-            var API_URL = (window.APP_CONTEXT_PATH || '/') + 'api/v1/organisasi/tree';
+            var APP_CTX = window.APP_CONTEXT_PATH || '/';
+            var TREE_URL = APP_CTX + 'api/v1/organisasi/tree';
+            var PERSONAL_URL_FN = function(bidangId) {
+                return APP_CTX + 'api/v1/organisasi/bidang/' + bidangId + '/personal';
+            };
+
+            // === Element refs (tree) ===
             var treeRoot = document.getElementById('treeRoot');
+            var treeContainer = document.getElementById('treeContainer');
             var loadingSpinner = document.getElementById('loadingSpinner');
             var errorContainer = document.getElementById('errorContainer');
             var errorMessage = document.getElementById('errorMessage');
             var emptyState = document.getElementById('emptyState');
             var retryBtn = document.getElementById('retryBtn');
 
-            /**
-             * Dapatkan kelas badge untuk tipe node.
-             */
+            // === Element refs (personal panel) ===
+            var personalPlaceholder = document.getElementById('personalPlaceholder');
+            var personalLoading = document.getElementById('personalLoading');
+            var personalError = document.getElementById('personalError');
+            var personalErrorMessage = document.getElementById('personalErrorMessage');
+            var personalContent = document.getElementById('personalContent');
+            var personalBidangName = document.getElementById('personalBidangName');
+            var personalBreadcrumb = document.getElementById('personalBreadcrumb');
+            var personalTableBody = document.getElementById('personalTableBody');
+
+            // === Element refs (controls) ===
+            var expandAllBtn = document.getElementById('expandAllBtn');
+            var collapseAllBtn = document.getElementById('collapseAllBtn');
+
+            // === State ===
+            var selectedToggleEl = null;
+            // Cache node untuk lookup cepat (tetap dipakai untuk label, ikon, dll).
+            var nodeIndex = {}; // id -> node
+
+            var ICON_MAP = {
+                'PROVINSI': 'bi bi-geo-alt-fill',
+                'KABUPATEN': 'bi bi-building',
+                'KOTA': 'bi bi-buildings',
+                'OPD': 'bi bi-building-gear',
+                'BIDANG': 'bi bi-folder'
+            };
+            var ICON_COLOR_MAP = {
+                'PROVINSI': '#2e7d32',
+                'KABUPATEN': '#1565c0',
+                'KOTA': '#e65100',
+                'OPD': '#7b1fa2',
+                'BIDANG': '#c62828'
+            };
+
             function getBadgeClass(tipe) {
                 var t = (tipe || '').toLowerCase();
                 if (t === 'provinsi') return 'badge-provinsi';
@@ -292,65 +360,53 @@
                 if (t === 'kota') return 'badge-kota';
                 if (t === 'opd') return 'badge-opd';
                 if (t === 'bidang') return 'badge-bidang';
-                if (t === 'jabatan') return 'badge-jabatan';
                 return '';
             }
-
-            /**
-             * Dapatkan kelas ikon Tabler untuk tipe node.
-             */
             function getIconClass(tipe) {
-                var t = (tipe || '').toUpperCase();
-                if (t === 'PROVINSI') return 'ti ti-map-pin';
-                if (t === 'KABUPATEN') return 'ti ti-building';
-                if (t === 'KOTA') return 'ti ti-building-community';
-                if (t === 'OPD') return 'ti ti-government';
-                if (t === 'BIDANG') return 'ti ti-folder';
-                if (t === 'JABATAN') return 'ti ti-user';
-                return 'ti ti-dot';
+                return ICON_MAP[(tipe || '').toUpperCase()] || 'bi bi-dot';
             }
-
-            /**
-             * Dapatkan warna ikon untuk tipe node.
-             */
             function getIconColor(tipe) {
-                var t = (tipe || '').toUpperCase();
-                if (t === 'PROVINSI') return '#2e7d32';
-                if (t === 'KABUPATEN' || t === 'KOTA') return '#1565c0';
-                if (t === 'OPD') return '#7b1fa2';
-                if (t === 'BIDANG') return '#c62828';
-                return '#00695c';
+                return ICON_COLOR_MAP[(tipe || '').toUpperCase()] || '#6c757d';
             }
 
             /**
-             * Render satu node tree sebagai elemen LI.
+             * Build satu node tree dan rekursif child-nya.
+             * Untuk tipe BIDANG: klik = load personal, bukan expand/collapse.
              */
             function createNodeElement(node) {
                 var li = document.createElement('li');
                 li.className = 'tree-item';
+                li.dataset.nodeId = node.id;
+                li.dataset.nodeTipe = node.tipe;
 
                 var hasChildren = node.children && node.children.length > 0;
                 var tipe = (node.tipe || '').toUpperCase();
-                var isLeaf = (tipe === 'JABATAN') || !hasChildren;
+                var isBidang = (tipe === 'BIDANG');
 
-                // Container toggle
                 var toggle = document.createElement('div');
                 toggle.className = 'tree-toggle';
                 toggle.dataset.expanded = 'false';
+                toggle.dataset.nodeId = node.id;
 
-                // Chevron
-                var chevron = document.createElement('span');
-                chevron.className = 'ti ' + (isLeaf ? 'ti-minus' : 'ti-chevron-down');
-                if (isLeaf) {
+                // Chevron: tampilkan jika punya child ATAU klik-untuk-personal (bidang)
+                var chevron = document.createElement('i');
+                if (hasChildren) {
+                    chevron.className = 'bi bi-chevron-down';
+                    chevron.style.fontSize = '0.875rem';
+                } else if (isBidang) {
+                    // bidang tanpa anak tetap bisa diklik untuk lihat personal
+                    chevron.className = 'bi bi-chevron-right';
+                    chevron.style.fontSize = '0.875rem';
+                    chevron.style.opacity = '0.6';
+                } else {
+                    chevron.className = 'bi bi-dash';
                     chevron.style.opacity = '0.3';
                     chevron.style.fontSize = '0.75rem';
-                } else {
-                    chevron.style.fontSize = '0.875rem';
                 }
                 toggle.appendChild(chevron);
 
                 // Icon
-                var icon = document.createElement('span');
+                var icon = document.createElement('i');
                 icon.className = getIconClass(node.tipe) + ' me-1';
                 icon.style.color = getIconColor(node.tipe);
                 icon.style.fontSize = '1rem';
@@ -362,7 +418,7 @@
                 label.textContent = node.nama || '(tanpa nama)';
                 toggle.appendChild(label);
 
-                // Badge
+                // Badge tipe
                 var badge = document.createElement('span');
                 badge.className = 'badge-tipe ' + getBadgeClass(node.tipe) + ' ms-1';
                 badge.textContent = node.tipe || '';
@@ -370,36 +426,197 @@
 
                 li.appendChild(toggle);
 
+                // Anak (kab/kota, OPD, atau Bidang kosong)
                 if (hasChildren) {
                     var childrenUl = document.createElement('ul');
                     childrenUl.className = 'tree-children';
-
                     for (var i = 0; i < node.children.length; i++) {
                         childrenUl.appendChild(createNodeElement(node.children[i]));
                     }
-
                     li.appendChild(childrenUl);
 
-                    // Event toggle expand/collapse
-                    (function(ul, togg) {
-                        togg.addEventListener('click', function(e) {
+                    toggle.addEventListener('click', (function(ul, togg) {
+                        return function(e) {
                             e.stopPropagation();
                             var expanded = togg.dataset.expanded === 'true';
                             togg.dataset.expanded = expanded ? 'false' : 'true';
                             togg.classList.toggle('expanded');
                             ul.classList.toggle('expanded');
-                        });
-                    })(childrenUl, toggle);
+                        };
+                    })(childrenUl, toggle));
+                }
+
+                // Bidang: klik juga memuat personal di panel kanan
+                if (isBidang) {
+                    toggle.addEventListener('click', (function(togg, n) {
+                        return function(e) {
+                            e.stopPropagation();
+                            selectBidang(togg, n);
+                        };
+                    })(toggle, node));
                 }
 
                 return li;
             }
 
+            function selectBidang(toggleEl, node) {
+                if (selectedToggleEl) {
+                    selectedToggleEl.classList.remove('selected');
+                }
+                toggleEl.classList.add('selected');
+                selectedToggleEl = toggleEl;
+
+                // Tampilkan header dulu dengan placeholder breadcrumb; baru ganti
+                // dengan teks dari backend begitu /breadcrumb selesai.
+                personalBidangName.textContent = node.nama || '';
+                personalBreadcrumb.textContent = 'Memuat jalur…';
+                loadPersonal(node.id, node.tipe);
+            }
+
             /**
-             * Render seluruh tree dari data JSON.
+             * Ambil breadcrumb untuk satu node dari backend. Parameter {@code tipe}
+             * wajib dikirim supaya server tidak salah resolve node ketika id yang
+             * sama muncul di tabel berbeda (sequence Wilayah / OPD / Bidang berdiri
+             * sendiri, sehingga tumpang tindih bisa terjadi).
              */
+            function fetchBreadcrumb(tipe, nodeId) {
+                var url = APP_CTX + 'api/v1/organisasi/breadcrumb/' +
+                          encodeURIComponent(tipe) + '/' + encodeURIComponent(nodeId);
+                return fetch(url, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                }).then(function(response) {
+                    if (response.status === 401) {
+                        window.location.href = APP_CTX + 'login';
+                        return Promise.reject('Unauthorized - redirecting to login');
+                    }
+                    if (response.status === 404) {
+                        return null;
+                    }
+                    if (!response.ok) {
+                        return response.text().then(function(text) {
+                            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                        });
+                    }
+                    return response.json();
+                });
+            }
+
+            function indexNodes(nodes) {
+                for (var i = 0; i < nodes.length; i++) {
+                    var n = nodes[i];
+                    nodeIndex[n.id] = n;
+                    if (n.children && n.children.length > 0) {
+                        indexNodes(n.children);
+                    }
+                }
+            }
+
+            function loadPersonal(bidangId, bidangTipe) {
+                personalPlaceholder.classList.add('d-none');
+                personalContent.classList.add('d-none');
+                personalError.classList.add('d-none');
+                personalLoading.classList.add('active');
+
+                var personalUrl = PERSONAL_URL_FN(bidangId);
+
+                // Fetch paralel: tabel personal + breadcrumb (path dari root ke node).
+                var personalPromise = fetch(personalUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                }).then(function(response) {
+                    if (response.status === 401) {
+                        window.location.href = APP_CTX + 'login';
+                        return Promise.reject('Unauthorized - redirecting to login');
+                    }
+                    if (!response.ok) {
+                        return response.text().then(function(text) {
+                            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+                        });
+                    }
+                    return response.json();
+                });
+                var breadcrumbPromise = fetchBreadcrumb(bidangTipe, bidangId);
+
+                Promise.all([personalPromise, breadcrumbPromise])
+                    .then(function(results) {
+                        var rows = results[0] || [];
+                        var breadcrumbDto = results[1];
+                        personalLoading.classList.remove('active');
+                        var breadcrumbText = (breadcrumbDto && breadcrumbDto.display)
+                            ? breadcrumbDto.display
+                            : '';
+                        renderPersonal(rows, breadcrumbText);
+                    })
+                    .catch(function(err) {
+                        personalLoading.classList.remove('active');
+                        if (err === 'Unauthorized - redirecting to login') return;
+                        personalPlaceholder.classList.add('d-none');
+                        personalContent.classList.add('d-none');
+                        personalErrorMessage.textContent = 'Gagal memuat personal: ' + (err.message || err);
+                        personalError.classList.remove('d-none');
+                        console.error('[Personal] Error:', err);
+                    });
+            }
+
+            function renderPersonal(rows, breadcrumbText) {
+                personalBreadcrumb.textContent = breadcrumbText || '';
+                personalTableBody.innerHTML = '';
+
+                if (rows.length === 0) {
+                    var tr = document.createElement('tr');
+                    var td = document.createElement('td');
+                    td.colSpan = 4;
+                    td.className = 'text-center text-body-tertiary py-4';
+                    td.innerHTML = '<i class="bi bi-inbox d-block fs-4 mb-1"></i>Bidang ini belum memiliki data personal.';
+                    tr.appendChild(td);
+                    personalTableBody.appendChild(tr);
+                    personalContent.classList.remove('d-none');
+                    return;
+                }
+
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i];
+                    var tr = document.createElement('tr');
+
+                    var tdNo = document.createElement('td');
+                    tdNo.className = 'text-body-secondary';
+                    tdNo.textContent = (i + 1);
+                    tr.appendChild(tdNo);
+
+                    var tdNama = document.createElement('td');
+                    tdNama.className = 'fw-medium';
+                    tdNama.textContent = row.nama || '-';
+                    tr.appendChild(tdNama);
+
+                    var tdJabatan = document.createElement('td');
+                    var badge = document.createElement('span');
+                    badge.className = 'jabatan-badge jabatan-' + (row.jabatan || 'ANGGOTA');
+                    badge.textContent = formatJabatan(row.jabatan);
+                    tdJabatan.appendChild(badge);
+                    tr.appendChild(tdJabatan);
+
+                    var tdUsername = document.createElement('td');
+                    tdUsername.className = 'font-monospace text-body-secondary';
+                    tdUsername.textContent = row.username || '-';
+                    tr.appendChild(tdUsername);
+
+                    personalTableBody.appendChild(tr);
+                }
+
+                personalContent.classList.remove('d-none');
+            }
+
+            function formatJabatan(j) {
+                if (!j) return '-';
+                return j.charAt(0).toUpperCase() + j.slice(1).toLowerCase().replace('_', ' ');
+            }
+
             function renderTree(data) {
                 treeRoot.innerHTML = '';
+                treeContainer.classList.add('d-none');
                 loadingSpinner.classList.remove('active');
                 errorContainer.classList.add('d-none');
                 emptyState.classList.add('d-none');
@@ -409,14 +626,16 @@
                     return;
                 }
 
+                // Index semua node untuk breadcrumb lookup
+                nodeIndex = {};
+                indexNodes(data);
+
                 for (var i = 0; i < data.length; i++) {
                     treeRoot.appendChild(createNodeElement(data[i]));
                 }
+                treeContainer.classList.remove('d-none');
             }
 
-            /**
-             * Expand / collapse semua node.
-             */
             function setAllExpanded(expand) {
                 var toggles = document.querySelectorAll('#treeRoot .tree-toggle');
                 for (var i = 0; i < toggles.length; i++) {
@@ -429,39 +648,34 @@
                 }
             }
 
-            /**
-             * Ambil CSRF token dari cookie untuk POST/PUT/PATCH/DELETE.
-             * Tapi GET tidak perlu CSRF — ini hanya untuk jaga-jaga.
-             */
-            function getCsrfToken() {
-                var match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-                return match ? decodeURIComponent(match[1]) : null;
-            }
-
-            /**
-             * Load data tree dari API.
-             */
             function loadTree() {
                 loadingSpinner.classList.add('active');
+                treeContainer.classList.add('d-none');
                 errorContainer.classList.add('d-none');
                 emptyState.classList.add('d-none');
 
-                fetch(API_URL, {
+                // Safety timeout: auto-clear loading state after 30s
+                var timeoutId = setTimeout(function() {
+                    loadingSpinner.classList.remove('active');
+                    errorMessage.textContent = 'Waktu muat habis. Server mungkin sibuk. Silakan coba lagi.';
+                    errorContainer.classList.remove('d-none');
+                    console.warn('[OrganisasiTree] Request timed out after 30s');
+                }, 30000);
+
+                fetch(TREE_URL, {
                     method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    },
+                    headers: { 'Accept': 'application/json' },
                     credentials: 'same-origin'
                 })
                 .then(function(response) {
+                    clearTimeout(timeoutId);
                     if (response.status === 401) {
-                        // Redirect ke login
-                        window.location.href = (window.APP_CONTEXT_PATH || '/') + 'login';
+                        window.location.href = APP_CTX + 'login';
                         return Promise.reject('Unauthorized - redirecting to login');
                     }
                     if (!response.ok) {
                         return response.text().then(function(text) {
-                            throw new Error('HTTP ' + response.status + ': ' + response.statusText + (text ? ' - ' + text : ''));
+                            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
                         });
                     }
                     return response.json();
@@ -470,32 +684,21 @@
                     renderTree(data);
                 })
                 .catch(function(err) {
+                    clearTimeout(timeoutId);
                     loadingSpinner.classList.remove('active');
-                    if (err === 'Unauthorized - redirecting to login') {
-                        return; // sudah redirect
-                    }
-                    errorContainer.classList.remove('d-none');
+                    treeContainer.classList.add('d-none');
+                    if (err === 'Unauthorized - redirecting to login') return;
                     errorMessage.textContent = 'Gagal memuat data: ' + (err.message || err);
+                    errorContainer.classList.remove('d-none');
                     console.error('[OrganisasiTree] Error:', err);
                 });
             }
 
-            // Event: Retry
-            if (retryBtn) {
-                retryBtn.addEventListener('click', loadTree);
-            }
+            // === Event wiring ===
+            if (retryBtn) retryBtn.addEventListener('click', loadTree);
+            expandAllBtn.addEventListener('click', function() { setAllExpanded(true); });
+            collapseAllBtn.addEventListener('click', function() { setAllExpanded(false); });
 
-            // Event: Expand All
-            document.getElementById('expandAllBtn').addEventListener('click', function() {
-                setAllExpanded(true);
-            });
-
-            // Event: Collapse All
-            document.getElementById('collapseAllBtn').addEventListener('click', function() {
-                setAllExpanded(false);
-            });
-
-            // Load on DOM ready
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', loadTree);
             } else {
@@ -505,4 +708,3 @@
     </script>
 </body>
 </html>
-
