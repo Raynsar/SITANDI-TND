@@ -19,6 +19,9 @@ import com.sitandi.repository.OpdRepository;
 import com.sitandi.repository.WilayahRepository;
 import com.sitandi.service.OrganisasiService;
 
+import com.sitandi.dto.OrganisasiPersonalRequestDto;
+import com.sitandi.exception.ResourceNotFoundException;
+import com.sitandi.model.Jabatan;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -186,6 +189,67 @@ public class OrganisasiServiceImpl implements OrganisasiService {
     private List<OrganisasiTreeNodeDto> mergeLists(List<OrganisasiTreeNodeDto> a,
                                                     List<OrganisasiTreeNodeDto> b) {
         return java.util.stream.Stream.concat(a.stream(), b.stream()).toList();
+    }
+    @Override
+    @Transactional
+    public OrganisasiPersonalDto createPersonal(Long bidangId, OrganisasiPersonalRequestDto dto) {
+        Bidang bidang = bidangRepository.findById(bidangId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bidang tidak ditemukan dengan id: " + bidangId));
+        
+        if (jabatanStrukturRepository.existsByUsername(dto.getUsername())) {
+            throw new IllegalArgumentException("Username sudah digunakan: " + dto.getUsername());
+        }
+
+        Jabatan jabatanEnum;
+        try {
+            jabatanEnum = Jabatan.valueOf(dto.getJabatan().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Jabatan tidak valid: " + dto.getJabatan());
+        }
+
+        JabatanStruktur js = JabatanStruktur.builder()
+                .bidang(bidang)
+                .namaDummy(dto.getNama())
+                .jabatan(jabatanEnum)
+                .username(dto.getUsername())
+                .build();
+        
+        js = jabatanStrukturRepository.save(js);
+        return toPersonalDto(js);
+    }
+
+    @Override
+    @Transactional
+    public OrganisasiPersonalDto updatePersonal(Long id, OrganisasiPersonalRequestDto dto) {
+        JabatanStruktur js = jabatanStrukturRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Personel tidak ditemukan dengan id: " + id));
+        
+        if (jabatanStrukturRepository.existsByUsernameAndIdNot(dto.getUsername(), id)) {
+            throw new IllegalArgumentException("Username sudah digunakan: " + dto.getUsername());
+        }
+
+        Jabatan jabatanEnum;
+        try {
+            jabatanEnum = Jabatan.valueOf(dto.getJabatan().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Jabatan tidak valid: " + dto.getJabatan());
+        }
+
+        js.setNamaDummy(dto.getNama());
+        js.setJabatan(jabatanEnum);
+        js.setUsername(dto.getUsername());
+        
+        js = jabatanStrukturRepository.save(js);
+        return toPersonalDto(js);
+    }
+
+    @Override
+    @Transactional
+    public void deletePersonal(Long id) {
+        if (!jabatanStrukturRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Personel tidak ditemukan dengan id: " + id);
+        }
+        jabatanStrukturRepository.deleteById(id);
     }
 }
 
