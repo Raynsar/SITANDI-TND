@@ -1,7 +1,7 @@
 import { restRequest } from './api.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('SIPENJAM TU Frontend Core Layer Engine initialized.');
+    console.log('SITANDI Frontend Core Layer Engine initialized.');
 
     // Tombol "Masuk Akun" di landing page -> halaman login
     const loginBtn = document.getElementById('btn-login');

@@ -1,28 +1,45 @@
-# SIPENJAM Alat TU — Aplikasi Manajemen Peminjaman Alat TU
+# SITANDI — Sistem Tata Naskah Dinas
 
-Sistem informasi untuk pengajuan, approval, dan pengelolaan peminjaman alat/sarana milik Tata Usaha.
+Sistem informasi terpadu untuk pengelolaan naskah dinas, struktur organisasi, dan manajemen pengguna.
+
+## Fitur Utama
+
+- **Surat Masuk** — Integrasi dengan API TNDE (Tata Naskah Dinas Elektronik) untuk menampilkan inbox surat masuk
+- **Struktur Organisasi** — Visualisasi tree OPD se-Jatim (Provinsi → Kab/Kota → OPD → Bidang → Personal)
+- **Manajemen Pengguna** — Kelola akun, approval pendaftaran, aktivasi/nonaktifasi user
+- **Dashboard Admin** — Ringkasan statistik sistem
+- **Autentikasi** — Login lokal + integrasi login TNDE, role-based (ADMIN/USER)
 
 ## Stack
 
 - Backend: Spring Boot 3.5.16 (Web, Thymeleaf, Spring Data JPA, Spring Security, Validation)
 - Java 17
-- Frontend: Thymeleaf + Tailwind CSS (CDN) + vanilla JS (fetch API)
+- Frontend: Thymeleaf + AdminLTE 4.0.0 (Bootstrap 5.3) + vanilla JS (fetch API)
 - Database: MySQL (default, bisa diganti driver di `pom.xml`)
 - Runtime produksi: Tomcat 10.1.x eksternal (WAR)
-
-## Status
-
-Struktur project & frontend awal sudah tersedia. **Seluruh kode backend (Java) sengaja dikosongkan** — dikerjakan menyusul menggunakan Claude Code.
 
 ## Menjalankan Lokal (development)
 
 ```bash
+# Set JWT_SECRET dulu (wajib, aplikasi menolak start bila kosong)
+# Linux/Mac:
+export JWT_SECRET=$(openssl rand -base64 48)
+# Windows PowerShell:
+$env:JWT_SECRET = [Convert]::ToBase64String((1..48 | ForEach-Object { Get-Random -Maximum 256 }))
+
 mvn spring-boot:run
 ```
 
 Akses di `http://localhost:8080`
 
 Meski packaging-nya `war`, mode ini tetap jalan pakai embedded Tomcat karena `spring-boot-starter-tomcat` ber-scope `provided` (tetap ada di classpath saat `spring-boot:run` / `mvn test`, hanya dikecualikan dari isi WAR).
+
+### Akun Default (DataSeeder)
+
+| Username | Password  | Role       |
+|----------|-----------|------------|
+| admin    | admin123  | ROLE_ADMIN |
+| user     | user123   | ROLE_USER  |
 
 ## Deployment ke Tomcat 10
 
@@ -41,24 +58,23 @@ Aplikasi di-package sebagai `.war` untuk di-deploy ke Tomcat 10 standalone milik
 mvn clean package
 ```
 
-Hasilnya: `target/peminjaman-alat-tu-0.0.1-SNAPSHOT.war`
+Hasilnya: `target/sitandi.war`
 
 ### 2. Deploy
 
-Rename WAR sesuai context path yang diinginkan, lalu copy ke folder `webapps/` Tomcat.
-**Nama file WAR menentukan context path**, jadi untuk context `/sipenjam`:
+Copy WAR ke folder `webapps/` Tomcat. Nama file WAR menentukan context path:
 
 ```bash
-cp target/peminjaman-alat-tu-0.0.1-SNAPSHOT.war $CATALINA_HOME/webapps/sipenjam.war
+cp target/sitandi.war $CATALINA_HOME/webapps/sitandi.war
 ```
 
-Tomcat akan auto-deploy dan mengekstrak ke `webapps/sipenjam/`.
+Tomcat akan auto-deploy dan mengekstrak ke `webapps/sitandi/`.
 Kasus khusus: `ROOT.war` → context path `/` (root).
 
 ### 3. Akses
 
 ```
-http://<host>/<nama-war>/      contoh: http://10.10.10.5/sipenjam/
+http://<host>/<nama-war>/      contoh: http://10.10.10.5/sitandi/
 ```
 
 Port ditentukan `<Connector port="80">` di `conf/server.xml` Tomcat — `server.port` di `application.properties` diabaikan saat mode WAR.
@@ -68,8 +84,8 @@ Port ditentukan `<Connector port="80">` di `conf/server.xml` Tomcat — `server.
 `application.properties` ikut terbundel di dalam WAR. Untuk override tanpa rebuild, set via env var / system property di `bin/setenv.sh` Tomcat, contoh:
 
 ```bash
-export JAVA_OPTS="$JAVA_OPTS -Dspring.datasource.url=jdbc:mysql://dbhost:3306/peminjaman_alat_tu \
-                             -Dspring.datasource.username=sipenjam \
+export JAVA_OPTS="$JAVA_OPTS -Dspring.datasource.url=jdbc:mysql://dbhost:3306/sitandi \
+                             -Dspring.datasource.username=sitandi \
                              -Dspring.datasource.password=**** \
                              -Dspring.jpa.hibernate.ddl-auto=validate"
 ```
@@ -98,17 +114,17 @@ Project ini dikunci di **Spring Boot 3.5.16** — patch terakhir cabang 3.x, dan
 ## Struktur Utama
 
 - `controller/` — MVC controller untuk render halaman Thymeleaf
-- `controller/api/` — REST controller untuk `/api/v1/peminjaman/**` (dikonsumsi `static/js/api.js`)
+- `controller/api/` — REST controller untuk `/api/v1/organisasi/**` (dikonsumsi `static/js/api.js`)
 - `model/` — entity JPA
 - `repository/` — Spring Data JPA repository
 - `service/` — interface + implementasi business logic
 - `dto/` — request/response payload
 - `exception/` — global exception handler
 
-## Catatan Keamanan (perlu diisi saat implementasi backend)
+## Catatan Keamanan
 
-- `SecurityConfig` harus mengatur role `ADMIN` vs `USER` (endpoint `/admin/**` hanya untuk staf TU).
-- Password wajib di-hash (BCrypt), jangan disimpan plaintext.
-- Tambahkan proteksi CSRF untuk endpoint state-changing jika session-based auth dipakai; jika stateless (JWT), pastikan token divalidasi di setiap request `api.js`.
+- `SecurityConfig` mengatur role `ADMIN` vs `USER` (endpoint `/admin/**` hanya untuk admin).
+- Password di-hash (BCrypt), tidak disimpan plaintext.
+- CSRF diproteksi untuk endpoint state-changing. JWT untuk REST API divalidasi di setiap request.
 - Validasi semua input DTO (`@Valid`) untuk cegah data korup/injection.
 - Thymeleaf: gunakan `th:text` (auto-escape), hindari `th:utext` untuk data dari user (risiko XSS).

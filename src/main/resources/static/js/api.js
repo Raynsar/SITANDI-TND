@@ -2,10 +2,10 @@
  * API Bridge Service untuk integrasi asinkronus ke REST Controller Spring Boot
  *
  * APP_CONTEXT_PATH diinject Thymeleaf lewat fragment common/context-path.html
- * dan selalu berakhiran '/' ('/' saat lokal, '/sipenjam/' saat deploy WAR).
+ * dan selalu berakhiran '/' ('/' saat lokal, '/sitandi/' saat deploy WAR).
  * window.location.origin TIDAK dipakai karena tidak menyertakan context path.
  *
- * Autentikasi TIDAK diurus di sini: JWT dibawa cookie http-only SIPENJAM_TOKEN yang
+ * Autentikasi TIDAK diurus di sini: JWT dibawa cookie http-only SITANDI_TOKEN yang
  * dikirim browser otomatis. Token sengaja tidak disimpan di sessionStorage/localStorage
  * supaya tidak bisa dibaca script bila terjadi XSS.
  *

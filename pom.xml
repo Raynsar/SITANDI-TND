@@ -17,11 +17,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.sipenjam</groupId>
-    <artifactId>peminjaman-alat-tu</artifactId>
+    <groupId>com.sitandi</groupId>
+    <artifactId>tata-naskah-dinas</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>peminjaman-alat-tu</name>
-    <description>Aplikasi Manajemen Peminjaman Alat TU</description>
+    <name>tata-naskah-dinas</name>
+    <description>SITANDI — Sistem Tata Naskah Dinas</description>
     <!-- Dideploy sebagai .war ke Tomcat eksternal (lihat README: Deployment ke Tomcat Eksternal) -->
     <packaging>war</packaging>
 
@@ -131,7 +131,7 @@
     </dependencies>
 
     <build>
-        <finalName>sipenjam</finalName>
+        <finalName>sitandi</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
