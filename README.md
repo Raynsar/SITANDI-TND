@@ -1,4 +1,4 @@
-﻿# Sistem Tata Naskah Dinas (SITANDI)
+# Sistem Tata Naskah Dinas (SITANDI)
 
 SITANDI adalah aplikasi berbasis web yang digunakan untuk mengelola tata naskah dinas, manajemen struktur organisasi instansi, serta integrasi surat menyurat elektronik secara terpusat. Aplikasi ini dikembangkan menggunakan Spring Boot dan memiliki antarmuka (UI) berbasis AdminLTE 4.
 
@@ -17,18 +17,36 @@ SITANDI adalah aplikasi berbasis web yang digunakan untuk mengelola tata naskah 
 ## Cara Konfigurasi & Menjalankan (Development)
 
 1. Clone repositori ini.
-2. Buat database MySQL baru, sesuaikan konfigurasinya pada properti (contoh file pplication-local.properties).
-3. Set environment variable JWT_SECRET dengan string acak (minimal 32 karakter) untuk keamanan token JWT.
+2. Buat database MySQL baru, sesuaikan konfigurasinya pada properti (contoh file `application-local.properties`).
+
+### ⚡ Cara Tercepat (Rekomendasi)
+
+Gunakan script helper yang sudah disediakan. Script ini otomatis men-generate `JWT_SECRET` acak dan langsung menjalankan aplikasi:
+
+```powershell
+.\run-dev.ps1
+```
+
+> **Catatan:** `JWT_SECRET` di-generate ulang setiap kali script dijalankan. Ini aman untuk development karena token JWT hanya perlu valid selama sesi berjalan.
+
+### Cara Manual
+
+Jika ingin mengatur `JWT_SECRET` sendiri (misalnya agar token tetap valid antar-restart):
+
+3. Set environment variable `JWT_SECRET` dengan string acak (minimal 32 karakter) untuk keamanan token JWT.
    
    **Contoh di PowerShell (Windows):**
-   `powershell
+   ```powershell
    $env:JWT_SECRET = "rahasia-super-panjang-untuk-sitandi-dev-minimal-32-karakter"
-   `
+   ```
 4. Jalankan aplikasi menggunakan Maven:
-   `ash
+   ```bash
    mvn spring-boot:run
-   `
-5. Akses aplikasi melalui browser di: http://localhost:8080/
+   ```
+
+### Akses Aplikasi
+
+5. Buka browser di: http://localhost:8080/
 
 ## Cara Build untuk Production (WAR)
 

@@ -330,6 +330,18 @@
                             <label for="inputUsernamePersonel" class="form-label">Username</label>
                             <input type="text" class="form-control" id="inputUsernamePersonel" required>
                         </div>
+                        <div class="mb-3">
+                            <label for="inputNipPersonel" class="form-label">NIP</label>
+                            <input type="text" class="form-control" id="inputNipPersonel" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="inputEmailPersonel" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="inputEmailPersonel" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="inputNoHpPersonel" class="form-label">No. HP</label>
+                            <input type="tel" class="form-control" id="inputNoHpPersonel" required>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -361,6 +373,63 @@
                         <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                         Hapus
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detail Personel -->
+    <div class="modal fade" id="modalDetailPersonel" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h4 class="modal-title fw-bold" id="detailNamaPersonel">Nama Personel</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <div class="mb-3">
+                        <span id="detailJabatanPersonel" class="jabatan-badge">Jabatan</span>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-transparent d-flex align-items-center px-0">
+                            <i class="bi bi-person-badge fs-5 text-secondary me-3"></i>
+                            <div>
+                                <small class="text-body-secondary d-block">Username</small>
+                                <span id="detailUsernamePersonel" class="fw-medium"></span>
+                            </div>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex align-items-center px-0">
+                            <i class="bi bi-credit-card-2-front fs-5 text-secondary me-3"></i>
+                            <div>
+                                <small class="text-body-secondary d-block">NIP</small>
+                                <span id="detailNipPersonel" class="fw-medium font-monospace"></span>
+                            </div>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex align-items-center px-0">
+                            <i class="bi bi-envelope fs-5 text-secondary me-3"></i>
+                            <div>
+                                <small class="text-body-secondary d-block">Email</small>
+                                <span id="detailEmailPersonel" class="fw-medium"></span>
+                            </div>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex align-items-center px-0">
+                            <i class="bi bi-telephone fs-5 text-secondary me-3"></i>
+                            <div>
+                                <small class="text-body-secondary d-block">No. HP</small>
+                                <span id="detailNoHpPersonel" class="fw-medium"></span>
+                            </div>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex align-items-center px-0">
+                            <i class="bi bi-geo-alt fs-5 text-secondary me-3"></i>
+                            <div>
+                                <small class="text-body-secondary d-block">Posisi</small>
+                                <span id="detailPosisiPersonel" class="fw-medium small"></span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -672,7 +741,17 @@
 
                     var tdNama = document.createElement('td');
                     tdNama.className = 'fw-medium';
-                    tdNama.textContent = row.nama || '-';
+                    var linkNama = document.createElement('a');
+                    linkNama.href = '#';
+                    linkNama.className = 'text-decoration-none fw-medium text-primary';
+                    linkNama.textContent = row.nama || '-';
+                    linkNama.onclick = (function(r) {
+                        return function(e) {
+                            e.preventDefault();
+                            window.openDetailModal(r);
+                        };
+                    })(row);
+                    tdNama.appendChild(linkNama);
                     tr.appendChild(tdNama);
 
                     var tdJabatan = document.createElement('td');
@@ -815,6 +894,7 @@
             // === CRUD Functions ===
             var bsModalPersonel = null;
             var bsModalHapus = null;
+            var bsModalDetail = null;
 
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', initApp);
@@ -828,6 +908,9 @@
                 }
                 if (document.getElementById('modalHapusPersonel')) {
                     bsModalHapus = new bootstrap.Modal(document.getElementById('modalHapusPersonel'));
+                }
+                if (document.getElementById('modalDetailPersonel')) {
+                    bsModalDetail = new bootstrap.Modal(document.getElementById('modalDetailPersonel'));
                 }
                 
                 var formPersonel = document.getElementById('formPersonel');
@@ -848,6 +931,9 @@
                 document.getElementById('inputNamaPersonel').value = '';
                 document.getElementById('inputJabatanPersonel').value = '';
                 document.getElementById('inputUsernamePersonel').value = '';
+                document.getElementById('inputNipPersonel').value = '';
+                document.getElementById('inputEmailPersonel').value = '';
+                document.getElementById('inputNoHpPersonel').value = '';
                 document.getElementById('modalPersonelError').classList.add('d-none');
                 bsModalPersonel.show();
             };
@@ -858,8 +944,27 @@
                 document.getElementById('inputNamaPersonel').value = row.nama;
                 document.getElementById('inputJabatanPersonel').value = row.jabatan;
                 document.getElementById('inputUsernamePersonel').value = row.username;
+                document.getElementById('inputNipPersonel').value = row.nip;
+                document.getElementById('inputEmailPersonel').value = row.email;
+                document.getElementById('inputNoHpPersonel').value = row.noHp;
                 document.getElementById('modalPersonelError').classList.add('d-none');
                 bsModalPersonel.show();
+            };
+
+            window.openDetailModal = function(row) {
+                document.getElementById('detailNamaPersonel').textContent = row.nama || '-';
+                
+                var badge = document.getElementById('detailJabatanPersonel');
+                badge.className = 'jabatan-badge jabatan-' + (row.jabatan || 'ANGGOTA');
+                badge.textContent = formatJabatan(row.jabatan);
+
+                document.getElementById('detailUsernamePersonel').textContent = row.username || '-';
+                document.getElementById('detailNipPersonel').textContent = row.nip || '-';
+                document.getElementById('detailEmailPersonel').textContent = row.email || '-';
+                document.getElementById('detailNoHpPersonel').textContent = row.noHp || '-';
+                document.getElementById('detailPosisiPersonel').textContent = personalBreadcrumb.textContent || '-';
+
+                bsModalDetail.show();
             };
 
             window.openHapusModal = function(row) {
@@ -874,7 +979,10 @@
                 var data = {
                     nama: document.getElementById('inputNamaPersonel').value,
                     jabatan: document.getElementById('inputJabatanPersonel').value,
-                    username: document.getElementById('inputUsernamePersonel').value
+                    username: document.getElementById('inputUsernamePersonel').value,
+                    nip: document.getElementById('inputNipPersonel').value,
+                    email: document.getElementById('inputEmailPersonel').value,
+                    noHp: document.getElementById('inputNoHpPersonel').value
                 };
 
                 var url = id ? (APP_CTX + 'api/v1/organisasi/personal/' + id) : (APP_CTX + 'api/v1/organisasi/bidang/' + currentBidangId + '/personal');
