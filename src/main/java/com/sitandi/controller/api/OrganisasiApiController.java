@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * REST endpoint untuk struktur organisasi (tree OPD se-Jatim).
- * Base path: /api/v1/organisasi (terpisah dari /api/v1/naskah)
+ * Base path: /api/v1/organisasi (terpisah dari /api/v1/peminjaman)
  *
  * <p>GET /tree — seluruh tree (Provinsi → Kab/Kota → OPD → Bidang).
  * Tree TIDAK menyertakan leaf Jabatan, supaya payload tetap kecil untuk data

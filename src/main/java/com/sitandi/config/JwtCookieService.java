@@ -33,7 +33,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtCookieService {
 
     /** Nama cookie berisi JWT. */
-    public static final String COOKIE_NAME = "SITANDI_TOKEN";
+    public static final String COOKIE_NAME = "SIPENJAM_TOKEN";
 
     private final long expirationMs;
     private final boolean secure;
@@ -46,7 +46,7 @@ public class JwtCookieService {
 
     /**
      * @param contextPath dari request.getContextPath(); wajib dipakai sebagai Path
-     *                    cookie. Aplikasi berjalan di /sitandi, bukan root — cookie
+     *                    cookie. Aplikasi berjalan di /sipenjam, bukan root — cookie
      *                    ber-Path "/" akan ikut terkirim ke aplikasi lain di Tomcat
      *                    yang sama, dan Path yang salah membuat cookie tidak pernah
      *                    dikirim balik sehingga user seperti tidak pernah login.

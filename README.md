@@ -58,23 +58,23 @@ Aplikasi di-package sebagai `.war` untuk di-deploy ke Tomcat 10 standalone milik
 mvn clean package
 ```
 
-Hasilnya: `target/sitandi.war`
+Hasilnya: `target/sipenjam.war`
 
 ### 2. Deploy
 
 Copy WAR ke folder `webapps/` Tomcat. Nama file WAR menentukan context path:
 
 ```bash
-cp target/sitandi.war $CATALINA_HOME/webapps/sitandi.war
+cp target/sipenjam.war $CATALINA_HOME/webapps/sipenjam.war
 ```
 
-Tomcat akan auto-deploy dan mengekstrak ke `webapps/sitandi/`.
+Tomcat akan auto-deploy dan mengekstrak ke `webapps/sipenjam/`.
 Kasus khusus: `ROOT.war` → context path `/` (root).
 
 ### 3. Akses
 
 ```
-http://<host>/<nama-war>/      contoh: http://10.10.10.5/sitandi/
+http://<host>/<nama-war>/      contoh: http://10.10.10.5/sipenjam/
 ```
 
 Port ditentukan `<Connector port="80">` di `conf/server.xml` Tomcat — `server.port` di `application.properties` diabaikan saat mode WAR.
@@ -84,7 +84,7 @@ Port ditentukan `<Connector port="80">` di `conf/server.xml` Tomcat — `server.
 `application.properties` ikut terbundel di dalam WAR. Untuk override tanpa rebuild, set via env var / system property di `bin/setenv.sh` Tomcat, contoh:
 
 ```bash
-export JAVA_OPTS="$JAVA_OPTS -Dspring.datasource.url=jdbc:mysql://dbhost:3306/sitandi \
+export JAVA_OPTS="$JAVA_OPTS -Dspring.datasource.url=jdbc:mysql://dbhost:3306/peminjaman_alat_tu \
                              -Dspring.datasource.username=sitandi \
                              -Dspring.datasource.password=**** \
                              -Dspring.jpa.hibernate.ddl-auto=validate"

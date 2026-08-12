@@ -32,7 +32,7 @@ import jakarta.servlet.http.HttpServletResponse;
  *
  * Token dicari dari dua tempat, sesuai jenis kliennya:
  *   1. Header "Authorization: Bearer <token>" — klien API (Postman, integrasi).
- *   2. Cookie http-only SITANDI_TOKEN — browser, karena navigasi halaman tidak
+ *   2. Cookie http-only SIPENJAM_TOKEN — browser, karena navigasi halaman tidak
  *      bisa menyisipkan header.
  * Header diprioritaskan agar klien API yang memakai browser yang sama (mis. sedang
  * login di tab lain) tetap memakai identitas tokennya, bukan cookie-nya.

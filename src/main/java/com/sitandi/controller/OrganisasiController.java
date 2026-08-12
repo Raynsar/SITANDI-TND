@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * Render halaman struktur organisasi (tree OPD se-Jatim).
- * Halaman terpisah dari modul lain — template ini
+ * Halaman terpisah dari modul peminjaman yang memakai Tailwind — template ini
  * menggunakan Tabler CDN.
  */
 @Controller
