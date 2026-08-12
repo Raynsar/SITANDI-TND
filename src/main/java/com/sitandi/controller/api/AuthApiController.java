@@ -4,6 +4,7 @@ import java.security.Principal;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.sitandi.config.JwtCookieService;
 
 import com.sitandi.config.JwtUtil;
 import com.sitandi.dto.GantiPasswordRequestDto;
@@ -24,6 +27,7 @@ import com.sitandi.exception.AkunBelumAktifException;
 import com.sitandi.model.Pengguna;
 import com.sitandi.service.AuthService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -34,6 +38,7 @@ public class AuthApiController {
 
     private final AuthService authService;
     private final JwtUtil jwtUtil;
+    private final JwtCookieService cookieService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
@@ -60,8 +65,11 @@ public class AuthApiController {
 
     @PostMapping("/ganti-password")
     public ResponseEntity<Void> gantiPassword(@Valid @RequestBody GantiPasswordRequestDto request,
-                                              Principal principal) {
+                                              Principal principal,
+                                              jakarta.servlet.http.HttpServletRequest httpRequest,
+                                              HttpServletResponse response) {
         authService.gantiPassword(request, principal.getName());
+        cookieService.hapus(response, httpRequest.getContextPath());
         return ResponseEntity.noContent().build();
     }
 
@@ -81,5 +89,11 @@ public class AuthApiController {
     @PatchMapping("/pengguna/{id}/nonaktifkan")
     public ResponseEntity<PenggunaDto> nonaktifkan(@PathVariable Long id, Principal principal) {
         return ResponseEntity.ok(authService.nonaktifkan(id, principal.getName()));
+    }
+
+    @DeleteMapping("/pengguna/{id}")
+    public ResponseEntity<Void> hapusPengguna(@PathVariable Long id, Principal principal) {
+        authService.hapusPengguna(id, principal.getName());
+        return ResponseEntity.noContent().build();
     }
 }

@@ -56,4 +56,9 @@ public interface AuthService {
      * dari database di setiap request.
      */
     PenggunaDto nonaktifkan(Long penggunaId, String usernamePelaku);
+
+    /**
+     * Hapus permanen akun pengguna. Admin tidak bisa menghapus akunnya sendiri.
+     */
+    void hapusPengguna(Long penggunaId, String usernamePelaku);
 }
