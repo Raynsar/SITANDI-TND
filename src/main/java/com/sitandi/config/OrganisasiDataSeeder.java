@@ -415,12 +415,9 @@ public class OrganisasiDataSeeder implements CommandLineRunner {
         return String.format("08%d-%04d-%04d", prefix, mid, suffix);
     }
 
-    /** Bikin kode singkat dari nama kab/kota untuk prefix kodeOpd yang unik secara global. */
+    /** Bikin kode unik dari nama kab/kota untuk prefix kodeOpd yang unik secara global. */
     private String kodeWilayah(String namaKabKota) {
-        String bersih = namaKabKota.replace("Kabupaten ", "").replace("Kota ", "");
-        return bersih.length() >= 3
-                ? bersih.substring(0, 3).toUpperCase()
-                : bersih.toUpperCase();
+        return namaKabKota.replace("Kabupaten ", "KAB_").replace("Kota ", "KOTA_").replace(" ", "").toUpperCase();
     }
 
     /** Record sederhana untuk pasangan nama + tipe kab/kota (seluruh daftar 38). */
