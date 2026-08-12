@@ -12,18 +12,18 @@
     <th:block th:replace="~{common/context-path :: context-path}"></th:block>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
-<body class="app-wrapper d-flex flex-column" data-bs-theme="light">
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+
+    <div class="app-wrapper">
 
     <!-- App Header -->
     <div th:replace="~{common/header :: header}"></div>
 
-    <!-- App Layout: Sidebar + Main -->
-    <div class="app-layout">
-        <!-- App Sidebar -->
+    <!-- App Sidebar -->
         <div th:replace="~{common/sidebar :: sidebar}"></div>
 
         <!-- App Main Content -->
-        <main class="app-main d-flex flex-column">
+        <main class="app-main">
             <div class="container-fluid mt-4 mb-4">
                 <h1 class="fs-2 fw-bold mb-1">
                     <i class="bi bi-people me-2 text-primary"></i>Kelola Pengguna
@@ -93,9 +93,10 @@
                 </div>
             </div>
 
-            <!-- App Footer -->
-            <div th:replace="~{common/footer :: footer}"></div>
-        </main>
+            </main>
+
+        <!-- App Footer -->
+        <div th:replace="~{common/footer :: footer}"></div>
     </div>
 
     <!-- Core JS -->
@@ -131,4 +132,6 @@
     </script>
 </body>
 </html>
+
+
 

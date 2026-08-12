@@ -152,18 +152,18 @@
         }
     </style>
 </head>
-<body class="app-wrapper d-flex flex-column" data-bs-theme="light">
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+
+    <div class="app-wrapper">
 
     <!-- App Header -->
     <div th:replace="~{common/header :: header}"></div>
 
-    <!-- App Layout: Sidebar + Main -->
-    <div class="app-layout">
-        <!-- App Sidebar -->
+    <!-- App Sidebar -->
         <div th:replace="~{common/sidebar :: sidebar}"></div>
 
         <!-- App Main Content -->
-        <main class="app-main d-flex flex-column">
+        <main class="app-main">
             <div class="container-fluid mt-4 mb-4">
                 <!-- Page Header -->
                 <div class="row g-2 align-items-center mb-4">
@@ -959,3 +959,5 @@
     </script>
 </body>
 </html>
+
+
