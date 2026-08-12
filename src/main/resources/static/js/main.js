@@ -27,14 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
         htmlEl.setAttribute('data-bs-theme', theme);
         localStorage.setItem(STORAGE_KEY, theme);
         
-        const icon = document.getElementById('darkModeIcon');
-        if (icon) {
+        const icons = document.querySelectorAll('#darkModeIcon');
+        icons.forEach(icon => {
             if (theme === 'dark') {
                 icon.className = 'bi bi-sun-fill';
             } else {
                 icon.className = 'bi bi-moon-fill';
             }
-        }
+        });
     }
 
     // Apply saved theme immediately on load
