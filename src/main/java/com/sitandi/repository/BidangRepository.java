@@ -7,11 +7,12 @@ import org.springframework.stereotype.Repository;
 
 import com.sitandi.model.Bidang;
 
-@Repository
 public interface BidangRepository extends JpaRepository<Bidang, Long> {
 
     List<Bidang> findByOpdIdOrderByNamaBidang(Long opdId);
 
     long countByOpdId(Long opdId);
+
+    List<Bidang> findByNamaBidangContainingIgnoreCase(String namaBidang);
 }
 

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import com.sitandi.model.JabatanStruktur;
 
-@Repository
 public interface JabatanStrukturRepository extends JpaRepository<JabatanStruktur, Long> {
 
     List<JabatanStruktur> findByBidangIdOrderByJabatan(Long bidangId);
@@ -17,5 +16,8 @@ public interface JabatanStrukturRepository extends JpaRepository<JabatanStruktur
     boolean existsByUsername(String username);
 
     boolean existsByUsernameAndIdNot(String username, Long id);
+
+    List<JabatanStruktur> findByNamaDummyContainingIgnoreCaseOrNipContainingIgnoreCaseOrJabatanIn(
+            String namaDummy, String nip, List<com.sitandi.model.Jabatan> jabatans);
 }
 

@@ -4,9 +4,10 @@ SITANDI adalah aplikasi berbasis web yang digunakan untuk mengelola tata naskah 
 
 ## Fitur Utama
 - **Autentikasi Terintegrasi**: Login terintegrasi dengan layanan TNDE eksternal (serta memiliki sistem fallback user lokal).
-- **Struktur Organisasi**: Visualisasi dan pengelolaan hierarki wilayah, OPD, dan bidang/jabatan.
+- **Struktur Organisasi (Tree Filter Search)**: Visualisasi dan pengelolaan hierarki wilayah, OPD, bidang, serta personil. Dilengkapi dengan fitur **Global Search** berbasis *tree filter* yang sangat responsif.
 - **Kelola Pengguna**: Aktivasi akun pengguna oleh admin.
-- **Surat Masuk**: Integrasi dengan inbox TNDE.
+- **Surat Masuk**: Integrasi API Entry Point ke inbox TNDE.
+- **API Entry Point Arsitektur**: Komunikasi terpusat melalui `/api/v1/*` sebagai pintu masuk frontend menuju backend.
 - **Dark Mode**: Dukungan mode gelap/terang bawaan AdminLTE 4.
 
 ## Prasyarat Lingkungan

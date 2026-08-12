@@ -212,7 +212,7 @@ public class SecurityConfig {
                  * Tidak ada session untuk di-invalidate; JSESSIONID pun tidak pernah
                  * dibuat lagi. Yang perlu dibuang hanya cookie JWT di atas.
                  */
-                .successHandler(new JwtLoginSuccessHandler(jwtUtil, cookieService, authService))
+                .successHandler(new JwtLoginSuccessHandler(jwtUtil, cookieService))
                 .failureHandler(failureHandler)
                 .permitAll()
             )

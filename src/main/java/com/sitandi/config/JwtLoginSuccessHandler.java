@@ -8,7 +8,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 
 import com.sitandi.dto.TndeLoginResponseDto;
 import com.sitandi.dto.TndeUserDataDto;
-import com.sitandi.service.AuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,13 +28,10 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
     private final JwtCookieService cookieService;
-    private final AuthService authService;
 
-    public JwtLoginSuccessHandler(JwtUtil jwtUtil, JwtCookieService cookieService,
-                                  AuthService authService) {
+    public JwtLoginSuccessHandler(JwtUtil jwtUtil, JwtCookieService cookieService) {
         this.jwtUtil = jwtUtil;
         this.cookieService = cookieService;
-        this.authService = authService;
     }
 
     @Override

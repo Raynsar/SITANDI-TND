@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sitandi.dto.OrganisasiBreadcrumbDto;
 import com.sitandi.dto.OrganisasiPersonalDto;
+import com.sitandi.dto.OrganisasiSearchResultDto;
 import com.sitandi.dto.OrganisasiTreeNodeDto;
 import com.sitandi.model.Bidang;
 import com.sitandi.model.JabatanStruktur;
@@ -249,6 +250,83 @@ public class OrganisasiServiceImpl implements OrganisasiService {
             throw new ResourceNotFoundException("Personel tidak ditemukan dengan id: " + id);
         }
         jabatanStrukturRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrganisasiSearchResultDto> search(String keyword) {
+        if (keyword == null || keyword.trim().length() < 2) {
+            return List.of(); // Return empty if keyword is too short
+        }
+
+        List<OrganisasiSearchResultDto> results = new ArrayList<>();
+        String searchKw = keyword.trim();
+
+        // 1. Search Wilayah
+        List<Wilayah> wilayahList = wilayahRepository.findByNamaContainingIgnoreCase(searchKw);
+        for (Wilayah w : wilayahList) {
+            OrganisasiBreadcrumbDto breadcrumb = getBreadcrumb(w.getTipe().name(), w.getId());
+            results.add(OrganisasiSearchResultDto.builder()
+                    .id(w.getId())
+                    .nama(w.getNama())
+                    .tipe(w.getTipe().name())
+                    .path(breadcrumb != null ? breadcrumb.getDisplay() : w.getNama())
+                    .build());
+        }
+
+        // 2. Search OPD
+        List<Opd> opdList = opdRepository.findByNamaOpdContainingIgnoreCase(searchKw);
+        for (Opd o : opdList) {
+            OrganisasiBreadcrumbDto breadcrumb = getBreadcrumb("OPD", o.getId());
+            results.add(OrganisasiSearchResultDto.builder()
+                    .id(o.getId())
+                    .nama(o.getNamaOpd())
+                    .tipe("OPD")
+                    .path(breadcrumb != null ? breadcrumb.getDisplay() : o.getNamaOpd())
+                    .build());
+        }
+
+        // 3. Search Bidang
+        List<Bidang> bidangList = bidangRepository.findByNamaBidangContainingIgnoreCase(searchKw);
+        for (Bidang b : bidangList) {
+            OrganisasiBreadcrumbDto breadcrumb = getBreadcrumb("BIDANG", b.getId());
+            results.add(OrganisasiSearchResultDto.builder()
+                    .id(b.getId())
+                    .nama(b.getNamaBidang())
+                    .tipe("BIDANG")
+                    .path(breadcrumb != null ? breadcrumb.getDisplay() : b.getNamaBidang())
+                    .build());
+        }
+
+        // 4. Search Personal
+        List<Jabatan> matchingJabatans = new ArrayList<>();
+        for (Jabatan j : Jabatan.values()) {
+            if (j.name().toLowerCase().replace("_", " ").contains(searchKw.toLowerCase())) {
+                matchingJabatans.add(j);
+            }
+        }
+        List<JabatanStruktur> personalList = jabatanStrukturRepository.findByNamaDummyContainingIgnoreCaseOrNipContainingIgnoreCaseOrJabatanIn(
+                searchKw, searchKw, matchingJabatans.isEmpty() ? null : matchingJabatans);
+
+        for (JabatanStruktur p : personalList) {
+            Bidang b = p.getBidang();
+            OrganisasiBreadcrumbDto breadcrumb = getBreadcrumb("BIDANG", b.getId());
+            results.add(OrganisasiSearchResultDto.builder()
+                    .id(p.getId())
+                    .nama(p.getNamaDummy())
+                    .tipe("PERSONAL")
+                    .path(breadcrumb != null ? breadcrumb.getDisplay() : b.getNamaBidang())
+                    .bidangId(b.getId())
+                    .jabatan(p.getJabatan().name())
+                    .nip(p.getNip())
+                    .build());
+        }
+
+        // Limit results to prevent massive payloads (e.g. top 50)
+        if (results.size() > 50) {
+            return results.subList(0, 50);
+        }
+        return results;
     }
 }
 

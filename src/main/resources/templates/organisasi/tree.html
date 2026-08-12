@@ -179,7 +179,16 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="card-body org-tree-card">
+                            <div class="card-body org-tree-card pt-3">
+                                <div class="position-relative mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                        <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Filter organisasi, OPD, bidang, nama personal...">
+                                        <button class="btn btn-outline-secondary d-none" type="button" id="clearSearchBtn">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
                                 <div id="loadingSpinner" class="loading-spinner active">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Memuat data...</span>
@@ -464,6 +473,11 @@
             // === Element refs (controls) ===
             var expandAllBtn = document.getElementById('expandAllBtn');
             var collapseAllBtn = document.getElementById('collapseAllBtn');
+
+            // === Element refs (search) ===
+            var searchInput = document.getElementById('searchInput');
+            var clearSearchBtn = document.getElementById('clearSearchBtn');
+            var searchDebounceTimer = null;
 
             // === State ===
             var selectedToggleEl = null;
@@ -865,6 +879,157 @@
             if (retryBtn) retryBtn.addEventListener('click', loadTree);
             expandAllBtn.addEventListener('click', function() { setAllExpanded(true); });
             collapseAllBtn.addEventListener('click', function() { setAllExpanded(false); });
+
+            // Search Events
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    var keyword = this.value.trim();
+                    if (keyword.length > 0) {
+                        clearSearchBtn.classList.remove('d-none');
+                    } else {
+                        clearSearchBtn.classList.add('d-none');
+                        clearTreeFilter();
+                    }
+
+                    clearTimeout(searchDebounceTimer);
+                    if (keyword.length < 2) {
+                        if (keyword.length === 0) clearTreeFilter();
+                        return;
+                    }
+                    
+                    searchDebounceTimer = setTimeout(function() {
+                        performSearch(keyword);
+                    }, 400);
+                });
+            }
+
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    clearSearchBtn.classList.add('d-none');
+                    clearTreeFilter();
+                    searchInput.focus();
+                });
+            }
+
+            function performSearch(keyword) {
+                var url = APP_CTX + 'api/v1/organisasi/search?q=' + encodeURIComponent(keyword);
+                fetch(url, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                })
+                .then(function(res) {
+                    if (res.ok) return res.json();
+                    throw new Error('Search failed');
+                })
+                .then(function(data) {
+                    applyTreeFilter(data);
+                })
+                .catch(function(err) {
+                    console.error('[Search] Error:', err);
+                });
+            }
+
+            function applyTreeFilter(searchResultsData) {
+                var allItems = document.querySelectorAll('.tree-item');
+                
+                if (!searchResultsData || searchResultsData.length === 0) {
+                    allItems.forEach(function(el) {
+                        el.classList.add('d-none');
+                    });
+                    return;
+                }
+
+                // Reset state
+                allItems.forEach(function(el) {
+                    el.classList.remove('d-none', 'match-target', 'match-ancestor', 'match-descendant');
+                });
+
+                // Build set of matching targets
+                var matchKeys = {};
+                for (var i = 0; i < searchResultsData.length; i++) {
+                    var item = searchResultsData[i];
+                    if (item.tipe === 'PERSONAL') {
+                        matchKeys['BIDANG-' + item.bidangId] = true;
+                    } else {
+                        matchKeys[item.tipe + '-' + item.id] = true;
+                    }
+                }
+
+                // Mark matching nodes
+                allItems.forEach(function(el) {
+                    var key = el.dataset.nodeTipe + '-' + el.dataset.nodeId;
+                    if (matchKeys[key]) {
+                        el.classList.add('match-target');
+                        
+                        var parent = el.parentElement;
+                        while (parent && parent.id !== 'treeRoot') {
+                            if (parent.classList.contains('tree-item')) {
+                                parent.classList.add('match-ancestor');
+                            }
+                            parent = parent.parentElement;
+                        }
+
+                        var descendants = el.querySelectorAll('.tree-item');
+                        descendants.forEach(function(desc) {
+                            desc.classList.add('match-descendant');
+                        });
+                    }
+                });
+
+                // Apply visibility and expansion
+                allItems.forEach(function(el) {
+                    var isTarget = el.classList.contains('match-target');
+                    var isAncestor = el.classList.contains('match-ancestor');
+                    var isDescendant = el.classList.contains('match-descendant');
+
+                    if (!isTarget && !isAncestor && !isDescendant) {
+                        el.classList.add('d-none');
+                    }
+
+                    if (isAncestor) {
+                        // For direct toggle button
+                        var toggle = null;
+                        var ul = null;
+                        for (var i = 0; i < el.children.length; i++) {
+                            if (el.children[i].classList.contains('tree-toggle')) toggle = el.children[i];
+                            if (el.children[i].classList.contains('tree-children')) ul = el.children[i];
+                        }
+                        if (toggle && ul) {
+                            toggle.dataset.expanded = 'true';
+                            toggle.classList.add('expanded');
+                            ul.classList.add('expanded');
+                        }
+                    }
+                    
+                    var tg = null;
+                    for (var j = 0; j < el.children.length; j++) {
+                        if (el.children[j].classList.contains('tree-toggle')) tg = el.children[j];
+                    }
+                    if (tg) {
+                        if (isTarget) {
+                            tg.classList.add('bg-warning', 'bg-opacity-25');
+                        } else {
+                            tg.classList.remove('bg-warning', 'bg-opacity-25');
+                        }
+                    }
+                });
+            }
+
+            function clearTreeFilter() {
+                var allItems = document.querySelectorAll('.tree-item');
+                allItems.forEach(function(el) {
+                    el.classList.remove('d-none', 'match-target', 'match-ancestor', 'match-descendant');
+                    var toggle = null;
+                    for (var i = 0; i < el.children.length; i++) {
+                        if (el.children[i].classList.contains('tree-toggle')) toggle = el.children[i];
+                    }
+                    if (toggle) {
+                        toggle.classList.remove('bg-warning', 'bg-opacity-25');
+                    }
+                });
+            }
 
             // === Utility ===
             function getCsrfToken() {
