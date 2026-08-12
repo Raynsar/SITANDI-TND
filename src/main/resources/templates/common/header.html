@@ -26,11 +26,18 @@
             <!-- Sidebar toggle button (visible on small screens) -->
             <button class="navbar-toggler order-1" type="button"
                     data-lte-toggle="sidebar"
-                    aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">
+                    aria-controls="sidebar" aria-expanded="false" aria-label="Toggle sidebar">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <!-- Top navigation links (hidden on small screens) -->
+            <!-- Navbar items toggle button (visible below md breakpoint) -->
+            <button class="navbar-toggler order-2" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle menu">
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+
+            <!-- Top navigation links (collapsed on small screens, toggled by button above) -->
             <div class="collapse navbar-collapse order-3" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item" sec:authorize="isAuthenticated()">
