@@ -831,32 +831,64 @@
                 treeContainer.classList.remove('d-none');
 
                 // Preselect bidang dari query param ?bidangId= (mis. dari global search)
-                var paramBidangId = new URLSearchParams(window.location.search).get('bidangId');
+                var queryParams = new URLSearchParams(window.location.search);
+                var paramBidangId = queryParams.get('bidangId');
+                var paramOpdId = queryParams.get('opdId');
+
                 if (paramBidangId) {
-                    var node = findBidangNode(data, paramBidangId);
-                    if (node) {
-                        personalBidangName.textContent = node.nama || '';
-                        currentBidangId = node.id;
-                        currentBidangTipe = node.tipe;
-                        document.getElementById('btnExportPersonalExcel').href =
-                            APP_CTX + 'api/v1/organisasi/export/excel?bidangId=' + node.id;
-                        document.getElementById('btnExportPersonalPdf').href =
-                            APP_CTX + 'api/v1/organisasi/export/pdf?bidangId=' + node.id;
-                        loadPersonal(node.id, node.tipe);
-                    }
+                    setTimeout(function() {
+                        var li = expandAncestors('BIDANG', paramBidangId);
+                        if (li) {
+                            var togg = li.querySelector(':scope > .tree-toggle');
+                            if (togg) {
+                                togg.click(); // memicu selectBidang: load personal + breadcrumb + export
+                                li.scrollIntoView({ block: 'nearest' });
+                            }
+                        }
+                    }, 0);
+                } else if (paramOpdId) {
+                    setTimeout(function() {
+                        var li = expandAncestors('OPD', paramOpdId);
+                        if (li) {
+                            // buka juga anak OPD (Bidang) supaya konteksnya terlihat
+                            var togg = li.querySelector(':scope > .tree-toggle');
+                            var ul = li.querySelector(':scope > .tree-children');
+                            if (togg && ul) {
+                                togg.dataset.expanded = 'true';
+                                togg.classList.add('expanded');
+                                ul.classList.add('expanded');
+                            }
+                            li.scrollIntoView({ block: 'center' });
+                            if (togg) togg.classList.add('selected');
+                        }
+                    }, 0);
                 }
             }
 
-            function findBidangNode(nodes, id) {
-                for (var i = 0; i < nodes.length; i++) {
-                    var n = nodes[i];
-                    if (n.tipe === 'BIDANG' && String(n.id) === String(id)) return n;
-                    if (n.children && n.children.length > 0) {
-                        var f = findBidangNode(n.children, id);
-                        if (f) return f;
+            /**
+             * Expand semua ancestor (ul + toggle) dari node target sehingga
+             * node tersebut terlihat di tree. Mengembalikan elemen <li> target.
+             */
+            function expandAncestors(tipe, id) {
+                var li = treeRoot.querySelector(
+                    'li[data-node-tipe="' + tipe + '"][data-node-id="' + id + '"]');
+                if (!li) return null;
+                var cursor = li.parentElement;
+                while (cursor && cursor !== treeRoot) {
+                    if (cursor.tagName === 'UL' && cursor.classList.contains('tree-children')) {
+                        cursor.classList.add('expanded');
+                        var parentLi = cursor.parentElement;
+                        if (parentLi && parentLi.classList.contains('tree-item')) {
+                            var t = parentLi.querySelector(':scope > .tree-toggle');
+                            if (t) {
+                                t.dataset.expanded = 'true';
+                                t.classList.add('expanded');
+                            }
+                        }
                     }
+                    cursor = cursor.parentElement;
                 }
-                return null;
+                return li;
             }
 
             function setAllExpanded(expand) {

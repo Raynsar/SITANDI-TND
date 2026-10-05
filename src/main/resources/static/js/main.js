@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 html += `<h6 class="dropdown-header"><i class="bi bi-building me-1"></i>OPD</h6>`;
                 data.opd.forEach(o => {
                     html += renderItem(escapeHtml(o.nama), 'OPD',
-                        (window.APP_CONTEXT_PATH || '/') + 'organisasi/tree');
+                        (window.APP_CONTEXT_PATH || '/') + 'organisasi/tree?opdId=' + o.id);
                 });
             }
             if (data.user && data.user.length) {
