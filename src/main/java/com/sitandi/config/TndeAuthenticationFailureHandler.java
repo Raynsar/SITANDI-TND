@@ -26,7 +26,10 @@ public class TndeAuthenticationFailureHandler implements AuthenticationFailureHa
                                         AuthenticationException exception)
             throws IOException, ServletException {
         String message = exception.getMessage();
-        if (message == null || message.isBlank()) {
+        if (message == null || message.isBlank()
+                || message.toLowerCase().contains("bad credential")
+                || message.toLowerCase().contains("user not found")
+                || message.toLowerCase().contains("username not found")) {
             message = "Username atau password salah";
         }
         String username = request.getParameter("username");
