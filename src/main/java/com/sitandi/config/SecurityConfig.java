@@ -101,6 +101,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset-password").permitAll()
                 .requestMatchers("/api/v1/auth/pengguna/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/pengguna/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/organisasi/**").authenticated()
                 .anyRequest().authenticated()
             )

@@ -19,6 +19,7 @@ import com.sitandi.dto.OrganisasiPersonalDto;
 import com.sitandi.dto.OrganisasiSearchResultDto;
 import com.sitandi.dto.OrganisasiTreeNodeDto;
 import com.sitandi.dto.OrganisasiPersonalRequestDto;
+import com.sitandi.service.ExportService;
 import com.sitandi.service.OrganisasiService;
 
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 public class OrganisasiApiController {
 
     private final OrganisasiService organisasiService;
+    private final ExportService exportService;
 
     /**
      * Mengembalikan seluruh tree struktur organisasi dari root (Provinsi)
@@ -122,6 +124,26 @@ public class OrganisasiApiController {
     public ResponseEntity<?> deletePersonal(@PathVariable Long id) {
         organisasiService.deletePersonal(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/export/excel")
+    public ResponseEntity<byte[]> exportExcel(@org.springframework.web.bind.annotation.RequestParam Long bidangId) {
+        byte[] excel = exportService.personalKeExcel(organisasiService.getPersonal(bidangId));
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"struktur-organisasi.xlsx\"")
+                .contentType(org.springframework.http.MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excel);
+    }
+
+    @GetMapping("/export/pdf")
+    public ResponseEntity<byte[]> exportPdf(@org.springframework.web.bind.annotation.RequestParam Long bidangId) {
+        byte[] pdf = exportService.personalKePdf(organisasiService.getPersonal(bidangId),
+                "Daftar Personal Struktur Organisasi");
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"struktur-organisasi.pdf\"")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdf);
     }
 
     @GetMapping("/search")
