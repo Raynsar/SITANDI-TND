@@ -19,5 +19,11 @@ public class AdminController {
     public String pengguna() {
         return "admin/pengguna";
     }
+
+    /** Halaman activity log — data diambil via fetch JSON oleh JavaScript. */
+    @GetMapping("/activity-log")
+    public String activityLog() {
+        return "admin/activity-log";
+    }
 }
 

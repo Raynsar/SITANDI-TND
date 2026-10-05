@@ -20,10 +20,16 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
     private final JwtCookieService cookieService;
+    private final com.sitandi.service.AuthService authService;
+    private final com.sitandi.service.ActivityLogService activityLogService;
 
-    public JwtLoginSuccessHandler(JwtUtil jwtUtil, JwtCookieService cookieService) {
+    public JwtLoginSuccessHandler(JwtUtil jwtUtil, JwtCookieService cookieService,
+                                  com.sitandi.service.AuthService authService,
+                                  com.sitandi.service.ActivityLogService activityLogService) {
         this.jwtUtil = jwtUtil;
         this.cookieService = cookieService;
+        this.authService = authService;
+        this.activityLogService = activityLogService;
     }
 
     @Override
@@ -35,6 +41,13 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
                 .findFirst()
                 .map(GrantedAuthority::getAuthority)
                 .orElse("ROLE_USER");
+
+        try {
+            com.sitandi.model.Pengguna pengguna = authService.getByUsername(username);
+            activityLogService.log(pengguna, "LOGIN_BERHASIL", "Login berhasil via form");
+        } catch (Exception ignored) {
+            // kalau user tidak ditemukan di tabel pengguna, tetap lanjut login
+        }
 
         cookieService.tulis(response, jwtUtil.generateToken(username, role), contextPath);
 

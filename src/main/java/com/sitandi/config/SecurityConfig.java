@@ -102,6 +102,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset-password").permitAll()
                 .requestMatchers("/api/v1/auth/pengguna/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/pengguna/**").hasRole("ADMIN")
+                .requestMatchers("/api/v1/activity-log/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/organisasi/**").authenticated()
                 .anyRequest().authenticated()
             )
@@ -123,7 +124,8 @@ public class SecurityConfig {
                                               JwtCookieService cookieService,
                                               AuthService authService,
                                               AuthenticationFailureHandler failureHandler,
-                                              AuthenticationManager authenticationManager) throws Exception {
+                                              AuthenticationManager authenticationManager,
+                                              com.sitandi.service.ActivityLogService activityLogService) throws Exception {
         http
             .authenticationManager(authenticationManager)
             .csrf(csrf -> csrf
@@ -142,7 +144,7 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
 
-                .successHandler(new JwtLoginSuccessHandler(jwtUtil, cookieService))
+                .successHandler(new JwtLoginSuccessHandler(jwtUtil, cookieService, authService, activityLogService))
                 .failureHandler(failureHandler)
                 .permitAll()
             )

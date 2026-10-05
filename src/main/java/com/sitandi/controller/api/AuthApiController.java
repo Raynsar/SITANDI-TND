@@ -42,16 +42,25 @@ public class AuthApiController {
 
     private final AuthService authService;
     private final PasswordResetService passwordResetService;
+    private final com.sitandi.service.ActivityLogService activityLogService;
     private final JwtUtil jwtUtil;
     private final JwtCookieService cookieService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
-        TndeLoginResponseDto tndeResponse = authService.loginTnde(request.getUsername(), request.getPassword());
+        TndeLoginResponseDto tndeResponse;
+        try {
+            tndeResponse = authService.loginTnde(request.getUsername(), request.getPassword());
+        } catch (RuntimeException e) {
+            activityLogService.log(null, "LOGIN_GAGAL",
+                    "Login API gagal untuk username '" + request.getUsername() + "'");
+            throw e;
+        }
         Pengguna pengguna = authService.getByUsername(tndeResponse.getData().getUser().getUsername());
         if (!pengguna.isAktif()) {
             throw new AkunBelumAktifException("Akun Anda belum disetujui admin, silakan tunggu");
         }
+        activityLogService.log(pengguna, "LOGIN_BERHASIL", "Login berhasil via API");
 
         String role = "ROLE_" + pengguna.getRole().name();
 
@@ -75,6 +84,10 @@ public class AuthApiController {
                                               HttpServletResponse response) {
         authService.gantiPassword(request, principal.getName());
         cookieService.hapus(response, httpRequest.getContextPath());
+        try {
+            activityLogService.log(authService.getByUsername(principal.getName()),
+                    "GANTI_PASSWORD", "Pengguna mengganti password");
+        } catch (Exception ignored) { }
         return ResponseEntity.noContent().build();
     }
 
@@ -95,6 +108,7 @@ public class AuthApiController {
             throw new IllegalArgumentException("Konfirmasi password baru tidak cocok");
         }
         passwordResetService.resetPassword(request.getToken(), request.getPasswordBaru());
+        activityLogService.log(null, "RESET_PASSWORD", "Reset password via token email");
         return ResponseEntity.ok(Map.of("message", "Password berhasil direset. Silakan login dengan password baru."));
     }
 
@@ -119,6 +133,10 @@ public class AuthApiController {
     @DeleteMapping("/pengguna/{id}")
     public ResponseEntity<Void> hapusPengguna(@PathVariable Long id, Principal principal) {
         authService.hapusPengguna(id, principal.getName());
+        try {
+            activityLogService.log(authService.getByUsername(principal.getName()),
+                    "HAPUS_USER", "Menghapus akun pengguna id=" + id);
+        } catch (Exception ignored) { }
         return ResponseEntity.noContent().build();
     }
 }

@@ -41,6 +41,12 @@
                             <p>Kelola Pengguna</p>
                         </a>
                     </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/admin/activity-log}" class="nav-link">
+                            <i class="nav-icon bi bi-journal-text"></i>
+                            <p>Activity Log</p>
+                        </a>
+                    </li>
 
                 </ul>
             </nav>

@@ -40,6 +40,18 @@ public class OrganisasiApiController {
 
     private final OrganisasiService organisasiService;
     private final ExportService exportService;
+    private final com.sitandi.service.ActivityLogService activityLogService;
+    private final com.sitandi.service.AuthService authService;
+
+    private void catat(String aksi, String deskripsi) {
+        try {
+            org.springframework.security.core.Authentication auth =
+                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            com.sitandi.model.Pengguna p = auth != null
+                    ? authService.getByUsername(auth.getName()) : null;
+            activityLogService.log(p, aksi, deskripsi);
+        } catch (Exception ignored) { }
+    }
 
     /**
      * Mengembalikan seluruh tree struktur organisasi dari root (Provinsi)
@@ -102,6 +114,7 @@ public class OrganisasiApiController {
     public ResponseEntity<?> createPersonal(@PathVariable Long id, @Valid @RequestBody OrganisasiPersonalRequestDto requestDto) {
         try {
             OrganisasiPersonalDto result = organisasiService.createPersonal(id, requestDto);
+            catat("CRUD_PERSONAL", "Tambah personal: " + result.getNama());
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -113,6 +126,7 @@ public class OrganisasiApiController {
     public ResponseEntity<?> updatePersonal(@PathVariable Long id, @Valid @RequestBody OrganisasiPersonalRequestDto requestDto) {
         try {
             OrganisasiPersonalDto result = organisasiService.updatePersonal(id, requestDto);
+            catat("CRUD_PERSONAL", "Ubah personal id=" + id + ": " + result.getNama());
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -123,6 +137,7 @@ public class OrganisasiApiController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deletePersonal(@PathVariable Long id) {
         organisasiService.deletePersonal(id);
+        catat("CRUD_PERSONAL", "Hapus personal id=" + id);
         return ResponseEntity.ok().build();
     }
 

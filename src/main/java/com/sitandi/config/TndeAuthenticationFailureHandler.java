@@ -15,6 +15,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class TndeAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
+    private final com.sitandi.service.ActivityLogService activityLogService;
+
+    public TndeAuthenticationFailureHandler(com.sitandi.service.ActivityLogService activityLogService) {
+        this.activityLogService = activityLogService;
+    }
+
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
                                         AuthenticationException exception)
@@ -23,6 +29,11 @@ public class TndeAuthenticationFailureHandler implements AuthenticationFailureHa
         if (message == null || message.isBlank()) {
             message = "Username atau password salah";
         }
+        String username = request.getParameter("username");
+        try {
+            activityLogService.log(null, "LOGIN_GAGAL",
+                    "Login gagal untuk username '" + username + "': " + message);
+        } catch (Exception ignored) { }
         String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
         String url = request.getContextPath() + "/login?error=true&message=" + encodedMessage;
         response.sendRedirect(url);
