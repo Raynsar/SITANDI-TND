@@ -92,11 +92,14 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(csrfRequestHandler())
                 .ignoringRequestMatchers(klienBearer())
 
-                .ignoringRequestMatchers("/api/v1/auth/login", "/api/v1/auth/register")
+                .ignoringRequestMatchers("/api/v1/auth/login", "/api/v1/auth/register",
+                        "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password")
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/forgot-password").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/reset-password").permitAll()
                 .requestMatchers("/api/v1/auth/pengguna/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/organisasi/**").authenticated()
                 .anyRequest().authenticated()
@@ -128,6 +131,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index.html", "/login", "/register",
+                        "/forgot-password", "/reset-password",
                         "/css/**", "/js/**", "/images/**", "/error/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/organisasi/**").authenticated()

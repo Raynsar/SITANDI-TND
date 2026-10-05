@@ -12,6 +12,8 @@ public interface PenggunaRepository extends JpaRepository<Pengguna, Long> {
 
     Optional<Pengguna> findByUsername(String username);
 
+    Optional<Pengguna> findByEmail(String email);
+
     boolean existsByUsername(String username);
 
     /** Akun yang menunggu persetujuan admin. */

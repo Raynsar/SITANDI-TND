@@ -111,6 +111,28 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Mailtrap Java SDK — kirim email reset password via API token (bukan SMTP).
+             Lihat https://mailtrap.io/sending/domains untuk konfigurasi domain pengirim. -->
+        <dependency>
+            <groupId>io.mailtrap</groupId>
+            <artifactId>mailtrap-java</artifactId>
+            <version>1.7.0</version>
+        </dependency>
+
+        <!-- Export Data -->
+        <!-- Apache POI untuk export Excel -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+        <!-- OpenPDF untuk export PDF -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>1.3.30</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

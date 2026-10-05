@@ -88,9 +88,12 @@ public class GlobalExceptionHandler {
                 .body(baseBody(HttpStatus.UNAUTHORIZED, "Username atau password salah"));
     }
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneric(Exception ex) {
         // Generic Error
+        log.error("Unhandled Exception caught by GlobalExceptionHandler", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(baseBody(HttpStatus.INTERNAL_SERVER_ERROR, "Terjadi kesalahan pada server"));
     }

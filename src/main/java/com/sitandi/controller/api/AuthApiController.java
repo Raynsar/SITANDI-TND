@@ -1,6 +1,7 @@
 package com.sitandi.controller.api;
 
 import java.security.Principal;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,16 +17,19 @@ import org.springframework.web.bind.annotation.RestController;
 import com.sitandi.config.JwtCookieService;
 
 import com.sitandi.config.JwtUtil;
+import com.sitandi.dto.ForgotPasswordRequestDto;
 import com.sitandi.dto.GantiPasswordRequestDto;
 import com.sitandi.dto.KelolaPenggunaResponseDto;
 import com.sitandi.dto.LoginRequestDto;
 import com.sitandi.dto.LoginResponseDto;
 import com.sitandi.dto.PenggunaDto;
 import com.sitandi.dto.RegisterRequestDto;
+import com.sitandi.dto.ResetPasswordRequestDto;
 import com.sitandi.dto.TndeLoginResponseDto;
 import com.sitandi.exception.AkunBelumAktifException;
 import com.sitandi.model.Pengguna;
 import com.sitandi.service.AuthService;
+import com.sitandi.service.PasswordResetService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -37,6 +41,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthApiController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
     private final JwtUtil jwtUtil;
     private final JwtCookieService cookieService;
 
@@ -71,6 +76,26 @@ public class AuthApiController {
         authService.gantiPassword(request, principal.getName());
         cookieService.hapus(response, httpRequest.getContextPath());
         return ResponseEntity.noContent().build();
+    }
+
+    // ===== Lupa / Reset Password (public — tanpa autentikasi) =====
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequestDto request) {
+        passwordResetService.requestReset(request.getEmail());
+        return ResponseEntity.ok(Map.of("message",
+                "Link reset password telah dikirim. Silakan cek inbox Anda."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequestDto request) {
+        if (!request.getPasswordBaru().equals(request.getKonfirmasiPasswordBaru())) {
+            throw new IllegalArgumentException("Konfirmasi password baru tidak cocok");
+        }
+        passwordResetService.resetPassword(request.getToken(), request.getPasswordBaru());
+        return ResponseEntity.ok(Map.of("message", "Password berhasil direset. Silakan login dengan password baru."));
     }
 
     @GetMapping("/pengguna")

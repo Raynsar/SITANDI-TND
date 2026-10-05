@@ -25,4 +25,14 @@ public class AuthController {
     public String gantiPassword() {
         return "auth/ganti-password";
     }
+
+    @GetMapping("/forgot-password")
+    public String forgotPassword() {
+        return "auth/forgot-password";
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPassword() {
+        return "auth/reset-password";
+    }
 }

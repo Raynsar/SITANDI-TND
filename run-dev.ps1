@@ -17,7 +17,13 @@ Write-Host "================================================" -ForegroundColor C
 Write-Host " JWT_SECRET sudah di-generate untuk sesi ini." -ForegroundColor Green
 Write-Host " (Secret baru dibuat setiap kali script dijalankan)" -ForegroundColor DarkGray
 Write-Host "================================================" -ForegroundColor Cyan
-Write-Host ""
+# Mailtrap API Token
+$env:MAILTRAP_API_TOKEN = "99509b148c25ba253251d7f0a752cf74"
+
+if ($env:MAILTRAP_API_TOKEN -eq "<YOUR_API_TOKEN>" -or $env:MAILTRAP_API_TOKEN -eq "") {
+    Write-Host " PERINGATAN: MAILTRAP_API_TOKEN masih kosong/default." -ForegroundColor Yellow
+    Write-Host " Fitur Lupa Password akan gagal saat mengirim email." -ForegroundColor Yellow
+}
 
 # Jalankan Spring Boot
 mvn spring-boot:run
