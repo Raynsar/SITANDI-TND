@@ -19,5 +19,8 @@ public interface JabatanStrukturRepository extends JpaRepository<JabatanStruktur
 
     List<JabatanStruktur> findByNamaDummyContainingIgnoreCaseOrNipContainingIgnoreCaseOrJabatanIn(
             String namaDummy, String nip, List<com.sitandi.model.Jabatan> jabatans);
+
+    List<JabatanStruktur> findByNamaDummyContainingIgnoreCaseOrNipContainingIgnoreCaseOrUsernameContainingIgnoreCase(
+            String namaDummy, String nip, String username);
 }
 

@@ -23,4 +23,6 @@ public interface PenggunaRepository extends JpaRepository<Pengguna, Long> {
 
     /** Dipakai untuk mencegah admin aktif terakhir dinonaktifkan. */
     long countByRoleAndAktifTrue(Role role);
+
+    List<Pengguna> findByNamaContainingIgnoreCaseOrUsernameContainingIgnoreCase(String nama, String username);
 }

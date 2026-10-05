@@ -829,6 +829,34 @@
                     treeRoot.appendChild(createNodeElement(data[i]));
                 }
                 treeContainer.classList.remove('d-none');
+
+                // Preselect bidang dari query param ?bidangId= (mis. dari global search)
+                var paramBidangId = new URLSearchParams(window.location.search).get('bidangId');
+                if (paramBidangId) {
+                    var node = findBidangNode(data, paramBidangId);
+                    if (node) {
+                        personalBidangName.textContent = node.nama || '';
+                        currentBidangId = node.id;
+                        currentBidangTipe = node.tipe;
+                        document.getElementById('btnExportPersonalExcel').href =
+                            APP_CTX + 'api/v1/organisasi/export/excel?bidangId=' + node.id;
+                        document.getElementById('btnExportPersonalPdf').href =
+                            APP_CTX + 'api/v1/organisasi/export/pdf?bidangId=' + node.id;
+                        loadPersonal(node.id, node.tipe);
+                    }
+                }
+            }
+
+            function findBidangNode(nodes, id) {
+                for (var i = 0; i < nodes.length; i++) {
+                    var n = nodes[i];
+                    if (n.tipe === 'BIDANG' && String(n.id) === String(id)) return n;
+                    if (n.children && n.children.length > 0) {
+                        var f = findBidangNode(n.children, id);
+                        if (f) return f;
+                    }
+                }
+                return null;
             }
 
             function setAllExpanded(expand) {
