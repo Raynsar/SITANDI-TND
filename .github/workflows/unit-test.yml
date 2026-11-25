@@ -1,0 +1,44 @@
+name: Unit Test
+
+on:
+  push:
+    branches: [testing]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      - name: Jalankan unit test + JaCoCo
+        run: |
+          set +e
+          mvn -B clean test -Dmaven.test.failure.ignore=true 2>&1 | tee mvn-test.log
+          echo "exit=${PIPESTATUS[0]}" > mvn-exit.txt
+
+      - name: Simpan laporan ke branch test-reports
+        if: always()
+        run: |
+          mkdir -p /tmp/reports
+          cp mvn-test.log mvn-exit.txt /tmp/reports/ || true
+          cp -r target/surefire-reports /tmp/reports/ || true
+          cp -r target/site/jacoco /tmp/reports/ || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan test-reports
+          git rm -rf . -q
+          rm -rf target
+          cp -r /tmp/reports/* .
+          git add -A
+          git commit -q -m "Laporan unit test untuk ${GITHUB_SHA}"
+          git push -f origin test-reports
