@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtAuthenticationEntryPoint.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.config</a> &gt; <span class="el_source">JwtAuthenticationEntryPoint.java</span></div><h1>JwtAuthenticationEntryPoint.java</h1><pre class="source lang-java linenums">package com.sitandi.config;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+/**
+ * JWT Authentication Entry Point
+ */
+public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+    private final ObjectMapper objectMapper;
+
+<span class="fc" id="L26">    public JwtAuthenticationEntryPoint(ObjectMapper objectMapper) {</span>
+<span class="fc" id="L27">        this.objectMapper = objectMapper;</span>
+<span class="fc" id="L28">    }</span>
+
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response,
+                         AuthenticationException authException) throws IOException {
+<span class="nc" id="L33">        response.setStatus(HttpStatus.UNAUTHORIZED.value());</span>
+<span class="nc" id="L34">        response.setContentType(MediaType.APPLICATION_JSON_VALUE);</span>
+<span class="nc" id="L35">        response.setCharacterEncoding(StandardCharsets.UTF_8.name());</span>
+
+<span class="nc" id="L37">        Map&lt;String, Object&gt; body = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L38">        body.put(&quot;timestamp&quot;, LocalDateTime.now().toString());</span>
+<span class="nc" id="L39">        body.put(&quot;status&quot;, HttpStatus.UNAUTHORIZED.value());</span>
+<span class="nc" id="L40">        body.put(&quot;error&quot;, HttpStatus.UNAUTHORIZED.getReasonPhrase());</span>
+
+<span class="nc" id="L42">        body.put(&quot;message&quot;, &quot;Autentikasi diperlukan atau token tidak valid&quot;);</span>
+
+<span class="nc" id="L44">        objectMapper.writeValue(response.getOutputStream(), body);</span>
+<span class="nc" id="L45">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

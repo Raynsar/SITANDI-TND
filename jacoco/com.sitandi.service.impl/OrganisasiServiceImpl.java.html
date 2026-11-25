@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrganisasiServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.service.impl</a> &gt; <span class="el_source">OrganisasiServiceImpl.java</span></div><h1>OrganisasiServiceImpl.java</h1><pre class="source lang-java linenums">package com.sitandi.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sitandi.dto.OrganisasiBreadcrumbDto;
+import com.sitandi.dto.OrganisasiPersonalDto;
+import com.sitandi.dto.OrganisasiSearchResultDto;
+import com.sitandi.dto.OrganisasiTreeNodeDto;
+import com.sitandi.model.Bidang;
+import com.sitandi.model.JabatanStruktur;
+import com.sitandi.model.Opd;
+import com.sitandi.model.Wilayah;
+import com.sitandi.repository.BidangRepository;
+import com.sitandi.repository.JabatanStrukturRepository;
+import com.sitandi.repository.OpdRepository;
+import com.sitandi.repository.WilayahRepository;
+import com.sitandi.service.OrganisasiService;
+
+import com.sitandi.dto.OrganisasiPersonalRequestDto;
+import com.sitandi.exception.ResourceNotFoundException;
+import com.sitandi.model.Jabatan;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class OrganisasiServiceImpl implements OrganisasiService {
+
+    private final WilayahRepository wilayahRepository;
+    private final OpdRepository opdRepository;
+    private final BidangRepository bidangRepository;
+    private final JabatanStrukturRepository jabatanStrukturRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;OrganisasiTreeNodeDto&gt; getTree() {
+<span class="fc" id="L40">        List&lt;Wilayah&gt; roots = wilayahRepository.findByParentIsNullOrderByNama();</span>
+<span class="fc" id="L41">        return roots.stream()</span>
+<span class="fc" id="L42">                .map(this::buildWilayahNode)</span>
+<span class="fc" id="L43">                .toList();</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrganisasiTreeNodeDto getWilayahWithChildren(Long wilayahId) {
+<span class="fc" id="L49">        Wilayah wilayah = wilayahRepository.findById(wilayahId).orElse(null);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (wilayah == null) return null;</span>
+<span class="fc" id="L51">        return buildWilayahNode(wilayah);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;OrganisasiPersonalDto&gt; getPersonal(Long bidangId) {
+<span class="fc" id="L57">        return jabatanStrukturRepository.findByBidangIdOrderByJabatan(bidangId).stream()</span>
+<span class="fc" id="L58">                .map(this::toPersonalDto)</span>
+<span class="fc" id="L59">                .toList();</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OrganisasiBreadcrumbDto getBreadcrumb(String tipe, Long id) {
+<span class="fc bfc" id="L65" title="All 4 branches covered.">        if (tipe == null || id == null) {</span>
+<span class="fc" id="L66">            return null;</span>
+        }
+<span class="fc" id="L68">        String t = tipe.trim().toUpperCase();</span>
+
+<span class="fc bfc" id="L70" title="All 4 branches covered.">        switch (t) {</span>
+            case &quot;PROVINSI&quot;:
+            case &quot;KABUPATEN&quot;:
+            case &quot;KOTA&quot;: {
+<span class="fc" id="L74">                Wilayah w = wilayahRepository.findById(id).orElse(null);</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">                if (w == null) return null;</span>
+<span class="fc" id="L76">                List&lt;String&gt; path = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L77">                Wilayah cursor = w;</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                while (cursor != null) {</span>
+<span class="fc" id="L79">                    path.add(0, cursor.getNama());</span>
+<span class="fc" id="L80">                    cursor = cursor.getParent();</span>
+                }
+<span class="fc" id="L82">                return buildBreadcrumbDto(path);</span>
+            }
+            case &quot;OPD&quot;: {
+<span class="fc" id="L85">                Opd opd = opdRepository.findById(id).orElse(null);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">                if (opd == null) return null;</span>
+<span class="fc" id="L87">                List&lt;String&gt; path = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L88">                path.add(0, opd.getNamaOpd());</span>
+<span class="fc" id="L89">                Wilayah cursor = opd.getWilayah();</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">                while (cursor != null) {</span>
+<span class="fc" id="L91">                    path.add(0, cursor.getNama());</span>
+<span class="fc" id="L92">                    cursor = cursor.getParent();</span>
+                }
+<span class="fc" id="L94">                return buildBreadcrumbDto(path);</span>
+            }
+            case &quot;BIDANG&quot;: {
+<span class="fc" id="L97">                Bidang bidang = bidangRepository.findById(id).orElse(null);</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                if (bidang == null) return null;</span>
+<span class="fc" id="L99">                List&lt;String&gt; path = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L100">                path.add(0, bidang.getNamaBidang());</span>
+<span class="fc" id="L101">                Opd opdParent = bidang.getOpd();</span>
+<span class="fc" id="L102">                path.add(0, opdParent.getNamaOpd());</span>
+<span class="fc" id="L103">                Wilayah cursor = opdParent.getWilayah();</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                while (cursor != null) {</span>
+<span class="fc" id="L105">                    path.add(0, cursor.getNama());</span>
+<span class="fc" id="L106">                    cursor = cursor.getParent();</span>
+                }
+<span class="fc" id="L108">                return buildBreadcrumbDto(path);</span>
+            }
+            default:
+<span class="fc" id="L111">                return null;</span>
+        }
+    }
+
+    private OrganisasiBreadcrumbDto buildBreadcrumbDto(List&lt;String&gt; path) {
+<span class="fc" id="L116">        String display = String.join(&quot; › &quot;, path);</span>
+<span class="fc" id="L117">        return OrganisasiBreadcrumbDto.builder()</span>
+<span class="fc" id="L118">                .path(path)</span>
+<span class="fc" id="L119">                .display(display)</span>
+<span class="fc" id="L120">                .build();</span>
+    }
+
+    private OrganisasiPersonalDto toPersonalDto(JabatanStruktur js) {
+<span class="fc" id="L124">        return OrganisasiPersonalDto.builder()</span>
+<span class="fc" id="L125">                .id(js.getId())</span>
+<span class="fc" id="L126">                .nama(js.getNamaDummy())</span>
+<span class="fc" id="L127">                .jabatan(js.getJabatan().name())</span>
+<span class="fc" id="L128">                .username(js.getUsername())</span>
+<span class="fc" id="L129">                .nip(js.getNip())</span>
+<span class="fc" id="L130">                .email(js.getEmail())</span>
+<span class="fc" id="L131">                .noHp(js.getNoHp())</span>
+<span class="fc" id="L132">                .build();</span>
+    }
+
+    private OrganisasiTreeNodeDto buildWilayahNode(Wilayah wilayah) {
+<span class="fc" id="L136">        OrganisasiTreeNodeDto node = new OrganisasiTreeNodeDto();</span>
+<span class="fc" id="L137">        node.setId(wilayah.getId());</span>
+<span class="fc" id="L138">        node.setNama(wilayah.getNama());</span>
+<span class="fc" id="L139">        node.setTipe(wilayah.getTipe().name());</span>
+
+<span class="fc" id="L141">        List&lt;Wilayah&gt; childWilayah = wilayahRepository.findByParentIdOrderByNama(wilayah.getId());</span>
+<span class="fc" id="L142">        List&lt;OrganisasiTreeNodeDto&gt; children = childWilayah.stream()</span>
+<span class="fc" id="L143">                .map(this::buildWilayahNode)</span>
+<span class="fc" id="L144">                .toList();</span>
+
+<span class="fc" id="L146">        List&lt;Opd&gt; opds = opdRepository.findByWilayahIdOrderByNamaOpd(wilayah.getId());</span>
+<span class="fc" id="L147">        List&lt;OrganisasiTreeNodeDto&gt; opdNodes = opds.stream()</span>
+<span class="fc" id="L148">                .map(this::buildOpdNode)</span>
+<span class="fc" id="L149">                .toList();</span>
+
+<span class="fc" id="L151">        children = mergeLists(children, opdNodes);</span>
+<span class="fc" id="L152">        node.setChildren(children);</span>
+<span class="fc" id="L153">        return node;</span>
+    }
+
+    private OrganisasiTreeNodeDto buildOpdNode(Opd opd) {
+<span class="fc" id="L157">        OrganisasiTreeNodeDto node = new OrganisasiTreeNodeDto();</span>
+<span class="fc" id="L158">        node.setId(opd.getId());</span>
+<span class="fc" id="L159">        node.setNama(opd.getNamaOpd());</span>
+<span class="fc" id="L160">        node.setTipe(&quot;OPD&quot;);</span>
+
+<span class="fc" id="L162">        List&lt;Bidang&gt; bidangList = bidangRepository.findByOpdIdOrderByNamaBidang(opd.getId());</span>
+<span class="fc" id="L163">        List&lt;OrganisasiTreeNodeDto&gt; bidangNodes = bidangList.stream()</span>
+<span class="fc" id="L164">                .map(this::buildBidangNode)</span>
+<span class="fc" id="L165">                .toList();</span>
+<span class="fc" id="L166">        node.setChildren(bidangNodes);</span>
+<span class="fc" id="L167">        return node;</span>
+    }
+
+    private OrganisasiTreeNodeDto buildBidangNode(Bidang bidang) {
+<span class="fc" id="L171">        OrganisasiTreeNodeDto node = new OrganisasiTreeNodeDto();</span>
+<span class="fc" id="L172">        node.setId(bidang.getId());</span>
+<span class="fc" id="L173">        node.setNama(bidang.getNamaBidang());</span>
+<span class="fc" id="L174">        node.setTipe(&quot;BIDANG&quot;);</span>
+<span class="fc" id="L175">        node.setChildren(List.of());</span>
+<span class="fc" id="L176">        return node;</span>
+    }
+
+    /**
+     * Gabung dua list child node jadi satu list.
+     * Dipakai untuk menggabung child wilayah + child OPD di satu level.
+     */
+    private List&lt;OrganisasiTreeNodeDto&gt; mergeLists(List&lt;OrganisasiTreeNodeDto&gt; a,
+                                                    List&lt;OrganisasiTreeNodeDto&gt; b) {
+<span class="fc" id="L185">        return java.util.stream.Stream.concat(a.stream(), b.stream()).toList();</span>
+    }
+    @Override
+    @Transactional
+    public OrganisasiPersonalDto createPersonal(Long bidangId, OrganisasiPersonalRequestDto dto) {
+<span class="fc" id="L190">        Bidang bidang = bidangRepository.findById(bidangId)</span>
+<span class="fc" id="L191">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Bidang tidak ditemukan dengan id: &quot; + bidangId));</span>
+        
+<span class="fc bfc" id="L193" title="All 2 branches covered.">        if (jabatanStrukturRepository.existsByUsername(dto.getUsername())) {</span>
+<span class="fc" id="L194">            throw new IllegalArgumentException(&quot;Username sudah digunakan: &quot; + dto.getUsername());</span>
+        }
+
+        Jabatan jabatanEnum;
+        try {
+<span class="fc" id="L199">            jabatanEnum = Jabatan.valueOf(dto.getJabatan().toUpperCase());</span>
+<span class="fc" id="L200">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L201">            throw new IllegalArgumentException(&quot;Jabatan tidak valid: &quot; + dto.getJabatan());</span>
+<span class="fc" id="L202">        }</span>
+
+<span class="fc" id="L204">        JabatanStruktur js = JabatanStruktur.builder()</span>
+<span class="fc" id="L205">                .bidang(bidang)</span>
+<span class="fc" id="L206">                .namaDummy(dto.getNama())</span>
+<span class="fc" id="L207">                .jabatan(jabatanEnum)</span>
+<span class="fc" id="L208">                .username(dto.getUsername())</span>
+<span class="fc" id="L209">                .nip(dto.getNip())</span>
+<span class="fc" id="L210">                .email(dto.getEmail())</span>
+<span class="fc" id="L211">                .noHp(dto.getNoHp())</span>
+<span class="fc" id="L212">                .build();</span>
+        
+<span class="fc" id="L214">        js = jabatanStrukturRepository.save(js);</span>
+<span class="fc" id="L215">        return toPersonalDto(js);</span>
+    }
+
+    @Override
+    @Transactional
+    public OrganisasiPersonalDto updatePersonal(Long id, OrganisasiPersonalRequestDto dto) {
+<span class="fc" id="L221">        JabatanStruktur js = jabatanStrukturRepository.findById(id)</span>
+<span class="fc" id="L222">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Personel tidak ditemukan dengan id: &quot; + id));</span>
+        
+<span class="fc bfc" id="L224" title="All 2 branches covered.">        if (jabatanStrukturRepository.existsByUsernameAndIdNot(dto.getUsername(), id)) {</span>
+<span class="fc" id="L225">            throw new IllegalArgumentException(&quot;Username sudah digunakan: &quot; + dto.getUsername());</span>
+        }
+
+        Jabatan jabatanEnum;
+        try {
+<span class="fc" id="L230">            jabatanEnum = Jabatan.valueOf(dto.getJabatan().toUpperCase());</span>
+<span class="fc" id="L231">        } catch (IllegalArgumentException e) {</span>
+<span class="fc" id="L232">            throw new IllegalArgumentException(&quot;Jabatan tidak valid: &quot; + dto.getJabatan());</span>
+<span class="fc" id="L233">        }</span>
+
+<span class="fc" id="L235">        js.setNamaDummy(dto.getNama());</span>
+<span class="fc" id="L236">        js.setJabatan(jabatanEnum);</span>
+<span class="fc" id="L237">        js.setUsername(dto.getUsername());</span>
+<span class="fc" id="L238">        js.setNip(dto.getNip());</span>
+<span class="fc" id="L239">        js.setEmail(dto.getEmail());</span>
+<span class="fc" id="L240">        js.setNoHp(dto.getNoHp());</span>
+        
+<span class="fc" id="L242">        js = jabatanStrukturRepository.save(js);</span>
+<span class="fc" id="L243">        return toPersonalDto(js);</span>
+    }
+
+    @Override
+    @Transactional
+    public void deletePersonal(Long id) {
+<span class="fc bfc" id="L249" title="All 2 branches covered.">        if (!jabatanStrukturRepository.existsById(id)) {</span>
+<span class="fc" id="L250">            throw new ResourceNotFoundException(&quot;Personel tidak ditemukan dengan id: &quot; + id);</span>
+        }
+<span class="fc" id="L252">        jabatanStrukturRepository.deleteById(id);</span>
+<span class="fc" id="L253">    }</span>
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;OrganisasiSearchResultDto&gt; search(String keyword) {
+<span class="fc bfc" id="L258" title="All 4 branches covered.">        if (keyword == null || keyword.trim().length() &lt; 2) {</span>
+<span class="fc" id="L259">            return List.of(); // Return empty if keyword is too short</span>
+        }
+
+<span class="fc" id="L262">        List&lt;OrganisasiSearchResultDto&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L263">        String searchKw = keyword.trim();</span>
+
+        // 1. Search Wilayah
+<span class="fc" id="L266">        List&lt;Wilayah&gt; wilayahList = wilayahRepository.findByNamaContainingIgnoreCase(searchKw);</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        for (Wilayah w : wilayahList) {</span>
+<span class="fc" id="L268">            OrganisasiBreadcrumbDto breadcrumb = getBreadcrumb(w.getTipe().name(), w.getId());</span>
+<span class="fc" id="L269">            results.add(OrganisasiSearchResultDto.builder()</span>
+<span class="fc" id="L270">                    .id(w.getId())</span>
+<span class="fc" id="L271">                    .nama(w.getNama())</span>
+<span class="fc" id="L272">                    .tipe(w.getTipe().name())</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">                    .path(breadcrumb != null ? breadcrumb.getDisplay() : w.getNama())</span>
+<span class="fc" id="L274">                    .build());</span>
+<span class="fc" id="L275">        }</span>
+
+        // 2. Search OPD
+<span class="fc" id="L278">        List&lt;Opd&gt; opdList = opdRepository.findByNamaOpdContainingIgnoreCase(searchKw);</span>
+<span class="fc bfc" id="L279" title="All 2 branches covered.">        for (Opd o : opdList) {</span>
+<span class="fc" id="L280">            OrganisasiBreadcrumbDto breadcrumb = getBreadcrumb(&quot;OPD&quot;, o.getId());</span>
+<span class="fc" id="L281">            results.add(OrganisasiSearchResultDto.builder()</span>
+<span class="fc" id="L282">                    .id(o.getId())</span>
+<span class="fc" id="L283">                    .nama(o.getNamaOpd())</span>
+<span class="fc" id="L284">                    .tipe(&quot;OPD&quot;)</span>
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">                    .path(breadcrumb != null ? breadcrumb.getDisplay() : o.getNamaOpd())</span>
+<span class="fc" id="L286">                    .build());</span>
+<span class="fc" id="L287">        }</span>
+
+        // 3. Search Bidang
+<span class="fc" id="L290">        List&lt;Bidang&gt; bidangList = bidangRepository.findByNamaBidangContainingIgnoreCase(searchKw);</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">        for (Bidang b : bidangList) {</span>
+<span class="fc" id="L292">            OrganisasiBreadcrumbDto breadcrumb = getBreadcrumb(&quot;BIDANG&quot;, b.getId());</span>
+<span class="fc" id="L293">            results.add(OrganisasiSearchResultDto.builder()</span>
+<span class="fc" id="L294">                    .id(b.getId())</span>
+<span class="fc" id="L295">                    .nama(b.getNamaBidang())</span>
+<span class="fc" id="L296">                    .tipe(&quot;BIDANG&quot;)</span>
+<span class="pc bpc" id="L297" title="1 of 2 branches missed.">                    .path(breadcrumb != null ? breadcrumb.getDisplay() : b.getNamaBidang())</span>
+<span class="fc" id="L298">                    .build());</span>
+<span class="fc" id="L299">        }</span>
+
+        // 4. Search Personal
+<span class="fc" id="L302">        List&lt;Jabatan&gt; matchingJabatans = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">        for (Jabatan j : Jabatan.values()) {</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">            if (j.name().toLowerCase().replace(&quot;_&quot;, &quot; &quot;).contains(searchKw.toLowerCase())) {</span>
+<span class="fc" id="L305">                matchingJabatans.add(j);</span>
+            }
+        }
+<span class="fc" id="L308">        List&lt;JabatanStruktur&gt; personalList = jabatanStrukturRepository.findByNamaDummyContainingIgnoreCaseOrNipContainingIgnoreCaseOrJabatanIn(</span>
+<span class="fc bfc" id="L309" title="All 2 branches covered.">                searchKw, searchKw, matchingJabatans.isEmpty() ? null : matchingJabatans);</span>
+
+<span class="fc bfc" id="L311" title="All 2 branches covered.">        for (JabatanStruktur p : personalList) {</span>
+<span class="fc" id="L312">            Bidang b = p.getBidang();</span>
+<span class="fc" id="L313">            OrganisasiBreadcrumbDto breadcrumb = getBreadcrumb(&quot;BIDANG&quot;, b.getId());</span>
+<span class="fc" id="L314">            results.add(OrganisasiSearchResultDto.builder()</span>
+<span class="fc" id="L315">                    .id(p.getId())</span>
+<span class="fc" id="L316">                    .nama(p.getNamaDummy())</span>
+<span class="fc" id="L317">                    .tipe(&quot;PERSONAL&quot;)</span>
+<span class="pc bpc" id="L318" title="1 of 2 branches missed.">                    .path(breadcrumb != null ? breadcrumb.getDisplay() : b.getNamaBidang())</span>
+<span class="fc" id="L319">                    .bidangId(b.getId())</span>
+<span class="fc" id="L320">                    .jabatan(p.getJabatan().name())</span>
+<span class="fc" id="L321">                    .nip(p.getNip())</span>
+<span class="fc" id="L322">                    .build());</span>
+<span class="fc" id="L323">        }</span>
+
+        // Limit results to prevent massive payloads (e.g. top 50)
+<span class="fc bfc" id="L326" title="All 2 branches covered.">        if (results.size() &gt; 50) {</span>
+<span class="fc" id="L327">            return results.subList(0, 50);</span>
+        }
+<span class="fc" id="L329">        return results;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

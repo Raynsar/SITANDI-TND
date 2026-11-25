@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrganisasiDataSeeder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.config</a> &gt; <span class="el_source">OrganisasiDataSeeder.java</span></div><h1>OrganisasiDataSeeder.java</h1><pre class="source lang-java linenums">package com.sitandi.config;
+
+import java.util.List;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sitandi.model.Bidang;
+import com.sitandi.model.Jabatan;
+import com.sitandi.model.JabatanStruktur;
+import com.sitandi.model.Opd;
+import com.sitandi.model.TipeWilayah;
+import com.sitandi.model.Wilayah;
+import com.sitandi.repository.BidangRepository;
+import com.sitandi.repository.JabatanStrukturRepository;
+import com.sitandi.repository.OpdRepository;
+import com.sitandi.repository.WilayahRepository;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * Organisasi Data Seeder
+ */
+@Component
+@Order(2)
+@RequiredArgsConstructor
+public class OrganisasiDataSeeder implements CommandLineRunner {
+
+    private final WilayahRepository wilayahRepository;
+    private final OpdRepository opdRepository;
+    private final BidangRepository bidangRepository;
+    private final JabatanStrukturRepository jabatanStrukturRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    /** Daftar 38 Kabupaten/Kota di Jawa Timur dengan tipenya. */
+<span class="fc" id="L42">    private static final List&lt;KabKota&gt; DAFTAR_KAB_KOTA = List.of(</span>
+            new KabKota(&quot;Kabupaten Bangkalan&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Banyuwangi&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Blitar&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Bojonegoro&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Bondowoso&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Gresik&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Jember&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Jombang&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Kediri&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Lamongan&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Lumajang&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Madiun&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Magetan&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Malang&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Mojokerto&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Nganjuk&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Ngawi&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Pacitan&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Pamekasan&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Pasuruan&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Ponorogo&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Probolinggo&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Sampang&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Sidoarjo&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Situbondo&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Sumenep&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Trenggalek&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Tuban&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kabupaten Tulungagung&quot;, TipeWilayah.KABUPATEN),
+            new KabKota(&quot;Kota Batu&quot;, TipeWilayah.KOTA),
+            new KabKota(&quot;Kota Blitar&quot;, TipeWilayah.KOTA),
+            new KabKota(&quot;Kota Kediri&quot;, TipeWilayah.KOTA),
+            new KabKota(&quot;Kota Madiun&quot;, TipeWilayah.KOTA),
+            new KabKota(&quot;Kota Malang&quot;, TipeWilayah.KOTA),
+            new KabKota(&quot;Kota Mojokerto&quot;, TipeWilayah.KOTA),
+            new KabKota(&quot;Kota Pasuruan&quot;, TipeWilayah.KOTA),
+            new KabKota(&quot;Kota Probolinggo&quot;, TipeWilayah.KOTA),
+            new KabKota(&quot;Kota Surabaya&quot;, TipeWilayah.KOTA)
+    );
+
+    /**
+     * Daftar Instansi / OPD yang akan digenerate untuk SETIAP Kabupaten/Kota.
+     */
+<span class="fc" id="L86">    private static final List&lt;String&gt; DAFTAR_OPD = List.of(</span>
+            // Instansi besar (4-6 Bidang)
+            &quot;Dinas Komunikasi dan Informatika&quot;,
+            &quot;Dinas Pendidikan&quot;,
+            &quot;Dinas Kesehatan&quot;,
+            &quot;Dinas Pekerjaan Umum dan Penataan Ruang&quot;,
+            // Instansi sedang (3-4 Bidang)
+            &quot;Dinas Sosial&quot;,
+            &quot;Dinas Lingkungan Hidup&quot;,
+            &quot;Dinas Pertanian&quot;,
+            &quot;Dinas Perindustrian dan Perdagangan&quot;,
+            &quot;Dinas Perhubungan&quot;,
+            // Instansi kecil (2-3 Bidang)
+            &quot;Badan Kepegawaian Daerah&quot;,
+            &quot;Badan Pengelolaan Keuangan dan Aset Daerah&quot;,
+            &quot;Satuan Polisi Pamong Praja&quot;,
+            &quot;Inspektorat Daerah&quot;
+    );
+
+    /** Daftar Bidang generik untuk setiap OPD contoh Kominfo. */
+<span class="fc" id="L106">    private static final List&lt;String&gt; BIDANG_KOMINFO = List.of(</span>
+            &quot;Sekretariat&quot;,
+            &quot;Bidang Infrastruktur Teknologi Informasi&quot;,
+            &quot;Bidang Layanan Aplikasi Informatika&quot;,
+            &quot;Bidang Komunikasi dan Informasi Publik&quot;,
+            &quot;Bidang Persandian dan Statistik&quot;
+    );
+
+    /** Daftar Bidang generik untuk Dinas Pendidikan. */
+<span class="fc" id="L115">    private static final List&lt;String&gt; BIDANG_PENDIDIKAN = List.of(</span>
+            &quot;Sekretariat&quot;,
+            &quot;Bidang Pembinaan PAUD dan Pendidikan Non Formal&quot;,
+            &quot;Bidang Pembinaan Sekolah Dasar&quot;,
+            &quot;Bidang Pembinaan Sekolah Menengah Pertama&quot;,
+            &quot;Bidang Pembinaan Ketenagaan&quot;
+    );
+
+    /** Daftar Bidang generik untuk Dinas Kesehatan. */
+<span class="fc" id="L124">    private static final List&lt;String&gt; BIDANG_KESEHATAN = List.of(</span>
+            &quot;Sekretariat&quot;,
+            &quot;Bidang Kesehatan Masyarakat&quot;,
+            &quot;Bidang Pencegahan dan Pengendalian Penyakit&quot;,
+            &quot;Bidang Pelayanan Kesehatan&quot;,
+            &quot;Bidang Sumber Daya Kesehatan&quot;
+    );
+
+    /** Daftar Bidang generik untuk DPUPR. */
+<span class="fc" id="L133">    private static final List&lt;String&gt; BIDANG_PUPR = List.of(</span>
+            &quot;Sekretariat&quot;,
+            &quot;Bidang Bina Marga&quot;,
+            &quot;Bidang Sumber Daya Air&quot;,
+            &quot;Bidang Cipta Karya&quot;,
+            &quot;Bidang Penataan Ruang&quot;
+    );
+
+    /** Daftar Bidang generik untuk Dinas Perhubungan. */
+<span class="fc" id="L142">    private static final List&lt;String&gt; BIDANG_PERHUBUNGAN = List.of(</span>
+            &quot;Sekretariat&quot;,
+            &quot;Bidang Lalu Lintas&quot;,
+            &quot;Bidang Angkutan&quot;,
+            &quot;Bidang Sarana dan Prasarana&quot;
+    );
+
+<span class="fc" id="L149">    private static final List&lt;String&gt; BIDANG_SOSIAL = List.of(</span>
+            &quot;Sekretariat&quot;, 
+            &quot;Bidang Perlindungan dan Jaminan Sosial&quot;, 
+            &quot;Bidang Rehabilitasi Sosial&quot;, 
+            &quot;Bidang Pemberdayaan Sosial&quot;
+    );
+<span class="fc" id="L155">    private static final List&lt;String&gt; BIDANG_DLH = List.of(</span>
+            &quot;Sekretariat&quot;, 
+            &quot;Bidang Tata Lingkungan&quot;, 
+            &quot;Bidang Pengelolaan Sampah dan B3&quot;, 
+            &quot;Bidang Pengendalian Pencemaran&quot;
+    );
+<span class="fc" id="L161">    private static final List&lt;String&gt; BIDANG_PERTANIAN = List.of(</span>
+            &quot;Sekretariat&quot;, 
+            &quot;Bidang Tanaman Pangan&quot;, 
+            &quot;Bidang Hortikultura&quot;, 
+            &quot;Bidang Peternakan&quot;
+    );
+<span class="fc" id="L167">    private static final List&lt;String&gt; BIDANG_PERINDAG = List.of(</span>
+            &quot;Sekretariat&quot;, 
+            &quot;Bidang Perindustrian&quot;, 
+            &quot;Bidang Perdagangan Dalam Negeri&quot;, 
+            &quot;Bidang Metrologi Legal&quot;
+    );
+<span class="fc" id="L173">    private static final List&lt;String&gt; BIDANG_BKD = List.of(</span>
+            &quot;Sekretariat&quot;, 
+            &quot;Bidang Mutasi dan Promosi&quot;, 
+            &quot;Bidang Pengembangan Aparatur&quot;
+    );
+<span class="fc" id="L178">    private static final List&lt;String&gt; BIDANG_BPKAD = List.of(</span>
+            &quot;Sekretariat&quot;, 
+            &quot;Bidang Anggaran&quot;, 
+            &quot;Bidang Perbendaharaan&quot;, 
+            &quot;Bidang Aset&quot;
+    );
+<span class="fc" id="L184">    private static final List&lt;String&gt; BIDANG_SATPOL = List.of(</span>
+            &quot;Sekretariat&quot;, 
+            &quot;Bidang Penegakan Perda&quot;, 
+            &quot;Bidang Ketertiban Umum&quot;
+    );
+<span class="fc" id="L189">    private static final List&lt;String&gt; BIDANG_INSPEKTORAT = List.of(</span>
+            &quot;Sekretariat&quot;, 
+            &quot;Inspektur Pembantu I&quot;, 
+            &quot;Inspektur Pembantu II&quot;
+    );
+
+    /** Struktur jabatan standar untuk tiap Bidang (5 orang: Ketua, Sekretaris, Bendahara, 2 Anggota). */
+<span class="fc" id="L196">    private static final List&lt;Jabatan&gt; STRUKTUR_JABATAN = List.of(</span>
+            Jabatan.KETUA, Jabatan.SEKRETARIS, Jabatan.BENDAHARA,
+            Jabatan.ANGGOTA, Jabatan.ANGGOTA
+    );
+
+    /** Counter deterministik untuk pengulangan nama dummy. */
+    private int namaCounter = 0;
+
+    /** Counter username untuk suffix urut saat terjadi duplikat. */
+    private final java.util.Map&lt;String, Integer&gt; usernameCounter = new java.util.HashMap&lt;&gt;();
+
+<span class="fc" id="L207">    private static final String[] NAMA_POOL = {</span>
+            &quot;Ahmad Fauzi&quot;, &quot;Budi Hartono&quot;, &quot;Citra Dewi Lestari&quot;,
+            &quot;Deni Prasetyo&quot;, &quot;Eka Fitriani&quot;, &quot;Fajar Setiawan&quot;,
+            &quot;Gita Permata Sari&quot;, &quot;Hendra Kusuma&quot;, &quot;Indah Permatasari&quot;,
+            &quot;Joko Susilo&quot;, &quot;Kartika Sari Dewi&quot;, &quot;Luki Ardiansyah&quot;,
+            &quot;Mega Puspita Rini&quot;, &quot;Nugroho Adi Wibowo&quot;, &quot;Olivia Putri Maharani&quot;,
+            &quot;Prasetyo Budi Utomo&quot;, &quot;Ratna Dewi Kusumawati&quot;, &quot;Rizky Fadhilah&quot;,
+            &quot;Sari Dewi Anggraini&quot;, &quot;Taufik Hidayat&quot;, &quot;Umi Kalsum&quot;,
+            &quot;Vina Aulia Rahmah&quot;, &quot;Wahyu Nugroho&quot;, &quot;Yuni Astuti&quot;,
+            &quot;Bambang Wijaya&quot;, &quot;Siti Nurhayati&quot;, &quot;Agus Supriyanto&quot;,
+            &quot;Dewi Sartika&quot;, &quot;Mochammad Rizal&quot;, &quot;Abdul Malik&quot;,
+            &quot;Sutrisno&quot;, &quot;Endang Purwanti&quot;, &quot;Sunaryo&quot;,
+            &quot;Rini Ambarwati&quot;, &quot;Hendra Gunawan&quot;, &quot;Yuliana Dewi&quot;,
+            &quot;Arief Rachman&quot;, &quot;Fitri Handayani&quot;, &quot;Eko Prasetyo&quot;,
+            &quot;Nina Marlina&quot;, &quot;Doni Kusuma&quot;, &quot;Ratna Puspita&quot;,
+            &quot;Adi Saputra&quot;, &quot;Tuti Alawiyah&quot;, &quot;Agus Salim&quot;,
+            &quot;Lilis Suryani&quot;, &quot;Diana Permata Sari&quot;, &quot;Haryanto&quot;,
+            &quot;Ani Rahmawati&quot;, &quot;Slamet Riyadi&quot;
+    };
+
+    @Override
+    @Transactional
+    public void run(String... args) {
+<span class="fc" id="L230">        long wilayahCount = wilayahRepository.count();</span>
+<span class="fc" id="L231">        long opdCount = opdRepository.count();</span>
+<span class="fc" id="L232">        long jabatanCount = jabatanStrukturRepository.count();</span>
+<span class="fc" id="L233">        System.out.println(&quot;[OrganisasiDataSeeder] wilayah=&quot; + wilayahCount + &quot; opd=&quot; + opdCount</span>
+                + &quot; jabatan=&quot; + jabatanCount);
+
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">        if (wilayahCount &gt; 0) {</span>
+            // Check Seed Conditions
+<span class="nc" id="L238">            boolean legacySeed = opdRepository.findAll().stream()</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">                    .anyMatch(o -&gt; o.getNamaOpd() != null</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">                            &amp;&amp; o.getNamaOpd().contains(&quot;Kabupaten Bangkalan&quot;));</span>
+<span class="nc bnc" id="L241" title="All 4 branches missed.">            boolean orphanedWilayah = (wilayahCount &gt; 0 &amp;&amp; opdCount == 0);</span>
+<span class="nc" id="L242">            boolean legacyMissingUsername = jabatanStrukturRepository.findAll().stream()</span>
+<span class="nc bnc" id="L243" title="All 4 branches missed.">                    .anyMatch(js -&gt; js.getUsername() == null || js.getUsername().isBlank());</span>
+<span class="nc" id="L244">            boolean legacyMissingNip = jabatanStrukturRepository.findAll().stream()</span>
+<span class="nc bnc" id="L245" title="All 4 branches missed.">                    .anyMatch(js -&gt; js.getNip() == null || js.getNip().isBlank());</span>
+<span class="nc" id="L246">            long expectedOpdCount = (long) DAFTAR_KAB_KOTA.size() * DAFTAR_OPD.size();</span>
+<span class="nc bnc" id="L247" title="All 4 branches missed.">            boolean scaleChanged = (opdCount != expectedOpdCount &amp;&amp; opdCount &gt; 0);</span>
+            
+<span class="nc" id="L249">            System.out.println(&quot;[OrganisasiDataSeeder] legacySeed=&quot; + legacySeed</span>
+                    + &quot; orphanedWilayah=&quot; + orphanedWilayah
+                    + &quot; legacyMissingUsername=&quot; + legacyMissingUsername
+                    + &quot; legacyMissingNip=&quot; + legacyMissingNip
+                    + &quot; scaleChanged=&quot; + scaleChanged);
+
+<span class="nc bnc" id="L255" title="All 10 branches missed.">            if (legacySeed || orphanedWilayah || legacyMissingUsername || legacyMissingNip || scaleChanged) {</span>
+<span class="nc" id="L256">                entityManager.createNativeQuery(&quot;SET FOREIGN_KEY_CHECKS = 0&quot;).executeUpdate();</span>
+<span class="nc" id="L257">                entityManager.createNativeQuery(&quot;TRUNCATE TABLE jabatan_struktur&quot;).executeUpdate();</span>
+<span class="nc" id="L258">                entityManager.createNativeQuery(&quot;TRUNCATE TABLE bidang&quot;).executeUpdate();</span>
+<span class="nc" id="L259">                entityManager.createNativeQuery(&quot;TRUNCATE TABLE opd&quot;).executeUpdate();</span>
+<span class="nc" id="L260">                entityManager.createNativeQuery(&quot;TRUNCATE TABLE wilayah&quot;).executeUpdate();</span>
+<span class="nc" id="L261">                entityManager.createNativeQuery(&quot;SET FOREIGN_KEY_CHECKS = 1&quot;).executeUpdate();</span>
+<span class="nc" id="L262">                entityManager.clear();</span>
+            } else {
+<span class="nc" id="L264">                return;</span>
+            }
+        }
+
+<span class="fc" id="L268">        Wilayah provinsi = wilayahRepository.save(Wilayah.builder()</span>
+<span class="fc" id="L269">                .nama(&quot;Jawa Timur&quot;)</span>
+<span class="fc" id="L270">                .tipe(TipeWilayah.PROVINSI)</span>
+<span class="fc" id="L271">                .parent(null)</span>
+<span class="fc" id="L272">                .build());</span>
+
+<span class="fc" id="L274">        int totalOpd = 0, totalBidang = 0, totalJabatan = 0;</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">        for (KabKota kk : DAFTAR_KAB_KOTA) {</span>
+<span class="fc" id="L276">            Wilayah wilayah = wilayahRepository.save(Wilayah.builder()</span>
+<span class="fc" id="L277">                    .nama(kk.nama())</span>
+<span class="fc" id="L278">                    .tipe(kk.tipe())</span>
+<span class="fc" id="L279">                    .parent(provinsi)</span>
+<span class="fc" id="L280">                    .build());</span>
+
+<span class="fc" id="L282">            int opdCounter = 1;</span>
+<span class="fc bfc" id="L283" title="All 2 branches covered.">            for (String namaOpd : DAFTAR_OPD) {</span>
+<span class="fc" id="L284">                Opd opd = opdRepository.save(Opd.builder()</span>
+<span class="fc" id="L285">                        .wilayah(wilayah)</span>
+<span class="fc" id="L286">                        .namaOpd(namaOpd + &quot; &quot; + kk.nama())</span>
+<span class="fc" id="L287">                        .kodeOpd(kodeWilayah(kk.nama()) + &quot;-OPD-&quot; + String.format(&quot;%02d&quot;, opdCounter++))</span>
+<span class="fc" id="L288">                        .build());</span>
+<span class="fc" id="L289">                totalOpd++;</span>
+
+                // Pilih daftar bidang sesuai tipe OPD
+<span class="fc" id="L292">                List&lt;String&gt; daftarBidang = pilihBidang(namaOpd);</span>
+
+                // 4. Buat Bidang per OPD
+<span class="fc bfc" id="L295" title="All 2 branches covered.">                for (String namaBidang : daftarBidang) {</span>
+<span class="fc" id="L296">                    Bidang bidang = bidangRepository.save(Bidang.builder()</span>
+<span class="fc" id="L297">                            .opd(opd)</span>
+<span class="fc" id="L298">                            .namaBidang(namaBidang)</span>
+<span class="fc" id="L299">                            .build());</span>
+<span class="fc" id="L300">                    totalBidang++;</span>
+
+                    // 5. Buat jabatan standar: Ketua, Sekretaris, Bendahara, 2 Anggota
+<span class="fc bfc" id="L303" title="All 2 branches covered.">                    for (Jabatan jabatan : STRUKTUR_JABATAN) {</span>
+<span class="fc" id="L304">                        String nama = nextNama();</span>
+<span class="fc" id="L305">                        String username = nextUsername(nama);</span>
+<span class="fc" id="L306">                        jabatanStrukturRepository.save(JabatanStruktur.builder()</span>
+<span class="fc" id="L307">                                .bidang(bidang)</span>
+<span class="fc" id="L308">                                .jabatan(jabatan)</span>
+<span class="fc" id="L309">                                .namaDummy(nama)</span>
+<span class="fc" id="L310">                                .username(username)</span>
+<span class="fc" id="L311">                                .nip(nextNip())</span>
+<span class="fc" id="L312">                                .email(nextEmail(username, opd.getNamaOpd()))</span>
+<span class="fc" id="L313">                                .noHp(nextNoHp())</span>
+<span class="fc" id="L314">                                .build());</span>
+<span class="fc" id="L315">                        totalJabatan++;</span>
+<span class="fc" id="L316">                    }</span>
+<span class="fc" id="L317">                }</span>
+<span class="fc" id="L318">            }</span>
+<span class="fc" id="L319">        }</span>
+<span class="fc" id="L320">        System.out.println(&quot;[OrganisasiDataSeeder] Seeded: &quot; + totalOpd + &quot; OPD, &quot;</span>
+                + totalBidang + &quot; Bidang, &quot; + totalJabatan + &quot; Jabatan&quot;);
+<span class="fc" id="L322">    }</span>
+
+    /** Pilih daftar bidang berdasarkan prefiks nama OPD. */
+    private List&lt;String&gt; pilihBidang(String namaOpd) {
+<span class="fc" id="L326">        String lower = namaOpd.toLowerCase();</span>
+<span class="pc bpc" id="L327" title="1 of 4 branches missed.">        if (lower.contains(&quot;komunikasi&quot;) || lower.contains(&quot;informatika&quot;)) return BIDANG_KOMINFO;</span>
+<span class="fc bfc" id="L328" title="All 2 branches covered.">        if (lower.contains(&quot;pendidikan&quot;)) return BIDANG_PENDIDIKAN;</span>
+<span class="fc bfc" id="L329" title="All 2 branches covered.">        if (lower.contains(&quot;kesehatan&quot;)) return BIDANG_KESEHATAN;</span>
+<span class="pc bpc" id="L330" title="1 of 4 branches missed.">        if (lower.contains(&quot;pekerjaan umum&quot;) || lower.contains(&quot;pupr&quot;)) return BIDANG_PUPR;</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">        if (lower.contains(&quot;perhubungan&quot;)) return BIDANG_PERHUBUNGAN;</span>
+        
+<span class="fc bfc" id="L333" title="All 2 branches covered.">        if (lower.contains(&quot;sosial&quot;)) return BIDANG_SOSIAL;</span>
+<span class="fc bfc" id="L334" title="All 2 branches covered.">        if (lower.contains(&quot;lingkungan hidup&quot;)) return BIDANG_DLH;</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">        if (lower.contains(&quot;pertanian&quot;)) return BIDANG_PERTANIAN;</span>
+<span class="pc bpc" id="L336" title="1 of 4 branches missed.">        if (lower.contains(&quot;perindustrian&quot;) || lower.contains(&quot;perdagangan&quot;)) return BIDANG_PERINDAG;</span>
+        
+<span class="fc bfc" id="L338" title="All 2 branches covered.">        if (lower.contains(&quot;kepegawaian&quot;)) return BIDANG_BKD;</span>
+<span class="pc bpc" id="L339" title="1 of 4 branches missed.">        if (lower.contains(&quot;keuangan&quot;) || lower.contains(&quot;aset&quot;)) return BIDANG_BPKAD;</span>
+<span class="pc bpc" id="L340" title="1 of 4 branches missed.">        if (lower.contains(&quot;pamong praja&quot;) || lower.contains(&quot;satpol&quot;)) return BIDANG_SATPOL;</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">        if (lower.contains(&quot;inspektorat&quot;)) return BIDANG_INSPEKTORAT;</span>
+
+        // Default fallback
+<span class="nc" id="L344">        return List.of(&quot;Sekretariat&quot;, &quot;Bidang Umum&quot;);</span>
+    }
+
+    /** Nama dummy deterministik dari pool, diulang dengan indeks. */
+    private String nextNama() {
+<span class="fc" id="L349">        String nama = NAMA_POOL[namaCounter % NAMA_POOL.length];</span>
+<span class="fc" id="L350">        namaCounter++;</span>
+<span class="fc" id="L351">        return nama;</span>
+    }
+
+    // Generate Dummy Username
+    private String nextUsername(String namaLengkap) {
+<span class="fc" id="L356">        String[] tokens = namaLengkap.trim().toLowerCase().split(&quot;\\s+&quot;);</span>
+<span class="fc" id="L357">        String inisialDepan = tokens[0].substring(0, 1);</span>
+<span class="fc" id="L358">        String namaBelakang = tokens[tokens.length - 1].replaceAll(&quot;[^a-z0-9]&quot;, &quot;&quot;);</span>
+<span class="fc" id="L359">        String base = inisialDepan + namaBelakang;</span>
+<span class="fc" id="L360">        int seen = usernameCounter.getOrDefault(base, 0);</span>
+<span class="fc" id="L361">        usernameCounter.put(base, seen + 1);</span>
+<span class="fc bfc" id="L362" title="All 2 branches covered.">        return seen == 0 ? base : base + (seen + 1);</span>
+    }
+
+    /** Generate NIP dummy 18 digit (format: tanggal lahir dummy + urutan). */
+    private String nextNip() {
+<span class="fc" id="L367">        int tahun = 1970 + (namaCounter % 20);</span>
+<span class="fc" id="L368">        int bulan = (namaCounter % 12) + 1;</span>
+<span class="fc" id="L369">        int tgl = (namaCounter % 28) + 1;</span>
+<span class="fc" id="L370">        int urutan = namaCounter % 1000;</span>
+<span class="fc" id="L371">        return String.format(&quot;%04d%02d%02d%06d%03d&quot;, tahun, bulan, tgl, 201001, urutan);</span>
+    }
+
+    /** Generate email dummy format username@slug-opd.go.id */
+    private String nextEmail(String username, String namaOpd) {
+<span class="fc" id="L376">        String slug = namaOpd.toLowerCase()</span>
+<span class="fc" id="L377">                .replaceAll(&quot;kota &quot;, &quot;&quot;)</span>
+<span class="fc" id="L378">                .replaceAll(&quot;kabupaten &quot;, &quot;&quot;)</span>
+<span class="fc" id="L379">                .replaceAll(&quot;[^a-z0-9]+&quot;, &quot;-&quot;)</span>
+<span class="fc" id="L380">                .replaceAll(&quot;^-|-$&quot;, &quot;&quot;);</span>
+<span class="fc" id="L381">        return username + &quot;@&quot; + slug + &quot;.go.id&quot;;</span>
+    }
+
+    /** Generate no HP dummy format 08xx-xxxx-xxxx */
+    private String nextNoHp() {
+<span class="fc" id="L386">        int prefix = 11 + (namaCounter % 9); // 0811 - 0819</span>
+<span class="fc" id="L387">        int mid = 1000 + (namaCounter % 9000);</span>
+<span class="fc" id="L388">        int suffix = 1000 + ((namaCounter * 3) % 9000);</span>
+<span class="fc" id="L389">        return String.format(&quot;08%d-%04d-%04d&quot;, prefix, mid, suffix);</span>
+    }
+
+    /** Bikin kode unik dari nama kab/kota untuk prefix kodeOpd yang unik secara global. */
+    private String kodeWilayah(String namaKabKota) {
+<span class="fc" id="L394">        return namaKabKota.replace(&quot;Kabupaten &quot;, &quot;KAB_&quot;).replace(&quot;Kota &quot;, &quot;KOTA_&quot;).replace(&quot; &quot;, &quot;&quot;).toUpperCase();</span>
+    }
+
+    /** Record sederhana untuk pasangan nama + tipe kab/kota (seluruh daftar 38). */
+<span class="fc" id="L398">    private record KabKota(String nama, TipeWilayah tipe) {}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

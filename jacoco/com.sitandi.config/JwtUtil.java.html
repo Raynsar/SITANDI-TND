@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.config</a> &gt; <span class="el_source">JwtUtil.java</span></div><h1>JwtUtil.java</h1><pre class="source lang-java linenums">package com.sitandi.config;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+
+/**
+ * JWT Utility
+ */
+@Component
+public class JwtUtil {
+
+    private static final String CLAIM_ROLE = &quot;role&quot;;
+
+    private static final int MIN_SECRET_BYTES = 32;
+
+    private final SecretKey key;
+    private final long expirationMs;
+
+    public JwtUtil(@Value(&quot;${jwt.secret:}&quot;) String secret,
+<span class="fc" id="L31">                   @Value(&quot;${jwt.expiration-ms:3600000}&quot;) long expirationMs) {</span>
+
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (!StringUtils.hasText(secret)) {</span>
+<span class="fc" id="L34">            throw new IllegalStateException(</span>
+                    &quot;jwt.secret belum diisi. Set environment variable JWT_SECRET (atau properti jwt.secret) &quot;
+                    + &quot;dengan string acak minimal 32 karakter. Contoh generate: &quot;
+                    + &quot;openssl rand -base64 48&quot;);
+        }
+<span class="fc" id="L39">        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (keyBytes.length &lt; MIN_SECRET_BYTES) {</span>
+<span class="fc" id="L41">            throw new IllegalStateException(</span>
+                    &quot;jwt.secret terlalu pendek (&quot; + keyBytes.length + &quot; byte). HS256 butuh minimal &quot;
+                    + MIN_SECRET_BYTES + &quot; byte (256 bit).&quot;);
+        }
+<span class="fc" id="L45">        this.key = Keys.hmacShaKeyFor(keyBytes);</span>
+<span class="fc" id="L46">        this.expirationMs = expirationMs;</span>
+<span class="fc" id="L47">    }</span>
+
+    public long getExpirationMs() {
+<span class="fc" id="L50">        return expirationMs;</span>
+    }
+
+    // Token Generation
+    public String generateToken(String username, String role) {
+<span class="fc" id="L55">        Date now = new Date();</span>
+<span class="fc" id="L56">        return Jwts.builder()</span>
+<span class="fc" id="L57">                .subject(username)</span>
+<span class="fc" id="L58">                .claim(CLAIM_ROLE, role)</span>
+<span class="fc" id="L59">                .issuedAt(now)</span>
+<span class="fc" id="L60">                .expiration(new Date(now.getTime() + expirationMs))</span>
+<span class="fc" id="L61">                .signWith(key)</span>
+<span class="fc" id="L62">                .compact();</span>
+    }
+
+    // Token Parsing
+    public Claims parse(String token) {
+<span class="fc" id="L67">        return Jwts.parser()</span>
+<span class="fc" id="L68">                .verifyWith(key)</span>
+<span class="fc" id="L69">                .build()</span>
+<span class="fc" id="L70">                .parseSignedClaims(token)</span>
+<span class="fc" id="L71">                .getPayload();</span>
+    }
+
+    public String extractUsername(String token) {
+<span class="fc" id="L75">        return parse(token).getSubject();</span>
+    }
+
+    public String extractRole(String token) {
+<span class="fc" id="L79">        return parse(token).get(CLAIM_ROLE, String.class);</span>
+    }
+
+    // Token Validation
+    public boolean isValid(String token) {
+        try {
+<span class="fc" id="L85">            parse(token);</span>
+<span class="fc" id="L86">            return true;</span>
+<span class="fc" id="L87">        } catch (JwtException | IllegalArgumentException ex) {</span>
+<span class="fc" id="L88">            return false;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

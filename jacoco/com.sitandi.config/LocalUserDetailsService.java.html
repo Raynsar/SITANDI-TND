@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LocalUserDetailsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.config</a> &gt; <span class="el_source">LocalUserDetailsService.java</span></div><h1>LocalUserDetailsService.java</h1><pre class="source lang-java linenums">package com.sitandi.config;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import com.sitandi.model.Pengguna;
+import com.sitandi.repository.PenggunaRepository;
+
+import lombok.RequiredArgsConstructor;
+
+/**
+ * UserDetailsService untuk autentikasi lokal (fallback).
+ *
+ * Memuat user dari tabel pengguna di database lokal, bukan dari TNDE API.
+ * Dipakai oleh DaoAuthenticationProvider sebagai fallback ketika
+ * TndeAuthenticationProvider gagal (karena TNDE API tidak reachable atau
+ * kredensial tidak terdaftar di TNDE).
+ */
+@Service
+@RequiredArgsConstructor
+public class LocalUserDetailsService implements UserDetailsService {
+
+<span class="fc" id="L32">    private static final Logger log = LoggerFactory.getLogger(LocalUserDetailsService.class);</span>
+
+    private final PenggunaRepository penggunaRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+<span class="fc" id="L38">        log.info(&quot;[LocalUserDetails] Mencari user '{}' di database lokal...&quot;, username);</span>
+
+<span class="fc" id="L40">        Pengguna pengguna = penggunaRepository.findByUsername(username)</span>
+<span class="fc" id="L41">                .orElseThrow(() -&gt; {</span>
+<span class="fc" id="L42">                    log.warn(&quot;[LocalUserDetails] User '{}' TIDAK DITEMUKAN di database lokal&quot;, username);</span>
+<span class="fc" id="L43">                    return new UsernameNotFoundException(</span>
+                            &quot;Pengguna tidak ditemukan: &quot; + username);
+                });
+
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (!pengguna.isAktif()) {</span>
+<span class="fc" id="L48">            log.warn(&quot;[LocalUserDetails] User '{}' DITEMUKAN tapi belum aktif (aktif=false)&quot;, username);</span>
+<span class="fc" id="L49">            throw new UsernameNotFoundException(&quot;Akun belum diaktifkan: &quot; + username);</span>
+        }
+
+<span class="fc" id="L52">        log.info(&quot;[LocalUserDetails] User '{}' DITEMUKAN di DB | role={} | aktif={} | pw_hash_prefix={}&quot;,</span>
+<span class="fc" id="L53">                username, pengguna.getRole(), pengguna.isAktif(),</span>
+<span class="fc" id="L54">                pengguna.getPassword().substring(0, Math.min(20, pengguna.getPassword().length())));</span>
+
+<span class="fc" id="L56">        GrantedAuthority authority = new SimpleGrantedAuthority(&quot;ROLE_&quot; + pengguna.getRole().name());</span>
+
+<span class="fc" id="L58">        return new User(</span>
+<span class="fc" id="L59">                pengguna.getUsername(),</span>
+<span class="fc" id="L60">                pengguna.getPassword(),</span>
+<span class="fc" id="L61">                pengguna.isAktif(),</span>
+                true,
+                true,
+                true,
+<span class="fc" id="L65">                List.of(authority));</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

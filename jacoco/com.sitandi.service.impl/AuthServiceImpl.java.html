@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.service.impl</a> &gt; <span class="el_source">AuthServiceImpl.java</span></div><h1>AuthServiceImpl.java</h1><pre class="source lang-java linenums">package com.sitandi.service.impl;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.sitandi.dto.GantiPasswordRequestDto;
+import com.sitandi.dto.PenggunaDto;
+import com.sitandi.dto.RegisterRequestDto;
+import com.sitandi.dto.TndeLoginRequestDto;
+import com.sitandi.dto.TndeLoginResponseDto;
+import com.sitandi.dto.TndeUserDataDto;
+import com.sitandi.exception.ResourceNotFoundException;
+import com.sitandi.exception.TndeLoginException;
+import com.sitandi.model.Pengguna;
+import com.sitandi.model.Role;
+import com.sitandi.repository.PenggunaRepository;
+import com.sitandi.service.AuthService;
+
+
+/**
+ * Implementasi otentikasi &amp; pengelolaan akun.
+ */
+@Service
+public class AuthServiceImpl implements AuthService {
+
+    private final PenggunaRepository penggunaRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    private final String tndeLoginUrl;
+
+    public AuthServiceImpl(PenggunaRepository penggunaRepository,
+                           PasswordEncoder passwordEncoder,
+                           RestTemplate restTemplate,
+                           ObjectMapper objectMapper,
+<span class="fc" id="L52">                           @Value(&quot;${tnde.login-url:http://192.168.1.131:1323/api/login}&quot;) String tndeLoginUrl) {</span>
+<span class="fc" id="L53">        this.penggunaRepository = penggunaRepository;</span>
+<span class="fc" id="L54">        this.passwordEncoder = passwordEncoder;</span>
+<span class="fc" id="L55">        this.restTemplate = restTemplate;</span>
+<span class="fc" id="L56">        this.objectMapper = objectMapper;</span>
+<span class="fc" id="L57">        this.tndeLoginUrl = tndeLoginUrl;</span>
+<span class="fc" id="L58">    }</span>
+
+    @Override
+    public Pengguna getByUsername(String username) {
+<span class="fc" id="L62">        return penggunaRepository.findByUsername(username)</span>
+<span class="fc" id="L63">                .orElseThrow(() -&gt; new UsernameNotFoundException(&quot;Pengguna tidak ditemukan: &quot; + username));</span>
+    }
+
+    @Override
+    @Transactional
+    public TndeLoginResponseDto loginTnde(String username, String password) {
+<span class="fc" id="L69">        TndeLoginRequestDto requestDto = TndeLoginRequestDto.builder()</span>
+<span class="fc" id="L70">                .username(username)</span>
+<span class="fc" id="L71">                .password(password)</span>
+<span class="fc" id="L72">                .build();</span>
+
+<span class="fc" id="L74">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L75">        headers.setContentType(MediaType.APPLICATION_JSON);</span>
+<span class="fc" id="L76">        headers.set(&quot;User-Agent&quot;, &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36&quot;);</span>
+        
+<span class="fc" id="L78">        HttpEntity&lt;TndeLoginRequestDto&gt; request = new HttpEntity&lt;&gt;(requestDto, headers);</span>
+
+        TndeLoginResponseDto response;
+        try {
+<span class="fc" id="L82">            response = restTemplate.postForObject(tndeLoginUrl, request, TndeLoginResponseDto.class);</span>
+<span class="fc" id="L83">        } catch (ResourceAccessException ex) {</span>
+<span class="fc" id="L84">            throw new TndeLoginException(&quot;Server TNDE tidak dapat dihubungi, silakan coba lagi nanti&quot;, ex);</span>
+<span class="fc" id="L85">        } catch (HttpStatusCodeException ex) {</span>
+<span class="fc" id="L86">            TndeLoginResponseDto errorResponse = parseTndeErrorResponse(ex.getResponseBodyAsString());</span>
+<span class="pc bpc" id="L87" title="2 of 6 branches missed.">            if (errorResponse != null &amp;&amp; !errorResponse.isSuccess() &amp;&amp; StringUtils.hasText(errorResponse.getMessage())) {</span>
+<span class="fc" id="L88">                throw new TndeLoginException(errorResponse.getMessage(), ex);</span>
+            }
+<span class="fc" id="L90">            throw new TndeLoginException(&quot;Gagal memproses respons dari server TNDE&quot;, ex);</span>
+<span class="fc" id="L91">        } catch (RestClientException ex) {</span>
+<span class="fc" id="L92">            throw new TndeLoginException(&quot;Gagal memproses respons dari server TNDE&quot;, ex);</span>
+<span class="fc" id="L93">        }</span>
+
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (response == null) {</span>
+<span class="fc" id="L96">            throw new TndeLoginException(&quot;Server TNDE tidak dapat dihubungi, silakan coba lagi nanti&quot;);</span>
+        }
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (!response.isSuccess()) {</span>
+<span class="fc" id="L99">            throw new TndeLoginException(response.getMessage());</span>
+        }
+<span class="pc bpc" id="L101" title="1 of 4 branches missed.">        if (response.getData() == null || response.getData().getUser() == null) {</span>
+<span class="fc" id="L102">            throw new TndeLoginException(&quot;Respons login TNDE tidak lengkap&quot;);</span>
+        }
+
+<span class="fc" id="L105">        sinkronkanPengguna(response.getData().getUser());</span>
+<span class="fc" id="L106">        return response;</span>
+    }
+
+    private TndeLoginResponseDto parseTndeErrorResponse(String responseBody) {
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (!StringUtils.hasText(responseBody)) {</span>
+<span class="fc" id="L111">            return null;</span>
+        }
+        try {
+<span class="fc" id="L114">            return objectMapper.readValue(responseBody, TndeLoginResponseDto.class);</span>
+<span class="fc" id="L115">        } catch (JsonProcessingException ex) {</span>
+<span class="fc" id="L116">            return null;</span>
+        }
+    }
+
+    private void sinkronkanPengguna(TndeUserDataDto user) {
+<span class="fc" id="L121">        Role role = mapLevelNameToRole(user.getLevelName());</span>
+<span class="fc" id="L122">        penggunaRepository.findByUsername(user.getUsername())</span>
+<span class="fc" id="L123">                .map(existing -&gt; {</span>
+<span class="fc" id="L124">                    existing.setNama(user.getNama());</span>
+<span class="fc" id="L125">                    existing.setRole(role);</span>
+<span class="fc" id="L126">                    return penggunaRepository.save(existing);</span>
+                })
+<span class="fc" id="L128">                .orElseGet(() -&gt; penggunaRepository.save(Pengguna.builder()</span>
+<span class="fc" id="L129">                        .nama(user.getNama())</span>
+<span class="fc" id="L130">                        .username(user.getUsername())</span>
+<span class="fc" id="L131">                        .password(passwordEncoder.encode(UUID.randomUUID().toString()))</span>
+<span class="fc" id="L132">                        .role(role)</span>
+<span class="fc" id="L133">                        .aktif(true)</span>
+<span class="fc" id="L134">                        .build()));</span>
+<span class="fc" id="L135">    }</span>
+
+    private Role mapLevelNameToRole(String levelName) {
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (levelName == null) {</span>
+<span class="fc" id="L139">            return Role.USER;</span>
+        }
+<span class="fc" id="L141">        String normalized = levelName.trim().toLowerCase();</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (normalized.contains(&quot;admin&quot;)) {</span>
+<span class="fc" id="L143">            return Role.ADMIN;</span>
+        }
+<span class="fc" id="L145">        return Role.USER;</span>
+    }
+
+    @Override
+    @Transactional
+    public PenggunaDto register(RegisterRequestDto request) {
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (!request.getPassword().equals(request.getKonfirmasiPassword())) {</span>
+<span class="fc" id="L152">            throw new IllegalArgumentException(&quot;Konfirmasi password tidak cocok&quot;);</span>
+        }
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        if (penggunaRepository.existsByUsername(request.getUsername())) {</span>
+<span class="fc" id="L155">            throw new IllegalArgumentException(&quot;Username sudah dipakai, silakan pilih yang lain&quot;);</span>
+        }
+
+<span class="fc" id="L158">        Pengguna pengguna = penggunaRepository.save(Pengguna.builder()</span>
+<span class="fc" id="L159">                .nama(request.getNama().trim())</span>
+<span class="fc" id="L160">                .username(request.getUsername().trim())</span>
+<span class="fc" id="L161">                .email(request.getEmail().trim())</span>
+<span class="fc" id="L162">                .password(passwordEncoder.encode(request.getPassword()))</span>
+                /*
+                 * Pendaftaran mandiri SELALU role USER. Role tidak boleh datang dari
+                 * request — kalau tidak, siapa pun bisa mendaftar sebagai ADMIN.
+                 * Status aktif false berarti menunggu persetujuan admin.
+                 */
+<span class="fc" id="L168">                .role(Role.USER)</span>
+<span class="fc" id="L169">                .aktif(false)</span>
+<span class="fc" id="L170">                .build());</span>
+
+<span class="fc" id="L172">        return toDto(pengguna);</span>
+    }
+
+    @Override
+    @Transactional
+    public void gantiPassword(GantiPasswordRequestDto request, String username) {
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        if (!request.getPasswordBaru().equals(request.getKonfirmasiPasswordBaru())) {</span>
+<span class="fc" id="L179">            throw new IllegalArgumentException(&quot;Konfirmasi password baru tidak cocok&quot;);</span>
+        }
+
+<span class="fc" id="L182">        Pengguna pengguna = getByUsername(username);</span>
+        /*
+         * Sengaja IllegalArgumentException (-&gt; 400), bukan BadCredentialsException:
+         * BadCredentialsException adalah AuthenticationException, sehingga akan
+         * tertangkap handler login dan dibalas 401 &quot;Username atau password salah&quot;.
+         * Ini menyesatkan karena pengguna sudah terautentikasi dan hanya salah mengetik
+         * password lamanya. Membocorkan &quot;password lama salah&quot; ke pemilik akun sendiri
+         * bukan masalah keamanan.
+         */
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        if (!passwordEncoder.matches(request.getPasswordLama(), pengguna.getPassword())) {</span>
+<span class="fc" id="L192">            throw new IllegalArgumentException(&quot;Password lama salah&quot;);</span>
+        }
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        if (passwordEncoder.matches(request.getPasswordBaru(), pengguna.getPassword())) {</span>
+<span class="fc" id="L195">            throw new IllegalArgumentException(&quot;Password baru tidak boleh sama dengan password lama&quot;);</span>
+        }
+
+<span class="fc" id="L198">        pengguna.setPassword(passwordEncoder.encode(request.getPasswordBaru()));</span>
+<span class="fc" id="L199">        penggunaRepository.save(pengguna);</span>
+<span class="fc" id="L200">    }</span>
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;PenggunaDto&gt; daftarMenungguAktivasi() {
+<span class="fc" id="L205">        return penggunaRepository.findByAktifFalseOrderByIdDesc().stream().map(this::toDto).toList();</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;PenggunaDto&gt; daftarSemuaPengguna() {
+<span class="fc" id="L211">        return penggunaRepository.findAllByOrderByIdDesc().stream().map(this::toDto).toList();</span>
+    }
+
+    @Override
+    @Transactional
+    public PenggunaDto aktifkan(Long penggunaId) {
+<span class="fc" id="L217">        Pengguna pengguna = penggunaRepository.findById(penggunaId)</span>
+<span class="fc" id="L218">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Pengguna tidak ditemukan: &quot; + penggunaId));</span>
+<span class="fc" id="L219">        pengguna.setAktif(true);</span>
+<span class="fc" id="L220">        return toDto(penggunaRepository.save(pengguna));</span>
+    }
+
+    @Override
+    @Transactional
+    public PenggunaDto nonaktifkan(Long penggunaId, String usernamePelaku) {
+<span class="fc" id="L226">        Pengguna pengguna = penggunaRepository.findById(penggunaId)</span>
+<span class="fc" id="L227">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Pengguna tidak ditemukan: &quot; + penggunaId));</span>
+
+        /*
+         * Tanpa ini, admin terakhir bisa mengunci dirinya sendiri keluar dan tidak
+         * ada lagi yang bisa mengaktifkan akun siapa pun.
+         */
+<span class="fc bfc" id="L233" title="All 2 branches covered.">        if (pengguna.getUsername().equals(usernamePelaku)) {</span>
+<span class="fc" id="L234">            throw new IllegalArgumentException(&quot;Anda tidak bisa menonaktifkan akun Anda sendiri&quot;);</span>
+        }
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        if (pengguna.getRole() == Role.ADMIN</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">                &amp;&amp; penggunaRepository.countByRoleAndAktifTrue(Role.ADMIN) &lt;= 1) {</span>
+<span class="fc" id="L238">            throw new IllegalStateException(&quot;Tidak bisa menonaktifkan admin aktif terakhir&quot;);</span>
+        }
+
+<span class="fc" id="L241">        pengguna.setAktif(false);</span>
+<span class="fc" id="L242">        return toDto(penggunaRepository.save(pengguna));</span>
+    }
+
+    @Override
+    @Transactional
+    public void hapusPengguna(Long penggunaId, String usernamePelaku) {
+<span class="fc" id="L248">        Pengguna pengguna = penggunaRepository.findById(penggunaId)</span>
+<span class="fc" id="L249">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Pengguna tidak ditemukan: &quot; + penggunaId));</span>
+
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        if (pengguna.getUsername().equals(usernamePelaku)) {</span>
+<span class="fc" id="L252">            throw new IllegalArgumentException(&quot;Anda tidak bisa menghapus akun Anda sendiri&quot;);</span>
+        }
+<span class="fc bfc" id="L254" title="All 2 branches covered.">        if (pengguna.getRole() == Role.ADMIN</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">                &amp;&amp; penggunaRepository.countByRoleAndAktifTrue(Role.ADMIN) &lt;= 1) {</span>
+<span class="fc" id="L256">            throw new IllegalStateException(&quot;Tidak bisa menghapus admin aktif terakhir&quot;);</span>
+        }
+
+<span class="fc" id="L259">        penggunaRepository.delete(pengguna);</span>
+<span class="fc" id="L260">    }</span>
+
+    private PenggunaDto toDto(Pengguna pengguna) {
+<span class="fc" id="L263">        return PenggunaDto.builder()</span>
+<span class="fc" id="L264">                .id(pengguna.getId())</span>
+<span class="fc" id="L265">                .nama(pengguna.getNama())</span>
+<span class="fc" id="L266">                .username(pengguna.getUsername())</span>
+<span class="fc" id="L267">                .email(pengguna.getEmail())</span>
+<span class="fc" id="L268">                .role(pengguna.getRole().name())</span>
+<span class="fc" id="L269">                .aktif(pengguna.isAktif())</span>
+<span class="fc" id="L270">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

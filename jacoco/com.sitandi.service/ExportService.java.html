@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.service</a> &gt; <span class="el_source">ExportService.java</span></div><h1>ExportService.java</h1><pre class="source lang-java linenums">package com.sitandi.service;
+
+import java.io.ByteArrayOutputStream;
+import java.util.List;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Service;
+
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+
+import com.sitandi.dto.OrganisasiPersonalDto;
+import com.sitandi.dto.PenggunaDto;
+
+/**
+ * Export data ke format Excel (.xlsx via Apache POI) dan PDF (via OpenPDF).
+ */
+@Service
+<span class="fc" id="L32">public class ExportService {</span>
+
+<span class="fc" id="L34">    private static final String[] HEADER_PERSONAL = {&quot;No&quot;, &quot;Nama&quot;, &quot;Jabatan&quot;, &quot;NIP&quot;, &quot;Username&quot;, &quot;Email&quot;, &quot;No HP&quot;};</span>
+<span class="fc" id="L35">    private static final String[] HEADER_PENGGUNA = {&quot;No&quot;, &quot;Nama&quot;, &quot;Username&quot;, &quot;Email&quot;, &quot;Role&quot;, &quot;Status&quot;};</span>
+
+    // ================= EXCEL =================
+
+    public byte[] personalKeExcel(List&lt;OrganisasiPersonalDto&gt; data) {
+<span class="fc" id="L40">        try (Workbook wb = new XSSFWorkbook()) {</span>
+<span class="fc" id="L41">            Sheet sheet = wb.createSheet(&quot;Personal&quot;);</span>
+<span class="fc" id="L42">            tulisHeader(wb, sheet, HEADER_PERSONAL);</span>
+<span class="fc" id="L43">            int no = 1;</span>
+<span class="fc" id="L44">            int r = 1;</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">            for (OrganisasiPersonalDto p : data) {</span>
+<span class="fc" id="L46">                Row row = sheet.createRow(r++);</span>
+<span class="fc" id="L47">                row.createCell(0).setCellValue(no++);</span>
+<span class="fc" id="L48">                row.createCell(1).setCellValue(nullSafe(p.getNama()));</span>
+<span class="fc" id="L49">                row.createCell(2).setCellValue(nullSafe(p.getJabatan()));</span>
+<span class="fc" id="L50">                row.createCell(3).setCellValue(nullSafe(p.getNip()));</span>
+<span class="fc" id="L51">                row.createCell(4).setCellValue(nullSafe(p.getUsername()));</span>
+<span class="fc" id="L52">                row.createCell(5).setCellValue(nullSafe(p.getEmail()));</span>
+<span class="fc" id="L53">                row.createCell(6).setCellValue(nullSafe(p.getNoHp()));</span>
+<span class="fc" id="L54">            }</span>
+<span class="fc" id="L55">            autoSize(sheet, HEADER_PERSONAL.length);</span>
+<span class="fc" id="L56">            return toBytes(wb);</span>
+<span class="nc" id="L57">        } catch (Exception e) {</span>
+<span class="nc" id="L58">            throw new IllegalStateException(&quot;Gagal membuat file Excel: &quot; + e.getMessage(), e);</span>
+        }
+    }
+
+    public byte[] penggunaKeExcel(List&lt;PenggunaDto&gt; data) {
+<span class="fc" id="L63">        try (Workbook wb = new XSSFWorkbook()) {</span>
+<span class="fc" id="L64">            Sheet sheet = wb.createSheet(&quot;Pengguna&quot;);</span>
+<span class="fc" id="L65">            tulisHeader(wb, sheet, HEADER_PENGGUNA);</span>
+<span class="fc" id="L66">            int no = 1;</span>
+<span class="fc" id="L67">            int r = 1;</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            for (PenggunaDto p : data) {</span>
+<span class="fc" id="L69">                Row row = sheet.createRow(r++);</span>
+<span class="fc" id="L70">                row.createCell(0).setCellValue(no++);</span>
+<span class="fc" id="L71">                row.createCell(1).setCellValue(nullSafe(p.getNama()));</span>
+<span class="fc" id="L72">                row.createCell(2).setCellValue(nullSafe(p.getUsername()));</span>
+<span class="fc" id="L73">                row.createCell(3).setCellValue(nullSafe(p.getEmail()));</span>
+<span class="fc" id="L74">                row.createCell(4).setCellValue(nullSafe(p.getRole()));</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">                row.createCell(5).setCellValue(p.isAktif() ? &quot;Aktif&quot; : &quot;Nonaktif&quot;);</span>
+<span class="fc" id="L76">            }</span>
+<span class="fc" id="L77">            autoSize(sheet, HEADER_PENGGUNA.length);</span>
+<span class="fc" id="L78">            return toBytes(wb);</span>
+<span class="nc" id="L79">        } catch (Exception e) {</span>
+<span class="nc" id="L80">            throw new IllegalStateException(&quot;Gagal membuat file Excel: &quot; + e.getMessage(), e);</span>
+        }
+    }
+
+    private void tulisHeader(Workbook wb, Sheet sheet, String[] headers) {
+<span class="fc" id="L85">        Font font = wb.createFont();</span>
+<span class="fc" id="L86">        font.setBold(true);</span>
+<span class="fc" id="L87">        CellStyle style = wb.createCellStyle();</span>
+<span class="fc" id="L88">        style.setFont(font);</span>
+<span class="fc" id="L89">        style.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.LIGHT_TURQUOISE.getIndex());</span>
+<span class="fc" id="L90">        style.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);</span>
+
+<span class="fc" id="L92">        Row header = sheet.createRow(0);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        for (int i = 0; i &lt; headers.length; i++) {</span>
+<span class="fc" id="L94">            Cell cell = header.createCell(i);</span>
+<span class="fc" id="L95">            cell.setCellValue(headers[i]);</span>
+<span class="fc" id="L96">            cell.setCellStyle(style);</span>
+        }
+<span class="fc" id="L98">    }</span>
+
+    private void autoSize(Sheet sheet, int cols) {
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        for (int i = 0; i &lt; cols; i++) {</span>
+<span class="fc" id="L102">            sheet.autoSizeColumn(i);</span>
+        }
+<span class="fc" id="L104">    }</span>
+
+    private byte[] toBytes(Workbook wb) throws Exception {
+<span class="fc" id="L107">        ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="fc" id="L108">        wb.write(out);</span>
+<span class="fc" id="L109">        return out.toByteArray();</span>
+    }
+
+    private String nullSafe(String s) {
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        return s == null ? &quot;&quot; : s;</span>
+    }
+
+    // ================= PDF =================
+
+    public byte[] personalKePdf(List&lt;OrganisasiPersonalDto&gt; data, String judul) {
+<span class="fc" id="L119">        com.lowagie.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);</span>
+<span class="fc" id="L120">        PdfPTable table = tabel(7);</span>
+<span class="fc" id="L121">        tambahBarisHeader(table, HEADER_PERSONAL);</span>
+<span class="fc" id="L122">        int no = 1;</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">        for (OrganisasiPersonalDto p : data) {</span>
+<span class="fc" id="L124">            table.addCell(String.valueOf(no++));</span>
+<span class="fc" id="L125">            table.addCell(nullSafe(p.getNama()));</span>
+<span class="fc" id="L126">            table.addCell(nullSafe(p.getJabatan()));</span>
+<span class="fc" id="L127">            table.addCell(nullSafe(p.getNip()));</span>
+<span class="fc" id="L128">            table.addCell(nullSafe(p.getUsername()));</span>
+<span class="fc" id="L129">            table.addCell(nullSafe(p.getEmail()));</span>
+<span class="fc" id="L130">            table.addCell(nullSafe(p.getNoHp()));</span>
+<span class="fc" id="L131">        }</span>
+<span class="fc" id="L132">        return bangunPdf(judul, titleFont, table);</span>
+    }
+
+    public byte[] penggunaKePdf(List&lt;PenggunaDto&gt; data, String judul) {
+<span class="fc" id="L136">        com.lowagie.text.Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);</span>
+<span class="fc" id="L137">        PdfPTable table = tabel(6);</span>
+<span class="fc" id="L138">        tambahBarisHeader(table, HEADER_PENGGUNA);</span>
+<span class="fc" id="L139">        int no = 1;</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        for (PenggunaDto p : data) {</span>
+<span class="fc" id="L141">            table.addCell(String.valueOf(no++));</span>
+<span class="fc" id="L142">            table.addCell(nullSafe(p.getNama()));</span>
+<span class="fc" id="L143">            table.addCell(nullSafe(p.getUsername()));</span>
+<span class="fc" id="L144">            table.addCell(nullSafe(p.getEmail()));</span>
+<span class="fc" id="L145">            table.addCell(nullSafe(p.getRole()));</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            table.addCell(p.isAktif() ? &quot;Aktif&quot; : &quot;Nonaktif&quot;);</span>
+<span class="fc" id="L147">        }</span>
+<span class="fc" id="L148">        return bangunPdf(judul, titleFont, table);</span>
+    }
+
+    private PdfPTable tabel(int kolom) {
+<span class="fc" id="L152">        PdfPTable table = new PdfPTable(kolom);</span>
+<span class="fc" id="L153">        table.setWidthPercentage(100);</span>
+<span class="fc" id="L154">        table.setSpacingBefore(10f);</span>
+<span class="fc" id="L155">        return table;</span>
+    }
+
+    private void tambahBarisHeader(PdfPTable table, String[] headers) {
+<span class="fc" id="L159">        com.lowagie.text.Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        for (String h : headers) {</span>
+<span class="fc" id="L161">            PdfPCell cell = new PdfPCell(new Phrase(h, headFont));</span>
+<span class="fc" id="L162">            cell.setBackgroundColor(new java.awt.Color(173, 216, 230));</span>
+<span class="fc" id="L163">            table.addCell(cell);</span>
+        }
+<span class="fc" id="L165">    }</span>
+
+    private byte[] bangunPdf(String judul, com.lowagie.text.Font titleFont, PdfPTable table) {
+        try {
+<span class="fc" id="L169">            Document doc = new Document(PageSize.A4.rotate());</span>
+<span class="fc" id="L170">            ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="fc" id="L171">            PdfWriter.getInstance(doc, out);</span>
+<span class="fc" id="L172">            doc.open();</span>
+<span class="fc" id="L173">            doc.add(new Paragraph(judul, titleFont));</span>
+<span class="fc" id="L174">            doc.add(table);</span>
+<span class="fc" id="L175">            doc.close();</span>
+<span class="fc" id="L176">            return out.toByteArray();</span>
+<span class="nc" id="L177">        } catch (DocumentException e) {</span>
+<span class="nc" id="L178">            throw new IllegalStateException(&quot;Gagal membuat file PDF: &quot; + e.getMessage(), e);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrganisasiApiController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.controller.api</a> &gt; <span class="el_source">OrganisasiApiController.java</span></div><h1>OrganisasiApiController.java</h1><pre class="source lang-java linenums">package com.sitandi.controller.api;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
+
+import com.sitandi.dto.OrganisasiBreadcrumbDto;
+import com.sitandi.dto.OrganisasiPersonalDto;
+import com.sitandi.dto.OrganisasiSearchResultDto;
+import com.sitandi.dto.OrganisasiTreeNodeDto;
+import com.sitandi.dto.OrganisasiPersonalRequestDto;
+import com.sitandi.service.ExportService;
+import com.sitandi.service.OrganisasiService;
+
+import lombok.RequiredArgsConstructor;
+
+/**
+ * REST endpoint untuk struktur organisasi (tree OPD se-Jatim).
+ * Base path: /api/v1/organisasi (terpisah dari /api/v1/naskah)
+ *
+ * &lt;p&gt;GET /tree — seluruh tree (Provinsi → Kab/Kota → OPD → Bidang).
+ * Tree TIDAK menyertakan leaf Jabatan, supaya payload tetap kecil untuk data
+ * produksi nanti. Personal di-load terpisah lewat /bidang/{id}/personal saat
+ * user memilih Bidang tertentu.&lt;/p&gt;
+ */
+@RestController
+@RequestMapping(&quot;/api/v1/organisasi&quot;)
+@RequiredArgsConstructor
+public class OrganisasiApiController {
+
+    private final OrganisasiService organisasiService;
+    private final ExportService exportService;
+    private final com.sitandi.service.ActivityLogService activityLogService;
+    private final com.sitandi.service.AuthService authService;
+
+    private void catat(String aksi, String deskripsi) {
+        try {
+            org.springframework.security.core.Authentication auth =
+<span class="nc" id="L49">                    org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">            com.sitandi.model.Pengguna p = auth != null</span>
+<span class="nc" id="L51">                    ? authService.getByUsername(auth.getName()) : null;</span>
+<span class="nc" id="L52">            activityLogService.log(p, aksi, deskripsi);</span>
+<span class="nc" id="L53">        } catch (Exception ignored) { }</span>
+<span class="nc" id="L54">    }</span>
+
+    /**
+     * Mengembalikan seluruh tree struktur organisasi dari root (Provinsi)
+     * sampai level Bidang. Tidak termasuk jabatan per orang.
+     */
+    @GetMapping(&quot;/tree&quot;)
+    public List&lt;OrganisasiTreeNodeDto&gt; getTree() {
+<span class="nc" id="L62">        return organisasiService.getTree();</span>
+    }
+
+    /**
+     * Lazy-load: ambil satu node Wilayah beserta child langsungnya (kab/kota, OPD).
+     * Berguna kalau tree terlalu besar untuk di-load sekaligus.
+     */
+    @GetMapping(&quot;/wilayah/{id}&quot;)
+    public ResponseEntity&lt;OrganisasiTreeNodeDto&gt; getWilayah(@PathVariable Long id) {
+<span class="nc" id="L71">        OrganisasiTreeNodeDto node = organisasiService.getWilayahWithChildren(id);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (node == null) {</span>
+<span class="nc" id="L73">            return ResponseEntity.notFound().build();</span>
+        }
+<span class="nc" id="L75">        return ResponseEntity.ok(node);</span>
+    }
+
+/**
+     * Ambil daftar personal (Nama + Jabatan + Username) untuk satu Bidang.
+     * Dipanggil saat user mengklik node Bidang di panel kiri tree.
+     * Mengembalikan array kosong (200) jika tidak ada data, bukan 404,
+     * agar JS tidak perlu special-handle 404 untuk empty state.
+     */
+    @GetMapping(&quot;/bidang/{id}/personal&quot;)
+    public ResponseEntity&lt;List&lt;OrganisasiPersonalDto&gt;&gt; getPersonal(@PathVariable Long id) {
+<span class="nc" id="L86">        List&lt;OrganisasiPersonalDto&gt; personal = organisasiService.getPersonal(id);</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">        if (personal == null || personal.isEmpty()) {</span>
+<span class="nc" id="L88">            return ResponseEntity.ok(List.of());</span>
+        }
+<span class="nc" id="L90">        return ResponseEntity.ok(personal);</span>
+    }
+
+    /**
+     * Bangun breadcrumb (path dari root ke node) untuk sembarang node. FE
+     * menyertakan parameter {@code tipe} supaya server tidak salah resolve
+     * ketika id yang sama muncul di lebih dari satu tabel (Bidang / OPD /
+     * Wilayah memakai sequence independent, sehingga tumpang tindih bisa
+     * terjadi, mis. Bidang id=10 dan OPD id=10). Tipe yang valid:
+     * {@code PROVINSI}, {@code KABUPATEN}, {@code KOTA}, {@code OPD},
+     * {@code BIDANG}.
+     */
+    @GetMapping(&quot;/breadcrumb/{tipe}/{id}&quot;)
+    public ResponseEntity&lt;OrganisasiBreadcrumbDto&gt; getBreadcrumb(@PathVariable String tipe,
+                                                                 @PathVariable Long id) {
+<span class="nc" id="L105">        OrganisasiBreadcrumbDto dto = organisasiService.getBreadcrumb(tipe, id);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (dto == null) {</span>
+<span class="nc" id="L107">            return ResponseEntity.notFound().build();</span>
+        }
+<span class="nc" id="L109">        return ResponseEntity.ok(dto);</span>
+    }
+
+    @PostMapping(&quot;/bidang/{id}/personal&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; createPersonal(@PathVariable Long id, @Valid @RequestBody OrganisasiPersonalRequestDto requestDto) {
+        try {
+<span class="nc" id="L116">            OrganisasiPersonalDto result = organisasiService.createPersonal(id, requestDto);</span>
+<span class="nc" id="L117">            catat(&quot;CRUD_PERSONAL&quot;, &quot;Tambah personal: &quot; + result.getNama());</span>
+<span class="nc" id="L118">            return ResponseEntity.ok(result);</span>
+<span class="nc" id="L119">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L120">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+        }
+    }
+
+    @PutMapping(&quot;/personal/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; updatePersonal(@PathVariable Long id, @Valid @RequestBody OrganisasiPersonalRequestDto requestDto) {
+        try {
+<span class="nc" id="L128">            OrganisasiPersonalDto result = organisasiService.updatePersonal(id, requestDto);</span>
+<span class="nc" id="L129">            catat(&quot;CRUD_PERSONAL&quot;, &quot;Ubah personal id=&quot; + id + &quot;: &quot; + result.getNama());</span>
+<span class="nc" id="L130">            return ResponseEntity.ok(result);</span>
+<span class="nc" id="L131">        } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L132">            return ResponseEntity.badRequest().body(e.getMessage());</span>
+        }
+    }
+
+    @DeleteMapping(&quot;/personal/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public ResponseEntity&lt;?&gt; deletePersonal(@PathVariable Long id) {
+<span class="nc" id="L139">        organisasiService.deletePersonal(id);</span>
+<span class="nc" id="L140">        catat(&quot;CRUD_PERSONAL&quot;, &quot;Hapus personal id=&quot; + id);</span>
+<span class="nc" id="L141">        return ResponseEntity.ok().build();</span>
+    }
+
+    @GetMapping(&quot;/export/excel&quot;)
+    public ResponseEntity&lt;byte[]&gt; exportExcel(@org.springframework.web.bind.annotation.RequestParam Long bidangId) {
+<span class="nc" id="L146">        byte[] excel = exportService.personalKeExcel(organisasiService.getPersonal(bidangId));</span>
+<span class="nc" id="L147">        return ResponseEntity.ok()</span>
+<span class="nc" id="L148">                .header(&quot;Content-Disposition&quot;, &quot;attachment; filename=\&quot;struktur-organisasi.xlsx\&quot;&quot;)</span>
+<span class="nc" id="L149">                .contentType(org.springframework.http.MediaType.parseMediaType(</span>
+                        &quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;))
+<span class="nc" id="L151">                .body(excel);</span>
+    }
+
+    @GetMapping(&quot;/export/pdf&quot;)
+    public ResponseEntity&lt;byte[]&gt; exportPdf(@org.springframework.web.bind.annotation.RequestParam Long bidangId) {
+<span class="nc" id="L156">        byte[] pdf = exportService.personalKePdf(organisasiService.getPersonal(bidangId),</span>
+                &quot;Daftar Personal Struktur Organisasi&quot;);
+<span class="nc" id="L158">        return ResponseEntity.ok()</span>
+<span class="nc" id="L159">                .header(&quot;Content-Disposition&quot;, &quot;attachment; filename=\&quot;struktur-organisasi.pdf\&quot;&quot;)</span>
+<span class="nc" id="L160">                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)</span>
+<span class="nc" id="L161">                .body(pdf);</span>
+    }
+
+    @GetMapping(&quot;/search&quot;)
+    public ResponseEntity&lt;List&lt;OrganisasiSearchResultDto&gt;&gt; searchOrganisasi(@org.springframework.web.bind.annotation.RequestParam(&quot;q&quot;) String keyword) {
+<span class="nc" id="L166">        List&lt;OrganisasiSearchResultDto&gt; results = organisasiService.search(keyword);</span>
+<span class="nc" id="L167">        return ResponseEntity.ok(results);</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

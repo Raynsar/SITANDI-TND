@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SuratMasukServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.service.impl</a> &gt; <span class="el_source">SuratMasukServiceImpl.java</span></div><h1>SuratMasukServiceImpl.java</h1><pre class="source lang-java linenums">package com.sitandi.service.impl;
+
+import java.util.Collections;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import com.sitandi.dto.SuratMasukResponseDto;
+import com.sitandi.dto.SuratMasukResponseDto.SuratDto;
+import com.sitandi.exception.TndeLoginException;
+import com.sitandi.exception.TndeServerException;
+import com.sitandi.service.SuratMasukService;
+
+/**
+ * Implementasi pemanggilan API inbox TNDE.
+ * Konsisten dengan pola AuthServiceImpl yang sudah ada.
+ */
+@Service
+public class SuratMasukServiceImpl implements SuratMasukService {
+
+    private final RestTemplate restTemplate;
+    private final String tndeInboxUrl;
+
+    public SuratMasukServiceImpl(RestTemplate restTemplate,
+<span class="fc" id="L35">                            @Value(&quot;${tnde.inbox-url:http://192.168.1.131:1323/api/inbox}&quot;) String tndeInboxUrl) {</span>
+<span class="fc" id="L36">        this.restTemplate = restTemplate;</span>
+<span class="fc" id="L37">        this.tndeInboxUrl = tndeInboxUrl;</span>
+<span class="fc" id="L38">    }</span>
+
+    @Override
+    public List&lt;SuratDto&gt; ambilSuratMasuk(String tndeToken, int tahun) {
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (!StringUtils.hasText(tndeToken)) {</span>
+<span class="fc" id="L43">            throw new TndeLoginException(&quot;Token TNDE tidak tersedia, silakan login kembali&quot;);</span>
+        }
+
+<span class="fc" id="L46">        String url = tndeInboxUrl + &quot;?year=&quot; + tahun;</span>
+
+<span class="fc" id="L48">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L49">        headers.setBearerAuth(tndeToken);</span>
+<span class="fc" id="L50">        HttpEntity&lt;Void&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+
+        SuratMasukResponseDto response;
+        /*
+         * Penanganan error API TNDE:
+         * - 401: Token invalid/expired -&gt; minta login ulang
+         * - 4xx/5xx: HTTP error lain dari server
+         * - ResourceAccessException: Connection timeout / unreachable
+         * - RestClientException: Error parsing/umum
+         */
+        try {
+<span class="fc" id="L61">            ResponseEntity&lt;SuratMasukResponseDto&gt; responseEntity = restTemplate.exchange(</span>
+                    url, HttpMethod.GET, entity, SuratMasukResponseDto.class);
+<span class="fc" id="L63">            response = responseEntity.getBody();</span>
+<span class="fc" id="L64">        } catch (HttpClientErrorException.Unauthorized ex) {</span>
+<span class="fc" id="L65">            throw new TndeLoginException(&quot;Sesi anda telah berakhir, silakan login kembali&quot;, ex);</span>
+<span class="fc" id="L66">        } catch (HttpStatusCodeException ex) {</span>
+<span class="fc" id="L67">            throw new TndeServerException(&quot;Gagal mengambil data surat dari server TNDE&quot;, ex);</span>
+<span class="fc" id="L68">        } catch (ResourceAccessException ex) {</span>
+<span class="fc" id="L69">            throw new TndeServerException(&quot;Server TNDE tidak dapat dihubungi, silakan coba lagi nanti&quot;, ex);</span>
+<span class="fc" id="L70">        } catch (RestClientException ex) {</span>
+<span class="fc" id="L71">            throw new TndeServerException(&quot;Gagal memproses respons dari server TNDE&quot;, ex);</span>
+<span class="fc" id="L72">        }</span>
+
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (response == null) {</span>
+<span class="fc" id="L75">            throw new TndeServerException(&quot;Server TNDE tidak memberikan respons yang valid&quot;);</span>
+        }
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (!response.isSuccess()) {</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            String message = StringUtils.hasText(response.getMessage())</span>
+<span class="fc" id="L79">                    ? response.getMessage()</span>
+<span class="fc" id="L80">                    : &quot;Gagal mengambil data surat dari server TNDE&quot;;</span>
+<span class="fc" id="L81">            throw new TndeServerException(message);</span>
+        }
+
+<span class="fc bfc" id="L84" title="All 4 branches covered.">        if (response.getData() == null || response.getData().getItems() == null) {</span>
+<span class="fc" id="L85">            return Collections.emptyList();</span>
+        }
+<span class="fc" id="L87">        return response.getData().getItems();</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

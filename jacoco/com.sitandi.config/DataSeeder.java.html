@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataSeeder.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.config</a> &gt; <span class="el_source">DataSeeder.java</span></div><h1>DataSeeder.java</h1><pre class="source lang-java linenums">package com.sitandi.config;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+import com.sitandi.model.Pengguna;
+import com.sitandi.model.Role;
+import com.sitandi.repository.PenggunaRepository;
+
+import lombok.RequiredArgsConstructor;
+
+/**
+ * Mengisi akun awal admin dan user saat aplikasi pertama kali dijalankan.
+ * Password di-hash BCrypt. Idempotent: hanya berjalan jika tabel pengguna
+ * masih kosong.
+ */
+@Component
+@RequiredArgsConstructor
+public class DataSeeder implements CommandLineRunner {
+
+    private final PenggunaRepository penggunaRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public void run(String... args) {
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">        if (penggunaRepository.count() &gt; 0) {</span>
+<span class="nc" id="L28">            return;</span>
+        }
+
+        // aktif(true) wajib eksplisit: field boolean default-nya false, jadi tanpa
+        // ini kedua akun seed lahir dalam status menunggu persetujuan dan TIDAK ADA
+        // yang bisa login untuk menyetujuinya.
+<span class="fc" id="L34">        penggunaRepository.save(Pengguna.builder()</span>
+<span class="fc" id="L35">                .nama(&quot;Administrator TU&quot;)</span>
+<span class="fc" id="L36">                .username(&quot;admin&quot;)</span>
+<span class="fc" id="L37">                .password(passwordEncoder.encode(&quot;admin123&quot;))</span>
+<span class="fc" id="L38">                .role(Role.ADMIN)</span>
+<span class="fc" id="L39">                .email(&quot;admin@sitandi.local&quot;)</span>
+<span class="fc" id="L40">                .aktif(true)</span>
+<span class="fc" id="L41">                .build());</span>
+
+<span class="fc" id="L43">        penggunaRepository.save(Pengguna.builder()</span>
+<span class="fc" id="L44">                .nama(&quot;Budi Pengguna&quot;)</span>
+<span class="fc" id="L45">                .username(&quot;user&quot;)</span>
+<span class="fc" id="L46">                .password(passwordEncoder.encode(&quot;user123&quot;))</span>
+<span class="fc" id="L47">                .role(Role.USER)</span>
+<span class="fc" id="L48">                .email(&quot;user@sitandi.local&quot;)</span>
+<span class="fc" id="L49">                .aktif(true)</span>
+<span class="fc" id="L50">                .build());</span>
+<span class="fc" id="L51">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

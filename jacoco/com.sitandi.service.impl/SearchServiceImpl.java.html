@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.service.impl</a> &gt; <span class="el_source">SearchServiceImpl.java</span></div><h1>SearchServiceImpl.java</h1><pre class="source lang-java linenums">package com.sitandi.service.impl;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sitandi.dto.GlobalSearchResultDto;
+import com.sitandi.model.JabatanStruktur;
+import com.sitandi.model.Opd;
+import com.sitandi.model.Pengguna;
+import com.sitandi.repository.JabatanStrukturRepository;
+import com.sitandi.repository.OpdRepository;
+import com.sitandi.repository.PenggunaRepository;
+import com.sitandi.service.SearchService;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class SearchServiceImpl implements SearchService {
+
+    private static final int MAX_PER_KATEGORI = 10;
+
+    private final JabatanStrukturRepository jabatanStrukturRepository;
+    private final OpdRepository opdRepository;
+    private final PenggunaRepository penggunaRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public GlobalSearchResultDto search(String keyword) {
+<span class="fc bfc" id="L32" title="All 4 branches covered.">        if (keyword == null || keyword.trim().length() &lt; 2) {</span>
+<span class="fc" id="L33">            return GlobalSearchResultDto.builder()</span>
+<span class="fc" id="L34">                    .personal(List.of())</span>
+<span class="fc" id="L35">                    .opd(List.of())</span>
+<span class="fc" id="L36">                    .user(List.of())</span>
+<span class="fc" id="L37">                    .build();</span>
+        }
+<span class="fc" id="L39">        String kw = keyword.trim();</span>
+
+<span class="fc" id="L41">        List&lt;JabatanStruktur&gt; personals = jabatanStrukturRepository</span>
+<span class="fc" id="L42">                .findByNamaDummyContainingIgnoreCaseOrNipContainingIgnoreCaseOrUsernameContainingIgnoreCase(kw, kw, kw);</span>
+<span class="fc" id="L43">        List&lt;Opd&gt; opds = opdRepository.findByNamaOpdContainingIgnoreCase(kw);</span>
+<span class="fc" id="L44">        List&lt;Pengguna&gt; users = penggunaRepository</span>
+<span class="fc" id="L45">                .findByNamaContainingIgnoreCaseOrUsernameContainingIgnoreCase(kw, kw);</span>
+
+<span class="fc" id="L47">        return GlobalSearchResultDto.builder()</span>
+<span class="fc" id="L48">                .personal(personals.stream().limit(MAX_PER_KATEGORI)</span>
+<span class="fc" id="L49">                        .map(p -&gt; GlobalSearchResultDto.PersonalResult.builder()</span>
+<span class="fc" id="L50">                                .id(p.getId())</span>
+<span class="fc" id="L51">                                .nama(p.getNamaDummy())</span>
+<span class="fc" id="L52">                                .nip(p.getNip())</span>
+<span class="fc" id="L53">                                .username(p.getUsername())</span>
+<span class="fc" id="L54">                                .jabatan(p.getJabatan().name())</span>
+<span class="fc" id="L55">                                .bidangId(p.getBidang().getId())</span>
+<span class="fc" id="L56">                                .build())</span>
+<span class="fc" id="L57">                        .toList())</span>
+<span class="fc" id="L58">                .opd(opds.stream().limit(MAX_PER_KATEGORI)</span>
+<span class="fc" id="L59">                        .map(o -&gt; GlobalSearchResultDto.OpdResult.builder()</span>
+<span class="fc" id="L60">                                .id(o.getId())</span>
+<span class="fc" id="L61">                                .nama(o.getNamaOpd())</span>
+<span class="fc" id="L62">                                .build())</span>
+<span class="fc" id="L63">                        .toList())</span>
+<span class="fc" id="L64">                .user(users.stream().limit(MAX_PER_KATEGORI)</span>
+<span class="fc" id="L65">                        .map(u -&gt; GlobalSearchResultDto.UserResult.builder()</span>
+<span class="fc" id="L66">                                .id(u.getId())</span>
+<span class="fc" id="L67">                                .nama(u.getNama())</span>
+<span class="fc" id="L68">                                .username(u.getUsername())</span>
+<span class="fc" id="L69">                                .role(u.getRole().name())</span>
+<span class="fc" id="L70">                                .build())</span>
+<span class="fc" id="L71">                        .toList())</span>
+<span class="fc" id="L72">                .build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

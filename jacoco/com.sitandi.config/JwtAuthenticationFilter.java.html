@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtAuthenticationFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">tata-naskah-dinas</a> &gt; <a href="index.source.html" class="el_package">com.sitandi.config</a> &gt; <span class="el_source">JwtAuthenticationFilter.java</span></div><h1>JwtAuthenticationFilter.java</h1><pre class="source lang-java linenums">package com.sitandi.config;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.sitandi.model.Pengguna;
+import com.sitandi.service.AuthService;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+/**
+ * JWT Authentication Filter
+ */
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final String BEARER_PREFIX = &quot;Bearer &quot;;
+
+    private final JwtUtil jwtUtil;
+    private final JwtCookieService cookieService;
+    private final AuthService authService;
+    private final SecurityContextRepository securityContextRepository;
+
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, JwtCookieService cookieService,
+                                   AuthService authService,
+<span class="fc" id="L43">                                   SecurityContextRepository securityContextRepository) {</span>
+<span class="fc" id="L44">        this.jwtUtil = jwtUtil;</span>
+<span class="fc" id="L45">        this.cookieService = cookieService;</span>
+<span class="fc" id="L46">        this.authService = authService;</span>
+<span class="fc" id="L47">        this.securityContextRepository = securityContextRepository;</span>
+<span class="fc" id="L48">    }</span>
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+<span class="nc" id="L53">        Optional&lt;String&gt; token = ambilToken(request);</span>
+
+<span class="nc bnc" id="L55" title="All 4 branches missed.">        if (token.isPresent() &amp;&amp; SecurityContextHolder.getContext().getAuthentication() == null) {</span>
+<span class="nc" id="L56">            autentikasi(token.get(), request, response);</span>
+        }
+
+<span class="nc" id="L59">        filterChain.doFilter(request, response);</span>
+<span class="nc" id="L60">    }</span>
+
+    private void autentikasi(String token, HttpServletRequest request, HttpServletResponse response) {
+        try {
+<span class="nc" id="L64">            Claims claims = jwtUtil.parse(token);</span>
+<span class="nc" id="L65">            String username = claims.getSubject();</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">            if (!StringUtils.hasText(username)) {</span>
+<span class="nc" id="L67">                throw new JwtException(&quot;Token tanpa subject&quot;);</span>
+            }
+
+<span class="nc" id="L70">            String role = jwtUtil.extractRole(token);</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">            if (!StringUtils.hasText(role)) {</span>
+<span class="nc" id="L72">                throw new JwtException(&quot;Token tanpa role&quot;);</span>
+            }
+
+            // Check User Active Status
+<span class="nc" id="L76">            boolean active = true;</span>
+            try {
+<span class="nc" id="L78">                Pengguna pengguna = authService.getByUsername(username);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                if (!pengguna.isAktif()) {</span>
+<span class="nc" id="L80">                    active = false;</span>
+                }
+<span class="nc" id="L82">            } catch (UsernameNotFoundException ex) {</span>
+<span class="nc" id="L83">                active = true;</span>
+<span class="nc" id="L84">            }</span>
+
+<span class="nc bnc" id="L86" title="All 2 branches missed.">            if (!active) {</span>
+<span class="nc" id="L87">                tolak(response, request);</span>
+<span class="nc" id="L88">                return;</span>
+            }
+
+<span class="nc" id="L91">            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(</span>
+                    username, null,
+<span class="nc" id="L93">                    List.of(new SimpleGrantedAuthority(role)));</span>
+<span class="nc" id="L94">            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));</span>
+
+<span class="nc" id="L96">            SecurityContext context = SecurityContextHolder.createEmptyContext();</span>
+<span class="nc" id="L97">            context.setAuthentication(authentication);</span>
+<span class="nc" id="L98">            SecurityContextHolder.setContext(context);</span>
+
+            // Save Context to Repository
+<span class="nc" id="L101">            securityContextRepository.saveContext(context, request, response);</span>
+
+<span class="nc" id="L103">        } catch (JwtException | IllegalArgumentException | UsernameNotFoundException ex) {</span>
+            // Invalid Token Handling
+<span class="nc" id="L105">            tolak(response, request);</span>
+<span class="nc" id="L106">        }</span>
+<span class="nc" id="L107">    }</span>
+
+    private void tolak(HttpServletResponse response, HttpServletRequest request) {
+<span class="nc" id="L110">        SecurityContextHolder.clearContext();</span>
+<span class="nc" id="L111">        cookieService.hapus(response, request.getContextPath());</span>
+<span class="nc" id="L112">    }</span>
+
+    private Optional&lt;String&gt; ambilToken(HttpServletRequest request) {
+<span class="nc" id="L115">        String header = request.getHeader(HttpHeaders.AUTHORIZATION);</span>
+<span class="nc bnc" id="L116" title="All 4 branches missed.">        if (StringUtils.hasText(header) &amp;&amp; header.startsWith(BEARER_PREFIX)) {</span>
+<span class="nc" id="L117">            String nilai = header.substring(BEARER_PREFIX.length()).trim();</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            return nilai.isEmpty() ? Optional.empty() : Optional.of(nilai);</span>
+        }
+<span class="nc" id="L120">        return cookieService.baca(request);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
